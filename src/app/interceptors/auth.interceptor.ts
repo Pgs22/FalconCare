@@ -9,6 +9,8 @@ import { AuthService } from '../services/auth.service';
 const API_PREFIX = `${environment.apiBaseUrl}/api`;
 const LOGIN_URL = `${API_PREFIX}/auth/login`;
 const DOCS_PREFIX = `${API_PREFIX}/docs`;
+const HEALTH_URL = `${API_PREFIX}/health`;
+const PATIENTS_URL = `${API_PREFIX}/patients`;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const url = req.url;
@@ -16,8 +18,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isApiCall = url.startsWith(API_PREFIX);
   const isLogin = url === LOGIN_URL;
   const isDocs = url.startsWith(DOCS_PREFIX);
+  const isHealth = url === HEALTH_URL;
+  // El registro de pacientes debe ser público: no adjuntar Bearer y no redirigir a login.
+  const isPatientRegistration = url === PATIENTS_URL && req.method === 'POST';
 
-  if (!isApiCall || isLogin || isDocs) {
+  if (!isApiCall || isLogin || isDocs || isHealth || isPatientRegistration) {
     return next(req);
   }
 
