@@ -42,32 +42,27 @@ export class AppointmentComponent implements OnInit {
     this.loading.set(true);
 
     const mockData: Appointment[] = [
-{ 
-      id: 1, 
-      visit_date: '2026-03-21',
-      visit_time: '09:00', 
-      consultation_reason: 'Neteja bucal',
-      observations: 'Pacient amb sensibilitat',
-      status: 'confirmed', 
-      duration_minutes: 30,
-      patient_id: 10,
-      doctor_id: 1,
-      box_id: 1
-    },
-    { 
-      id: 2, 
-      visit_date: '2026-03-21',
-      visit_time: '10:00', 
-      consultation_reason: 'Revisió ortodòncia',
-      observations: 'Canviar gomes',
-      status: 'pending', 
-      duration_minutes: 15,
-      patient_id: 25,
-      doctor_id: 1,
-      box_id: 2
-    }
-  ];
-
+      { 
+        id: 1, 
+        time: '09:00', 
+        duration: 60, 
+        status: 'confirmed', 
+        patientName: 'Amanda Smith', 
+        doctorName: 'Dra. Sarah Jenkins', 
+        box: 'BOX 1', 
+        reason: 'Ortodòncia' 
+      },
+      { 
+        id: 2, 
+        time: '12:00', 
+        duration: 90, 
+        status: 'pending', 
+        patientName: 'Eleanor Pena', 
+        doctorName: 'Dr. Michael Ross', 
+        box: 'BOX 2', 
+        reason: 'Sensibilitat molar' 
+      }
+    ];
 
     this.appointments.set(mockData);
     this.loading.set(false);
