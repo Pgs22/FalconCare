@@ -1,18 +1,49 @@
-<div class="agenda-container">
-  <h2>Gestió d'Agenda</h2>
+<div class="agenda-wrapper">
+  
+  <header class="agenda-header">
+    <h1>Dijous, 21 de Març</h1>
+    <div class="view-selector">
+      <button>Dia</button>
+      <button class="active">Per Box</button>
+      <button>Setmana</button>
+    </div>
+  </header>
 
-  <div *ngIf="loading()">
-    <p>Carregant dades...</p>
-  </div>
+  <div class="agenda-grid">
+    <div class="box-column">
+      <div class="box-header">
+        <h3>BOX 1</h3>
+        <span>SALA D'ORTODÒNCIA</span>
+      </div>
+      
+      <div class="appointments-container">
+        <div *ngFor="let cita of appointments()" >
+          <div class="card-appointment" *ngIf="cita.box === 'BOX 1'" [ngClass]="cita.status">
+            <span class="time">{{ cita.time }}</span>
+            <span class="patient">{{ cita.patientName }}</span>
+            <span class="doctor">{{ cita.doctorName }}</span>
+            <span class="reason">{{ cita.reason }}</span>
+            <span class="badge" *ngIf="cita.status === 'confirmed'">CONFIRMAT</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <div class="grid-agenda" *ngIf="!loading() && appointments().length > 0">
-    <div *ngFor="let cita of appointments()" class="appointment-card" [style.border-left]="'5px solid ' + (cita.status === 'confirmed' ? '#4CAF50' : '#FFC107')">
-      <h3>{{ cita.visit_time }} - Box {{ cita.box_id }}</h3>
-      <p><strong>Motiu:</strong> {{ cita.consultation_reason }}</p>
-      <p><strong>Estat:</strong> {{ cita.status === 'confirmed' ? 'Confirmat' : 'Pendent' }}</p>
-      <p><em>Observacions: {{ cita.observations }}</em></p>
+    <div class="box-column">
+      <div class="box-header">
+        <h3>BOX 2</h3>
+        <span>SALA DE CIRURGIA</span>
+      </div>
+      <div class="appointments-container">
+        <div *ngFor="let cita of appointments()">
+            <div class="card-appointment" *ngIf="cita.box === 'BOX 2'" [ngClass]="cita.status">
+                <span class="time">{{ cita.time }}</span>
+                <span class="patient">{{ cita.patientName }}</span>
+                <span class="doctor">{{ cita.doctorName }}</span>
+                <span class="reason">{{ cita.reason }}</span>
+            </div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <p *ngIf="!loading() && appointments().length === 0">No hi ha cites per avui.</p>
 </div>
