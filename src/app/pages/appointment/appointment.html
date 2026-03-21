@@ -1,1 +1,18 @@
-<p>appointment works!</p>
+<div class="agenda-container">
+  <h2>Gestió d'Agenda</h2>
+
+  <div *ngIf="loading()">
+    <p>Carregant dades...</p>
+  </div>
+
+  <div class="grid-agenda" *ngIf="!loading() && appointments().length > 0">
+    <div *ngFor="let cita of appointments()" class="appointment-card" [style.border-left]="'5px solid ' + (cita.status === 'confirmed' ? '#4CAF50' : '#FFC107')">
+      <h3>{{ cita.visit_time }} - Box {{ cita.box_id }}</h3>
+      <p><strong>Motiu:</strong> {{ cita.consultation_reason }}</p>
+      <p><strong>Estat:</strong> {{ cita.status === 'confirmed' ? 'Confirmat' : 'Pendent' }}</p>
+      <p><em>Observacions: {{ cita.observations }}</em></p>
+    </div>
+  </div>
+
+  <p *ngIf="!loading() && appointments().length === 0">No hi ha cites per avui.</p>
+</div>

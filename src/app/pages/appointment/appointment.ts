@@ -18,30 +18,75 @@ export class AppointmentComponent implements OnInit {
 
   constructor(private readonly appointmentService: AppointmentService) {}
 
+  // ngOnInit(): void {
+  //   this.fetchAppointments();
+  // }
+
+  // fetchAppointments(): void {
+  //   this.error.set(null);
+  //   this.loading.set(true);
+
+  //   this.appointmentService.getAppointments().subscribe({
+  //     next: (data) => {
+  //       this.appointments.set(data);
+  //       this.loading.set(false);
+  //     },
+  //     error: (err) => {
+  //       this.error.set('No s’ha pogut connectar amb el servidor.');
+  //       this.loading.set(false);
+  //     }
+  //   });
+  // }
+
   ngOnInit(): void {
-    this.loadAppointments();
+    this.loading.set(true);
+
+    const mockData: Appointment[] = [
+{ 
+      id: 1, 
+      visit_date: '2026-03-21',
+      visit_time: '09:00', 
+      consultation_reason: 'Neteja bucal',
+      observations: 'Pacient amb sensibilitat',
+      status: 'confirmed', 
+      duration_minutes: 30,
+      patient_id: 10,
+      doctor_id: 1,
+      box_id: 1
+    },
+    { 
+      id: 2, 
+      visit_date: '2026-03-21',
+      visit_time: '10:00', 
+      consultation_reason: 'Revisió ortodòncia',
+      observations: 'Canviar gomes',
+      status: 'pending', 
+      duration_minutes: 15,
+      patient_id: 25,
+      doctor_id: 1,
+      box_id: 2
+    }
+  ];
+
+
+    this.appointments.set(mockData);
+    this.loading.set(false);
+
   }
 
-  loadAppointments(): void {
+  fetchAppointments(): void {
     this.error.set(null);
     this.loading.set(true);
 
     this.appointmentService.getAppointments().subscribe({
       next: (data) => {
         this.appointments.set(data);
-      },
-      error: (err: unknown) => {
-        const httpError = err as HttpErrorResponse;
-        if (httpError?.status === 0) {
-          this.error.set('No se pudo conectar con Symfony. ¿Está el servidor encendido?');
-        } else {
-          this.error.set('Error al cargar las citas de la base de datos.');
-        }
         this.loading.set(false);
       },
-      complete: () => {
+      error: (err) => {
+        this.error.set('No s’ha pogut connectar amb el servidor.');
         this.loading.set(false);
-      },
+      }
     });
   }
 }
