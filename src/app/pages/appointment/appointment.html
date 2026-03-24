@@ -1,0 +1,49 @@
+<div class="agenda-wrapper">
+  
+  <header class="agenda-header">
+    <h1>Dijous, 21 de Març</h1>
+    <div class="view-selector">
+      <button>Dia</button>
+      <button class="active">Per Box</button>
+      <button>Setmana</button>
+    </div>
+  </header>
+
+  <div class="agenda-grid">
+    <div class="box-column">
+      <div class="box-header">
+        <h3>BOX 1</h3>
+        <span>SALA D'ORTODÒNCIA</span>
+      </div>
+      
+      <div class="appointments-container">
+        <div *ngFor="let cita of appointments()" >
+          <div class="card-appointment" *ngIf="cita.box === 'BOX 1'" [ngClass]="cita.status">
+            <span class="time">{{ cita.time }}</span>
+            <span class="patient">{{ cita.patientName }}</span>
+            <span class="doctor">{{ cita.doctorName }}</span>
+            <span class="reason">{{ cita.reason }}</span>
+            <span class="badge" *ngIf="cita.status === 'confirmed'">CONFIRMAT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box-column">
+      <div class="box-header">
+        <h3>BOX 2</h3>
+        <span>SALA DE CIRURGIA</span>
+      </div>
+      <div class="appointments-container">
+        <div *ngFor="let cita of appointments()">
+            <div class="card-appointment" *ngIf="cita.box === 'BOX 2'" [ngClass]="cita.status">
+                <span class="time">{{ cita.time }}</span>
+                <span class="patient">{{ cita.patientName }}</span>
+                <span class="doctor">{{ cita.doctorName }}</span>
+                <span class="reason">{{ cita.reason }}</span>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

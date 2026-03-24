@@ -1,0 +1,35 @@
+.agenda-grid {
+  display: flex;
+  gap: 20px;
+  background: #f8f9fa;
+  padding: 20px;
+}
+
+.box-column {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  min-height: 500px;
+  border: 1px solid #eee;
+}
+
+.box-header {
+  text-align: center;
+  padding: 15px;
+  border-bottom: 2px solid #00bcd4; /* El azul DentalEase */
+}
+
+.card-appointment {
+  margin: 10px;
+  padding: 15px;
+  border-radius: 12px;
+  border-left: 5px solid #00bcd4;
+  background: #e0f7fa; /* Azul clarito */
+  display: flex;
+  flex-direction: column;
+}
+
+.card-appointment.pending {
+  border-left-color: #ffb74d; /* Naranja para pendientes */
+  background: #fff3e0;
+}

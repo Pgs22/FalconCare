@@ -7,6 +7,7 @@ import { DoctorPanelComponent } from './pages/doctor-panel/doctor-panel';
 import { SettingsComponent } from './pages/settings/settings';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { PatientsPageComponent } from './pages/patients/patients.page';
+import { AppointmentPageComponent } from './pages/appointment/appointment.page';
 import { DocumentsPageComponent } from './pages/documents/documents.page';
 import { NotFoundPageComponent } from './pages/not-found/not-found.page';
 
@@ -20,6 +21,11 @@ export const routes: Routes = [
 
   { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },
   { path: 'patients', component: PatientsPageComponent, canActivate: [authGuard] },
+
+  { path: 'appointments', component: AppointmentPageComponent
+    // , canActivate: [authGuard] 
+  },
+  
   { path: 'documents', component: DocumentsPageComponent, canActivate: [authGuard] },
 
   { path: '**', component: NotFoundPageComponent },
