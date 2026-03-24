@@ -5,6 +5,23 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Patient } from '../models/patient.model';
 
+export type RegisterPatientPayload = {
+  identityDocument: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  plainPassword?: string;
+  address: string;
+  consultationReason: string;
+  familyHistory: string;
+  healthStatus: string;
+  lifestyleHabits: string;
+  medicationAllergies: string;
+  ssNumber?: string | null;
+  registrationDate?: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class PatientService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/patients`;
@@ -26,6 +43,10 @@ export class PatientService {
   }
 
   create(payload: Partial<Patient>): Observable<Patient> {
+    return this.http.post<Patient>(this.baseUrl, payload);
+  }
+
+  registerPatient(payload: RegisterPatientPayload): Observable<Patient> {
     return this.http.post<Patient>(this.baseUrl, payload);
   }
 

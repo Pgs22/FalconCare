@@ -1,0 +1,134 @@
+<div class="text-on-surface min-h-screen flex flex-col selection:bg-primary/30">
+  <main class="flex-grow flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-[440px] space-y-8">
+      <header class="flex flex-col items-center text-center space-y-4">
+        <img
+          alt="Logotipo FalconCare"
+          class="h-[188px] w-auto object-contain"
+          src="/assets/branding/logo-icon.png"
+        />
+        <div class="space-y-1">
+          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Bienvenido de nuevo</h1>
+          <p class="text-[17px] text-outline font-normal">
+            Accede a tu historial clínico y citas programadas.
+          </p>
+        </div>
+      </header>
+      <div class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
+        <form class="space-y-5" (ngSubmit)="onSubmit()" #f="ngForm" novalidate>
+          <div
+            *ngIf="showSubmitError && (getEmailError() || getPasswordError())"
+            class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
+            role="alert"
+          >
+            Revisa los campos marcados como obligatorios (*) antes de iniciar sesión.
+          </div>
+          <p
+            *ngIf="error()"
+            class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
+            role="alert"
+          >
+            {{ error() }}
+          </p>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="email">
+              Correo Electrónico <span class="text-primary">*</span>
+            </label>
+            <div
+              class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
+              [class.border-red-200]="showSubmitError && getEmailError()"
+            >
+              <span class="material-symbols-outlined absolute left-4 text-outline">mail</span>
+              <input
+                class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
+                id="email"
+                name="email"
+                placeholder="nombre@ejemplo.com"
+                [(ngModel)]="email"
+                required
+                type="email"
+              />
+            </div>
+            <p *ngIf="showSubmitError && getEmailError()" class="mt-1 text-[12px] text-red-700 font-medium">
+              {{ getEmailError() }}
+            </p>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center px-1">
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider" for="password">
+                Contraseña <span class="text-primary">*</span>
+              </label>
+              <a class="text-primary text-[11px] font-semibold uppercase tracking-wider hover:underline" href="#">
+                Olvidé mi contraseña
+              </a>
+            </div>
+            <div
+              class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
+              [class.border-red-200]="showSubmitError && getPasswordError()"
+            >
+              <span class="material-symbols-outlined absolute left-4 text-outline">lock</span>
+              <input
+                class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-12 text-[15px] placeholder:text-outline/50"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                [(ngModel)]="password"
+                required
+                [type]="showPassword ? 'text' : 'password'"
+              />
+              <button
+                class="absolute inset-y-0 right-3 flex items-center justify-center px-1 text-outline hover:text-on-surface transition-colors"
+                type="button"
+                (click)="togglePasswordVisibility()"
+              >
+                <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            <p *ngIf="showSubmitError && getPasswordError()" class="mt-1 text-[12px] text-red-700 font-medium">
+              {{ getPasswordError() }}
+            </p>
+          </div>
+          <div class="pt-2">
+            <button
+              class="w-full bg-primary text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px] disabled:opacity-60 disabled:pointer-events-none"
+              type="submit"
+              [disabled]="loading()"
+            >
+              {{ loading() ? 'Iniciando...' : 'Iniciar Sesión' }}
+            </button>
+          </div>
+        </form>
+        <div class="mt-8 text-center">
+          <p class="text-[14px] text-outline">
+            ¿No tienes una cuenta?
+            <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/register">
+              Crear una cuenta
+            </a>
+          </p>
+        </div>
+      </div>
+      <footer class="text-center pt-4 space-y-4">
+        <div class="flex justify-center gap-6">
+          <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
+            >Términos</a
+          >
+          <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
+            >Privacidad</a
+          >
+          <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
+            >Ayuda</a
+          >
+        </div>
+        <p class="text-[11px] uppercase tracking-[0.2em] text-outline/50 font-medium">
+          © 2026 Clínica Dental FalconCare. Hecho por Patricia, Maxime & Adrián
+        </p>
+      </footer>
+    </div>
+    <div class="fixed top-0 right-0 w-[500px] h-[500px] -z-10 opacity-[0.03] pointer-events-none overflow-hidden">
+      <div class="absolute -top-1/4 -right-1/4 w-full h-full bg-primary blur-[120px] rounded-full"></div>
+    </div>
+    <div class="fixed bottom-0 left-0 w-[400px] h-[400px] -z-10 opacity-[0.02] pointer-events-none overflow-hidden">
+      <div class="absolute -bottom-1/4 -left-1/4 w-full h-full bg-primary blur-[100px] rounded-full"></div>
+    </div>
+  </main>
+</div>

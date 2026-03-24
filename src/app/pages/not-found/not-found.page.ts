@@ -10,7 +10,7 @@ import { RouterLink } from '@angular/router';
     <main style="padding: 16px;">
       <h2>404</h2>
       <p>Página no encontrada.</p>
-      <a routerLink="/dashboard">Volver al dashboard</a>
+      <a routerLink="/doctor-panel">Volver al panel</a>
     </main>
   `,
 })

@@ -1,0 +1,19 @@
+.doctor-panel-shell {
+  font-family: "Outfit", sans-serif;
+}
+
+.doctor-panel-shell .allergy-card-red {
+  background-color: #fff4f4;
+}
+
+.doctor-panel-shell .allergy-card-amber {
+  background-color: #fff9e6;
+}
+
+.dark .doctor-panel-shell .allergy-card-red {
+  background-color: rgba(255, 244, 244, 0.05);
+}
+
+.dark .doctor-panel-shell .allergy-card-amber {
+  background-color: rgba(255, 249, 230, 0.05);
+}
