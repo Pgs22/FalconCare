@@ -11,6 +11,7 @@ export type RegisterPatientPayload = {
   lastName: string;
   phone: string;
   email: string;
+  plainPassword?: string;
   address: string;
   consultationReason: string;
   familyHistory: string;

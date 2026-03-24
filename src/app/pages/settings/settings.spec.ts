@@ -1,20 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { SettingsComponent } from './settings';
 
-import { PatientRegisterComponent } from './patient-register';
-
-describe('PatientRegisterComponent', () => {
-  let fixture: ComponentFixture<PatientRegisterComponent>;
-  let component: PatientRegisterComponent;
+describe('SettingsComponent', () => {
+  let fixture: ComponentFixture<SettingsComponent>;
+  let component: SettingsComponent;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PatientRegisterComponent],
+      imports: [SettingsComponent],
       providers: [provideHttpClient(), provideRouter([])],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(PatientRegisterComponent);
+    fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
