@@ -5,7 +5,7 @@
         <img
           alt="Logotipo FalconCare"
           class="h-[188px] w-auto object-contain"
-          src="assets/branding/logo-icon.png"
+          src="/assets/branding/logo-icon.png"
         />
         <div class="space-y-1">
           <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Crea tu cuenta</h1>
@@ -14,19 +14,8 @@
           </p>
         </div>
       </header>
-
-      <div
-        class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]"
-      >
+      <div class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
         <form class="space-y-5" (ngSubmit)="onSubmit(f)" #f="ngForm" novalidate>
-          <div
-            *ngIf="submitSuccessMessage"
-            class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-emerald-700"
-            role="status"
-          >
-            {{ submitSuccessMessage }}
-          </div>
-
           <div
             *ngIf="showSubmitError && f.invalid"
             class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
@@ -34,7 +23,6 @@
           >
             Revisa los campos marcados como obligatorios (*) antes de registrarte.
           </div>
-
           <div
             *ngIf="serverError"
             class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
@@ -42,14 +30,9 @@
           >
             {{ serverError }}
           </div>
-
           <div class="space-y-4">
-            <!-- Identidad -->
             <div class="space-y-1.5">
-              <label
-                class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1"
-                for="id_number"
-              >
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="id_number">
                 Número de Identidad <span class="text-primary">*</span>
               </label>
               <div
@@ -67,20 +50,12 @@
                   type="text"
                 />
               </div>
-              <p
-                *ngIf="showSubmitError && getIdNumberError()"
-                class="mt-1 text-[12px] text-red-700 font-medium"
-              >
+              <p *ngIf="showSubmitError && getIdNumberError()" class="mt-1 text-[12px] text-red-700 font-medium">
                 {{ getIdNumberError() }}
               </p>
             </div>
-
-            <!-- Nombre -->
             <div class="space-y-1.5">
-              <label
-                class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1"
-                for="full_name"
-              >
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="full_name">
                 Nombre y Apellidos <span class="text-primary">*</span>
               </label>
               <div
@@ -98,20 +73,12 @@
                   type="text"
                 />
               </div>
-              <p
-                *ngIf="showSubmitError && getFullNameError()"
-                class="mt-1 text-[12px] text-red-700 font-medium"
-              >
+              <p *ngIf="showSubmitError && getFullNameError()" class="mt-1 text-[12px] text-red-700 font-medium">
                 {{ getFullNameError() }}
               </p>
             </div>
-
-            <!-- Teléfono -->
             <div class="space-y-1.5">
-              <label
-                class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1"
-                for="phone"
-              >
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="phone">
                 Número de Teléfono <span class="text-primary">*</span>
               </label>
               <div
@@ -129,20 +96,12 @@
                   type="tel"
                 />
               </div>
-              <p
-                *ngIf="showSubmitError && getPhoneError()"
-                class="mt-1 text-[12px] text-red-700 font-medium"
-              >
+              <p *ngIf="showSubmitError && getPhoneError()" class="mt-1 text-[12px] text-red-700 font-medium">
                 {{ getPhoneError() }}
               </p>
             </div>
-
-            <!-- Email -->
             <div class="space-y-1.5">
-              <label
-                class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1"
-                for="email"
-              >
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="email">
                 Correo Electrónico <span class="text-primary">*</span>
               </label>
               <div
@@ -160,20 +119,12 @@
                   type="email"
                 />
               </div>
-              <p
-                *ngIf="showSubmitError && getEmailError()"
-                class="mt-1 text-[12px] text-red-700 font-medium"
-              >
+              <p *ngIf="showSubmitError && getEmailError()" class="mt-1 text-[12px] text-red-700 font-medium">
                 {{ getEmailError() }}
               </p>
             </div>
-
-            <!-- Contraseña -->
             <div class="space-y-1.5">
-              <label
-                class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1"
-                for="password"
-              >
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="password">
                 Contraseña <span class="text-primary">*</span>
               </label>
               <div
@@ -182,30 +133,29 @@
               >
                 <span class="material-symbols-outlined absolute left-4 text-outline">lock</span>
                 <input
-                  class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
+                  class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-12 text-[15px] placeholder:text-outline/50"
                   id="password"
                   name="password"
                   placeholder="Mínimo 8 caracteres"
                   [(ngModel)]="password"
                   required
-                  type="password"
+                  [type]="showPassword ? 'text' : 'password'"
                 />
+                <button
+                  class="absolute inset-y-0 right-3 flex items-center justify-center px-1 text-outline hover:text-on-surface transition-colors"
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                >
+                  <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+                </button>
               </div>
-              <p
-                *ngIf="showSubmitError && getPasswordError()"
-                class="mt-1 text-[12px] text-red-700 font-medium"
-              >
+              <p *ngIf="showSubmitError && getPasswordError()" class="mt-1 text-[12px] text-red-700 font-medium">
                 {{ getPasswordError() }}
               </p>
             </div>
-
-            <!-- Dirección -->
             <div class="space-y-1.5">
               <div class="flex justify-between items-center ml-1">
-                <label
-                  class="block text-xs font-semibold text-outline uppercase tracking-wider"
-                  for="address"
-                >
+                <label class="block text-xs font-semibold text-outline uppercase tracking-wider" for="address">
                   Dirección
                 </label>
                 <span class="text-[10px] text-outline/60 uppercase font-medium">Opcional</span>
@@ -224,51 +174,47 @@
                   type="text"
                 />
               </div>
-              <p
-                *ngIf="showSubmitError && getAddressError()"
-                class="mt-1 text-[12px] text-red-700 font-medium"
-              >
+              <p *ngIf="showSubmitError && getAddressError()" class="mt-1 text-[12px] text-red-700 font-medium">
                 {{ getAddressError() }}
               </p>
             </div>
           </div>
-
           <div class="space-y-1">
             <div class="flex items-start gap-3 pt-2">
-            <input
-              class="mt-1 h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20 transition-all cursor-pointer"
-              [class.border-red-300]="showSubmitError && getTermsError()"
-              id="terms"
-              name="terms"
-              [(ngModel)]="termsAccepted"
-              type="checkbox"
-            />
-            <label
-              class="text-[13px] text-outline leading-snug cursor-pointer select-none"
-              for="terms"
-            >
-              Acepto los <span class="text-primary font-medium hover:underline">Términos y Condiciones</span>
-              y la <span class="text-primary font-medium hover:underline">Política de Privacidad</span>.
-            </label>
-          </div>
-            <p
-              *ngIf="showSubmitError && getTermsError()"
-              class="mt-1 text-[12px] text-red-700 font-medium"
-            >
+              <input
+                class="mt-1 h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                [class.border-red-300]="showSubmitError && getTermsError()"
+                id="terms"
+                name="terms"
+                [(ngModel)]="termsAccepted"
+                type="checkbox"
+              />
+              <label class="text-[13px] text-outline leading-snug cursor-pointer select-none" for="terms">
+                Acepto los <span class="text-primary font-medium hover:underline">Términos y Condiciones</span>
+                y la <span class="text-primary font-medium hover:underline">Política de Privacidad</span>.
+              </label>
+            </div>
+            <p *ngIf="showSubmitError && getTermsError()" class="mt-1 text-[12px] text-red-700 font-medium">
               {{ getTermsError() }}
             </p>
           </div>
-
           <button
-            class="w-full bg-primary text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px]"
+            class="w-full bg-primary text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px] disabled:opacity-60 disabled:pointer-events-none"
             type="submit"
+            [disabled]="loading()"
           >
-            Registrarse
+            {{ loading() ? 'Registrando...' : 'Registrarse' }}
           </button>
         </form>
-
+        <div class="mt-8 text-center">
+          <p class="text-[14px] text-outline">
+            ¿Ya tienes una cuenta?
+            <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/login">
+              Iniciar sesión
+            </a>
+          </p>
+        </div>
       </div>
-
       <footer class="text-center pt-4 space-y-4">
         <div class="flex justify-center gap-6">
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
@@ -286,18 +232,11 @@
         </p>
       </footer>
     </div>
+    <div class="fixed top-0 right-0 w-[500px] h-[500px] -z-10 opacity-[0.03] pointer-events-none overflow-hidden">
+      <div class="absolute -top-1/4 -right-1/4 w-full h-full bg-primary blur-[120px] rounded-full"></div>
+    </div>
+    <div class="fixed bottom-0 left-0 w-[400px] h-[400px] -z-10 opacity-[0.02] pointer-events-none overflow-hidden">
+      <div class="absolute -bottom-1/4 -left-1/4 w-full h-full bg-primary blur-[100px] rounded-full"></div>
+    </div>
   </main>
-
-  <!-- Background Accents -->
-  <div
-    class="fixed top-0 right-0 w-[500px] h-[500px] -z-10 opacity-[0.03] pointer-events-none overflow-hidden"
-  >
-    <div class="absolute -top-1/4 -right-1/4 w-full h-full bg-primary blur-[120px] rounded-full"></div>
-  </div>
-  <div
-    class="fixed bottom-0 left-0 w-[400px] h-[400px] -z-10 opacity-[0.02] pointer-events-none overflow-hidden"
-  >
-    <div class="absolute -bottom-1/4 -left-1/4 w-full h-full bg-primary blur-[100px] rounded-full"></div>
-  </div>
 </div>
-

@@ -3,7 +3,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -17,7 +16,6 @@ export class LoginComponent {
   email = '';
   password = '';
   showPassword = false;
-
   showSubmitError = false;
   loading = signal(false);
   error = signal<string | null>(null);
@@ -26,7 +24,11 @@ export class LoginComponent {
     private readonly auth: AuthService,
     private readonly router: Router,
     private readonly route: ActivatedRoute
-  ) {}
+  ) {
+    if (this.route.snapshot.queryParamMap.get('sessionExpired') === '1') {
+      this.error.set('Tu sesión ha expirado o no es válida. Inicia sesión de nuevo.');
+    }
+  }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -53,12 +55,11 @@ export class LoginComponent {
     this.showSubmitError = true;
     this.error.set(null);
     if (this.hasAnyFormatError()) return;
-
     this.loading.set(true);
 
     this.auth.login(this.email.trim(), this.password).subscribe({
       next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/doctor-panel';
         this.router.navigateByUrl(returnUrl);
       },
       error: (err: unknown) => {
@@ -78,4 +79,3 @@ export class LoginComponent {
     });
   }
 }
-
