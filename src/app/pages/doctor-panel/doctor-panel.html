@@ -97,7 +97,11 @@
             </div>
             <input class="block w-64 md:w-80 p-2.5 pl-10 text-sm font-medium text-[#101818] dark:text-white bg-[#f0f5f5] dark:bg-[#0f2323] border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#162a2a] transition-all placeholder-[#5e8b8d]" placeholder="Buscar pacientes, registros, citas..." type="text" />
           </div>
-          <button class="flex items-center justify-center bg-primary text-white rounded-lg h-10 px-4 gap-2 text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all">
+          <button
+            class="flex items-center justify-center bg-primary text-white rounded-lg h-10 px-4 gap-2 text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all"
+            type="button"
+            routerLink="/patient-register"
+          >
             <span class="material-symbols-outlined text-[20px]">add</span>
             <span>Nuevo Paciente</span>
           </button>

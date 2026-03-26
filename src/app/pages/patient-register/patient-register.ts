@@ -2,13 +2,13 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { PatientService, RegisterPatientPayload } from '../../services/patient.service';
 
 @Component({
   selector: 'app-patient-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './patient-register.html',
   styleUrl: './patient-register.css',
 })
@@ -17,18 +17,21 @@ export class PatientRegisterComponent {
   fullName = '';
   phone = '';
   email = '';
-  password = '';
-  showPassword = false;
   address = '';
   showSubmitError = false;
-  termsAccepted = false;
   serverError: string | null = null;
+  successMessage: string | null = null;
   loading = signal(false);
 
   constructor(
     private readonly patientService: PatientService,
     private readonly router: Router
   ) {}
+
+  goToDoctorPanel(): void {
+    if (this.loading()) return;
+    this.router.navigate(['/doctor-panel']);
+  }
 
   private normalizePhone(value: string): string {
     const v = value.trim();
@@ -82,13 +85,6 @@ export class PatientRegisterComponent {
     return 'Correo electrónico inválido. Usa un formato tipo: correo@ejemplo.com';
   }
 
-  getPasswordError(): string | null {
-    const v = this.password;
-    if (!v) return 'Este campo es obligatorio.';
-    if (v.length < 8) return 'La contraseña debe tener mínimo 8 caracteres.';
-    return null;
-  }
-
   getAddressError(): string | null {
     const v = this.address.trim();
     if (!v) return null;
@@ -98,31 +94,21 @@ export class PatientRegisterComponent {
     return null;
   }
 
-  getTermsError(): string | null {
-    if (this.termsAccepted) return null;
-    return 'Debes aceptar los Términos y Condiciones y la Política de Privacidad.';
-  }
-
   private hasAnyFormatError(): boolean {
     return (
       !!this.getIdNumberError() ||
       !!this.getFullNameError() ||
       !!this.getPhoneError() ||
       !!this.getEmailError() ||
-      !!this.getPasswordError() ||
-      !!this.getAddressError() ||
-      !!this.getTermsError()
+      !!this.getAddressError()
     );
-  }
-
-  togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
   }
 
   onSubmit(form: NgForm): void {
     this.showSubmitError = true;
     this.serverError = null;
-    if (form.invalid || !this.termsAccepted) return;
+    this.successMessage = null;
+    if (form.invalid) return;
     if (this.hasAnyFormatError()) return;
     const split = this.splitFullName(this.fullName);
     if (!split) return;
@@ -133,7 +119,6 @@ export class PatientRegisterComponent {
       identityDocument: this.idNumber.trim(),
       firstName: split.firstName,
       lastName: split.lastName,
-      plainPassword: this.password,
       ssNumber: null,
       phone: this.normalizePhone(this.phone),
       email: this.email.trim(),
@@ -150,8 +135,9 @@ export class PatientRegisterComponent {
       next: () => {
         this.showSubmitError = false;
         form.resetForm();
+        this.successMessage = 'Paciente registrado correctamente. Redirigiendo al panel del doctor...';
         this.loading.set(false);
-        this.router.navigate(['/login']);
+        setTimeout(() => this.router.navigate(['/doctor-panel']), 700);
       },
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
