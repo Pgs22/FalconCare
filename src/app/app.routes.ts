@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { authGuard, guestOnlyGuard } from './guards/auth.guard';
 import { LoginComponent } from './pages/login/login';
 import { PatientRegisterComponent } from './pages/patient-register/patient-register';
+import { DoctorRegisterComponent } from './pages/doctor-register/doctor-register';
 import { DoctorPanelComponent } from './pages/doctor-panel/doctor-panel';
 import { SettingsComponent } from './pages/settings/settings';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
@@ -14,8 +15,10 @@ import { NotFoundPageComponent } from './pages/not-found/not-found.page';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', component: LoginComponent, canActivate: [guestOnlyGuard] },
   { path: 'login', component: LoginComponent, canActivate: [guestOnlyGuard] },
-  { path: 'register', component: PatientRegisterComponent },
-  { path: 'registro', redirectTo: 'register', pathMatch: 'full' },
+  { path: 'register', component: DoctorRegisterComponent, canActivate: [guestOnlyGuard] },
+  { path: 'doctor-register', component: DoctorRegisterComponent, canActivate: [guestOnlyGuard] },
+  { path: 'registro', redirectTo: 'doctor-register', pathMatch: 'full' },
+  { path: 'patient-register', component: PatientRegisterComponent, canActivate: [authGuard] },
   { path: 'doctor-panel', component: DoctorPanelComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
 

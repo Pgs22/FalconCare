@@ -8,20 +8,20 @@
           src="/assets/branding/logo-icon.png"
         />
         <div class="space-y-1">
-          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Bienvenido de nuevo</h1>
+          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Registro de doctor</h1>
           <p class="text-[17px] text-outline font-normal">
-            Inicia sesión para acceder a tu panel y gestionar tus pacientes, historial clínico y citas programadas.
+            Crea tu cuenta profesional para acceder a tu panel y gestionar tus pacientes.
           </p>
         </div>
       </header>
       <div class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
         <form class="space-y-5" (ngSubmit)="onSubmit()" #f="ngForm" novalidate>
           <div
-            *ngIf="showSubmitError && (getEmailError() || getPasswordError())"
+            *ngIf="showSubmitError && (getFullNameError() || getEmailError() || getPasswordError())"
             class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
             role="alert"
           >
-            Revisa los campos marcados como obligatorios (*) antes de iniciar sesión.
+            Revisa los campos marcados como obligatorios (*) antes de registrarte.
           </div>
           <p
             *ngIf="error()"
@@ -37,6 +37,29 @@
           >
             {{ success() }}
           </p>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="fullName">
+              Nombre y Apellidos <span class="text-primary">*</span>
+            </label>
+            <div
+              class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
+              [class.border-red-200]="showSubmitError && getFullNameError()"
+            >
+              <span class="material-symbols-outlined absolute left-4 text-outline">person</span>
+              <input
+                class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
+                id="fullName"
+                name="fullName"
+                placeholder="Tu nombre completo"
+                [(ngModel)]="fullName"
+                required
+                type="text"
+              />
+            </div>
+            <p *ngIf="showSubmitError && getFullNameError()" class="mt-1 text-[12px] text-red-700 font-medium">
+              {{ getFullNameError() }}
+            </p>
+          </div>
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="email">
               Correo Electrónico <span class="text-primary">*</span>
@@ -73,7 +96,7 @@
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-12 text-[15px] placeholder:text-outline/50"
                 id="password"
                 name="password"
-                placeholder="••••••••"
+                placeholder="Mínimo 8 caracteres"
                 [(ngModel)]="password"
                 required
                 [type]="showPassword ? 'text' : 'password'"
@@ -96,15 +119,15 @@
               type="submit"
               [disabled]="loading()"
             >
-              {{ loading() ? 'Iniciando...' : 'Iniciar Sesión' }}
+              {{ loading() ? 'Registrando doctor...' : 'Registrarme' }}
             </button>
           </div>
         </form>
         <div class="mt-8 text-center">
           <p class="text-[14px] text-outline">
-            ¿No tienes una cuenta?
-            <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/doctor-register">
-              Crear una cuenta
+            ¿Ya tienes una cuenta?
+            <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/login">
+              Iniciar sesión
             </a>
           </p>
         </div>

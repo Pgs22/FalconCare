@@ -10,6 +10,12 @@ type LoginRequest = {
   password: string;
 };
 
+type RegisterDoctorRequest = {
+  fullName: string;
+  email: string;
+  password: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   static readonly tokenStorageKey = 'falconcare_access_token';
@@ -30,6 +36,17 @@ export class AuthService {
         }
       })
     );
+  }
+
+  registerDoctor(fullName: string, email: string, password: string): Observable<LoginResponse['user']> {
+    const url = `${environment.apiBaseUrl}/api/auth/register-doctor`;
+    const body: RegisterDoctorRequest = { fullName, email, password };
+    return this.http.post<LoginResponse['user']>(url, body);
+  }
+
+  deleteMyAccount(): Observable<void> {
+    const url = `${environment.apiBaseUrl}/api/auth/me`;
+    return this.http.delete<void>(url);
   }
 
   logout(): void {
