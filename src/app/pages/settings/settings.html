@@ -129,9 +129,17 @@
             <button
               class="w-full bg-primary text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px] disabled:opacity-60 disabled:pointer-events-none"
               type="submit"
-              [disabled]="loading()"
+              [disabled]="loading() || deleting()"
             >
               {{ loading() ? 'Guardando...' : 'Guardar Cambios' }}
+            </button>
+            <button
+              class="w-full bg-red-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-red-600/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px] disabled:opacity-60 disabled:pointer-events-none"
+              type="button"
+              [disabled]="loading() || deleting()"
+              (click)="onDeleteAccount()"
+            >
+              {{ deleting() ? 'Eliminando cuenta...' : 'Eliminar Cuenta' }}
             </button>
           </div>
         </form>

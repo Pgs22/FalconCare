@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AppUser, UserService } from '../../services/user.service';
 
@@ -22,6 +22,7 @@ export class SettingsComponent implements OnInit {
   showSubmitError = false;
 
   loading = signal(false);
+  deleting = signal(false);
   success = signal<string | null>(null);
   error = signal<string | null>(null);
 
@@ -29,7 +30,8 @@ export class SettingsComponent implements OnInit {
 
   constructor(
     private readonly auth: AuthService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -152,6 +154,33 @@ export class SettingsComponent implements OnInit {
           this.error.set('No se pudieron actualizar los datos. Inténtalo de nuevo.');
         }
         this.loading.set(false);
+      },
+    });
+  }
+
+  onDeleteAccount(): void {
+    if (this.loading() || this.deleting()) return;
+    const confirmed = window.confirm('Esta acción eliminará tu cuenta de doctor de forma permanente. ¿Deseas continuar?');
+    if (!confirmed) return;
+
+    this.error.set(null);
+    this.success.set(null);
+    this.deleting.set(true);
+
+    this.auth.deleteMyAccount().subscribe({
+      next: () => {
+        this.auth.logout();
+        this.deleting.set(false);
+        this.router.navigate(['/login']);
+      },
+      error: (err: unknown) => {
+        const httpError = err as HttpErrorResponse;
+        if (httpError?.status === 401 || httpError?.status === 403) {
+          this.error.set('No tienes permisos para eliminar esta cuenta.');
+        } else {
+          this.error.set('No se pudo eliminar la cuenta. Inténtalo de nuevo.');
+        }
+        this.deleting.set(false);
       },
     });
   }
