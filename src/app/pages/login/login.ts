@@ -19,6 +19,7 @@ export class LoginComponent {
   showSubmitError = false;
   loading = signal(false);
   error = signal<string | null>(null);
+  success = signal<string | null>(null);
 
   constructor(
     private readonly auth: AuthService,
@@ -27,6 +28,9 @@ export class LoginComponent {
   ) {
     if (this.route.snapshot.queryParamMap.get('sessionExpired') === '1') {
       this.error.set('Tu sesión ha expirado o no es válida. Inicia sesión de nuevo.');
+    }
+    if (this.route.snapshot.queryParamMap.get('registered') === '1') {
+      this.success.set('Registro completado correctamente. Inicia sesión para acceder al panel.');
     }
   }
 
@@ -54,6 +58,7 @@ export class LoginComponent {
   onSubmit(): void {
     this.showSubmitError = true;
     this.error.set(null);
+    this.success.set(null);
     if (this.hasAnyFormatError()) return;
     this.loading.set(true);
 
