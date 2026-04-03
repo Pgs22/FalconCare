@@ -16,3 +16,14 @@ export const authGuard: CanActivateFn = (route, state) => {
   });
 };
 
+export const guestOnlyGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    return router.createUrlTree(['/doctor-panel']);
+  }
+
+  return true;
+};
+

@@ -1,3 +1,1 @@
-/* El wireframe usa Tailwind para la mayor parte del estilado.
-   Este archivo queda para ajustes finos del componente si fueran necesarios más adelante. */
-
+/* Misma base visual que login/settings: Tailwind (CDN en index.html) + .apple-input-focus en styles.css. */

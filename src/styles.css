@@ -1,21 +1,17 @@
 /* Estilos globales para que los componentes Tailwind (wireframes) se vean igual. */
-
 body {
   font-family: "Outfit", sans-serif;
   -webkit-font-smoothing: antialiased;
   background-color: #ffffff;
 }
-
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 20;
   font-size: 20px;
 }
-
 .apple-input-focus:focus-within {
   border-color: #00d2da;
   box-shadow: 0 0 0 4px rgba(0, 210, 218, 0.1);
 }
-
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -13,6 +13,7 @@ type LoginRequest = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   static readonly tokenStorageKey = 'falconcare_access_token';
+  static readonly userStorageKey = 'falconcare_current_user';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -24,12 +25,16 @@ export class AuthService {
         if (res?.accessToken) {
           localStorage.setItem(AuthService.tokenStorageKey, res.accessToken);
         }
+        if (res?.user) {
+          localStorage.setItem(AuthService.userStorageKey, JSON.stringify(res.user));
+        }
       })
     );
   }
 
   logout(): void {
     localStorage.removeItem(AuthService.tokenStorageKey);
+    localStorage.removeItem(AuthService.userStorageKey);
   }
 
   getToken(): string | null {
@@ -38,6 +43,16 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  getCurrentUser(): LoginResponse['user'] | null {
+    const raw = localStorage.getItem(AuthService.userStorageKey);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as LoginResponse['user'];
+    } catch {
+      return null;
+    }
   }
 }
 
