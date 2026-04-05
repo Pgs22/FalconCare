@@ -42,7 +42,7 @@ export class AppointmentService {
   }
 
   getPatients(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.patientsUrl}/`);
+    return this.http.get<any[]>(`${this.patientsUrl}`);
   }
 
   createQuickPatient(patientData: any): Observable<any> {

@@ -43,6 +43,7 @@ export class AppointmentComponent implements OnInit {
   ngOnInit(): void {
     this.fetchAppointments();
     this.loadPatients();
+    this.loadSetupData();
   }
 
   // Alterna entre cercar pacient o crear-ne un de nou
@@ -102,21 +103,35 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-  loadSetupData(): void {
+loadSetupData(): void {
     this.appointmentService.getSetupFormData().subscribe({
       next: (data) => {
-        console.log('Datos de configuración recibidos:', data);
-        this.doctorsList.set(data.doctors);
-        this.boxesList.set(data.boxes);
+        console.log('Configuración recibida de Symfony:', data);
+        // Validamos que la data traiga lo que esperamos
+        if (data && data.doctors && data.boxes) {
+          this.doctorsList.set(data.doctors);
+          this.boxesList.set(data.boxes);
+        }
       },
-      error: (err) => console.error('Error cargando Doctors/Boxes', err)
+      error: (err) => {
+        console.error('Error crítico cargando Doctors/Boxes:', err);
+        this.error.set('Error de comunicación con el servidor (Form Data)');
+      }
     });
   }
 
-  openNewAppointmentPanel(): void {
+openNewAppointmentPanel(): void {
+    // 1. Mostramos el formulario inmediatamente
     this.showForm.set(true);
+
+    // 2. Cargamos los pacientes (por si hay nuevos desde que se abrió la página)
     this.loadPatients();
-    this.loadSetupData();
+
+    // 3. Verificamos si los doctores/boxes ya están cargados. 
+    // Si la lista está vacía (por un error previo o lentitud), reintentamos la carga.
+    if (this.doctorsList().length === 0 || this.boxesList().length === 0) {
+      this.loadSetupData();
+    }
   }
 
   closePanel(): void {
