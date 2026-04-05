@@ -13,20 +13,25 @@ import { FormsModule } from '@angular/forms';
 export class AppointmentComponent implements OnInit {
   today = new Date();
   appointments = signal<Appointment[]>([]);
+  patientsList = signal<any[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   showForm = signal(false);
 
+  isNewPatientMode = false;
+
   // Data model for the new appointment form
   newAppointmentData = {
     patient: '',
+    newPatientName: '',
+    newPatientDni: '',
     doctor: '',
     box: '',
     visitDate: '',
     visitTime: '',
     treatment: '',
     consultationReason: '',
-    durationMinutes: 30,
+    durationMinutes: 30, // Valor per defecte inicial
     isFirstVisit: false,
     isUrgency: false
   };
@@ -35,10 +40,41 @@ export class AppointmentComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchAppointments();
+    this.loadPatients();
   }
 
-  // Fetches appointments from the server
-  // Recull les cites del servidor
+  // Alterna entre cercar pacient o crear-ne un de nou
+  toggleNewPatientMode(): void {
+    this.isNewPatientMode = !this.isNewPatientMode;
+    
+    if (this.isNewPatientMode) {
+      this.newAppointmentData.patient = '';
+      this.newAppointmentData.isFirstVisit = true;
+      this.onFirstVisitChange(); // Apliquem suggeriments automàtics
+    } else {
+      this.newAppointmentData.isFirstVisit = false;
+      this.newAppointmentData.durationMinutes = 30;
+    }
+  }
+
+  // Lògica de suggeriment per a Primera Visita
+  onFirstVisitChange(): void {
+    if (this.newAppointmentData.isFirstVisit) {
+      this.newAppointmentData.isUrgency = false;
+      this.newAppointmentData.durationMinutes = 60; // Suggerim més temps
+      this.newAppointmentData.consultationReason = 'Primera Visita / Revisió';
+    }
+  }
+
+  // Lògica de suggeriment per a Urgència
+  onUrgencyChange(): void {
+    if (this.newAppointmentData.isUrgency) {
+      this.newAppointmentData.isFirstVisit = false;
+      this.newAppointmentData.durationMinutes = 30; // Suggerim temps d'urgència
+      this.newAppointmentData.consultationReason = 'Urgència';
+    }
+  }
+
   fetchAppointments(): void {
     this.error.set(null);
     this.loading.set(true);
@@ -54,41 +90,61 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-  // Opens the side panel for a new appointment
-  // Obre el panell lateral
-  openNewAppointmentPanel(): void {
-    this.showForm.set(true);
-  }
-
-  // Closes the panel and resets the form
-  // Tanca el panell lateral
-  closePanel(): void {
-    this.showForm.set(false);
-  }
-
-  // Saves the appointment using the service
-  // Guarda la cita mitjançant el servei
-  saveAppointment(): void {
-    this.appointmentService.createAppointment(this.newAppointmentData).subscribe({
-      next: (res: any) => {
-        alert('Cita creada correctament');
-        this.showForm.set(false);
-        this.fetchAppointments();
+  loadPatients(): void {
+    this.appointmentService.getPatients().subscribe({
+      next: (data) => {
+        console.log('Pacients rebuts:', data);
+        this.patientsList.set(data);
       },
-      error: (err: any) => {
-        alert(err.error?.error || 'Error en crear la cita');
-      }
+      error: () => console.error('Error carregant pacients')
     });
   }
 
-  // Opens Symfony's odontogram
-  // Obre l'odontograma de Symfony
+  openNewAppointmentPanel(): void {
+    this.showForm.set(true);
+    this.loadPatients();
+  }
+
+  closePanel(): void {
+    this.showForm.set(false);
+    this.isNewPatientMode = false;
+  }
+
+  saveAppointment(): void {
+    if (this.isNewPatientMode && this.newAppointmentData.newPatientName) {
+      const newPatient = {
+        firstName: this.newAppointmentData.newPatientName,
+        identityDocument: this.newAppointmentData.newPatientDni || '00000000X',
+        lastName: 'Pendent'
+      };
+
+      this.appointmentService.createQuickPatient(newPatient).subscribe({
+        next: (patientCreated: any) => {
+          this.newAppointmentData.patient = patientCreated.id;
+          this.executeSave();
+        },
+        error: (err) => alert('Error al crear el nou pacient')
+      });
+    } else {
+      this.executeSave();
+    }
+  }
+
+  private executeSave(): void {
+    this.appointmentService.createAppointment(this.newAppointmentData).subscribe({
+      next: () => {
+        alert('Cita creada correctament');
+        this.closePanel();
+        this.fetchAppointments();
+      },
+      error: (err: any) => alert(err.error?.error || 'Error en crear la cita')
+    });
+  }
+
   openOdontogram(appointmentId: number): void {
     window.location.href = `/api/appointment/${appointmentId}/open`;
   }
 
-  // Closes/Finishes the appointment
-  // Finalitza la cita
   finishAppointment(appointmentId: number): void {
     if (confirm('Estàs segur que vols finalitzar aquesta cita?')) {
       this.appointmentService.closeAppointment(appointmentId).subscribe({

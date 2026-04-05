@@ -15,42 +15,24 @@
   </header>
 
   <div class="agenda-grid">
-    <div class="box-column">
-      <div class="box-header"><h3>BOX 1</h3></div>
+    <div class="box-column" *ngFor="let boxName of ['BOX 1', 'BOX 2']">
+      <div class="box-header"><h3>{{ boxName }}</h3></div>
       <div class="appointments-container">
         <ng-container *ngFor="let cita of appointments()">
-          <div class="card-appointment" *ngIf="cita.box === 'BOX 1'" [ngClass]="cita.status">
+          <div class="card-appointment" *ngIf="cita.box === boxName" [ngClass]="cita.status">
+            <div class="card-tag" *ngIf="cita.isUrgency">URGÈNCIA</div>
             <div class="info">
-              <span class="time">{{ cita.time }}</span>
-              <span class="patient">{{ cita.patientName }}</span>
-              <span class="doctor">{{ cita.doctorName }}</span>
-              <span class="reason">{{ cita.reason }}</span>
-              <span class="badge status-finalizada" *ngIf="cita.status === 'Finalizada'">FINALITZADA</span>
+              <span class="time">{{ cita.time }} ({{ cita.duration }}min)</span>
+              <span class="patient">
+                {{ cita.patientName }}
+                <small *ngIf="cita.isFirstVisit" style="color: #e67e22; font-weight: bold;">(1ª Visita)</small>
+              </span>
+              <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
+              <p class="reason-text">{{ cita.reason }}</p>
             </div>
             <div class="actions" *ngIf="cita.status !== 'Finalizada'">
-              <button (click)="openOdontogram(cita.id)" title="Odontograma">🦷</button>
-              <button (click)="finishAppointment(cita.id)" title="Finalitzar">✅</button>
-            </div>
-          </div>
-        </ng-container>
-      </div>
-    </div>
-
-    <div class="box-column">
-      <div class="box-header"><h3>BOX 2</h3></div>
-      <div class="appointments-container">
-        <ng-container *ngFor="let cita of appointments()">
-          <div class="card-appointment" *ngIf="cita.box === 'BOX 2'" [ngClass]="cita.status">
-            <div class="info">
-              <span class="time">{{ cita.time }}</span>
-              <span class="patient">{{ cita.patientName }}</span>
-              <span class="doctor">{{ cita.doctorName }}</span>
-              <span class="reason">{{ cita.reason }}</span>
-              <span class="badge status-finalizada" *ngIf="cita.status === 'Finalizada'">FINALITZADA</span>
-            </div>
-            <div class="actions" *ngIf="cita.status !== 'Finalizada'">
-              <button (click)="openOdontogram(cita.id)">🦷</button>
-              <button (click)="finishAppointment(cita.id)">✅</button>
+              <button class="btn-action view" (click)="openOdontogram(cita.id)">🦷</button>
+              <button class="btn-action check" (click)="finishAppointment(cita.id)">✅</button>
             </div>
           </div>
         </ng-container>
@@ -62,29 +44,57 @@
 
   <div class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
-      <h2>Detalle de Cita</h2>
+      <h2>Detall de la Cita</h2>
       <button (click)="closePanel()" class="close-btn">×</button>
     </div>
 
     <form (ngSubmit)="saveAppointment()" class="appointment-form">
+      
       <div class="form-group">
-        <label>PACIENTE</label>
-        <input type="text" [(ngModel)]="newAppointmentData.patient" name="patient" placeholder="Nom del pacient" required>
+        <div class="label-header">
+          <label>PACIENT</label>
+          <button type="button" class="btn-text-link" (click)="toggleNewPatientMode()">
+            {{ isNewPatientMode ? '⬅ Cercar existent' : '+ Nou Pacient' }}
+          </button>
+        </div>
+
+        <select [(ngModel)]="newAppointmentData.patient" name="patient" class="form-control" required>
+          <option value="" disabled>Selecciona un pacient...</option>
+          <option *ngFor="let p of patientsList()" [value]="p.id">
+            {{ p.firstName }} {{ p.lastName }}
+          </option>
+        </select>
+
+        <div *ngIf="isNewPatientMode" class="quick-patient-box">
+          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" placeholder="Nom complet" class="form-control mb-2" required>
+          <input type="text" [(ngModel)]="newAppointmentData.newPatientDni" name="newPatientDni" placeholder="DNI / NIE" class="form-control">
+        </div>
+      </div>
+
+      <div class="form-group extra-options">
+        <label class="checkbox-container">
+          <input type="checkbox" [(ngModel)]="newAppointmentData.isFirstVisit" name="isFirstVisit" (change)="onFirstVisitChange()">
+          <span class="checkmark"></span> Primera Visita
+        </label>
+        <label class="checkbox-container">
+          <input type="checkbox" [(ngModel)]="newAppointmentData.isUrgency" name="isUrgency" (change)="onUrgencyChange()">
+          <span class="checkmark"></span> Urgència
+        </label>
       </div>
 
       <div class="form-group">
-        <label>FECHA DE CITA</label>
-        <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" required>
+        <label>DATA</label>
+        <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>HORA INICIO</label>
-          <input type="time" [(ngModel)]="newAppointmentData.visitTime" name="visitTime" required>
+          <label>HORA</label>
+          <input type="time" [(ngModel)]="newAppointmentData.visitTime" name="visitTime" class="form-control" required>
         </div>
         <div class="form-group">
-          <label>DURACIÓN</label>
-          <select [(ngModel)]="newAppointmentData.durationMinutes" name="duration">
+          <label>DURADA (Editable)</label>
+          <select [(ngModel)]="newAppointmentData.durationMinutes" name="duration" class="form-control">
             <option [value]="30">30 min</option>
             <option [value]="60">60 min</option>
             <option [value]="90">90 min</option>
@@ -92,27 +102,13 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>DOCTOR</label>
-          <input type="text" [(ngModel)]="newAppointmentData.doctor" name="doctor" placeholder="ID o nom">
-        </div>
-        <div class="form-group">
-          <label>BOX</label>
-          <select [(ngModel)]="newAppointmentData.box" name="box">
-            <option value="BOX 1">Box 1</option>
-            <option value="BOX 2">Box 2</option>
-          </select>
-        </div>
-      </div>
-
       <div class="form-group">
-        <label>MOTIU / PATOLOGIA</label>
-        <textarea [(ngModel)]="newAppointmentData.consultationReason" name="reason" rows="3"></textarea>
+        <label>MOTIU</label>
+        <textarea [(ngModel)]="newAppointmentData.consultationReason" name="reason" class="form-control" rows="2"></textarea>
       </div>
 
       <div class="panel-footer">
-        <button type="button" (click)="closePanel()" class="btn-cancel">Cancelar</button>
+        <button type="button" (click)="closePanel()" class="btn-cancel">Cancel·lar</button>
         <button type="submit" class="btn-save">Guardar Cita</button>
       </div>
     </form>
