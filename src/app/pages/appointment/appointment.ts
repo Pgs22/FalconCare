@@ -14,6 +14,8 @@ export class AppointmentComponent implements OnInit {
   today = new Date();
   appointments = signal<Appointment[]>([]);
   patientsList = signal<any[]>([]);
+  doctorsList = signal<any[]>([]);
+  boxesList = signal<any[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   showForm = signal(false);
@@ -100,9 +102,21 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
+  loadSetupData(): void {
+    this.appointmentService.getSetupFormData().subscribe({
+      next: (data) => {
+        console.log('Datos de configuración recibidos:', data);
+        this.doctorsList.set(data.doctors);
+        this.boxesList.set(data.boxes);
+      },
+      error: (err) => console.error('Error cargando Doctors/Boxes', err)
+    });
+  }
+
   openNewAppointmentPanel(): void {
     this.showForm.set(true);
     this.loadPatients();
+    this.loadSetupData();
   }
 
   closePanel(): void {

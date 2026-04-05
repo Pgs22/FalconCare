@@ -82,29 +82,50 @@
         </label>
       </div>
 
-      <div class="form-group">
-        <label>DATA</label>
-        <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required>
-      </div>
-
       <div class="form-row">
+        <div class="form-group">
+          <label>DATA</label>
+          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required>
+        </div>
         <div class="form-group">
           <label>HORA</label>
           <input type="time" [(ngModel)]="newAppointmentData.visitTime" name="visitTime" class="form-control" required>
         </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
-          <label>DURADA (Editable)</label>
-          <select [(ngModel)]="newAppointmentData.durationMinutes" name="duration" class="form-control">
-            <option [value]="30">30 min</option>
-            <option [value]="60">60 min</option>
-            <option [value]="90">90 min</option>
+          <label>DOCTOR</label>
+          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required>
+            <option value="" disabled selected>Selecciona doctor...</option>
+            <option *ngFor="let d of doctorsList()" [value]="d.id">
+              {{ d.name }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>BOX</label>
+          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required>
+            <option value="" disabled selected>Selecciona box...</option>
+            <option *ngFor="let b of boxesList()" [value]="b.id">
+              {{ b.name }}
+            </option>
           </select>
         </div>
       </div>
 
       <div class="form-group">
-        <label>MOTIU</label>
-        <textarea [(ngModel)]="newAppointmentData.consultationReason" name="reason" class="form-control" rows="2"></textarea>
+        <label>DURADA (Editable)</label>
+        <select [(ngModel)]="newAppointmentData.durationMinutes" name="duration" class="form-control">
+          <option [value]="30">30 min</option>
+          <option [value]="60">60 min</option>
+          <option [value]="90">90 min</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>MOTIU / NOTES</label>
+        <textarea [(ngModel)]="newAppointmentData.consultationReason" name="reason" class="form-control" rows="2" placeholder="Escriu aquí el motiu..."></textarea>
       </div>
 
       <div class="panel-footer">
