@@ -1,4 +1,4 @@
-/* --- Agenda Grid Styles (Tus estilos actuales) --- */
+/* --- Agenda Grid Styles --- */
 .agenda-wrapper { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
 .header-main {
@@ -39,22 +39,46 @@
   border-bottom: 2px solid #00bcd4;
 }
 
-.card-appointment {
+/* Contenedor que agrupa Cita + Limpieza */
+.appointment-block {
   margin: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-appointment {
   padding: 15px;
-  border-radius: 12px;
+  border-radius: 12px 12px 0 0; /* Redondeado solo arriba */
   border-left: 5px solid #00bcd4;
   background: #e0f7fa;
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: all 0.2s;
 }
 
 .card-appointment.Finalizada {
   border-left-color: #9e9e9e;
   background: #f5f5f5;
   opacity: 0.8;
+}
+
+/* BLOQUE DE LIMPIEZA */
+.cleaning-block {
+  background: repeating-linear-gradient(
+    45deg,
+    #f9f9f9,
+    #f9f9f9 10px,
+    #f1f1f1 10px,
+    #f1f1f1 20px
+  );
+  border: 1px dashed #ccc;
+  border-top: none;
+  border-radius: 0 0 12px 12px; /* Redondeado solo abajo */
+  padding: 5px;
+  text-align: center;
+  color: #888;
+  font-size: 0.7rem;
+  font-style: italic;
 }
 
 .actions {
@@ -64,7 +88,7 @@
   margin-top: 10px;
 }
 
-/* --- SIDE PANEL STYLES (Lo nuevo) --- */
+/* --- SIDE PANEL STYLES --- */
 .side-panel-overlay {
   position: fixed;
   top: 0;
@@ -78,7 +102,7 @@
 .side-panel {
   position: fixed;
   top: 0;
-  right: -450px; /* Hide by default */
+  right: -450px;
   width: 400px;
   height: 100vh;
   background: white;
@@ -91,7 +115,7 @@
 }
 
 .side-panel.open {
-  right: 0; /* Slide in */
+  right: 0;
 }
 
 .panel-header {
@@ -134,3 +158,17 @@
 
 .btn-cancel { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; }
 .btn-save { flex: 2; padding: 12px; background: #00bcd4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+.btn-text-link {
+    background: none;
+    border: none;
+    color: #00bcd4;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+}
+.label-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

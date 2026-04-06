@@ -19,6 +19,7 @@ export class AppointmentComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   showForm = signal(false);
+  isEditMode = false;
 
   isNewPatientMode = false;
 
@@ -99,21 +100,26 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-  loadSetupData(date?: string): void {
-    const dateToFetch = date || this.newAppointmentData.visitDate;
+loadSetupData(date?: string): void {
+  const dateToFetch = date || this.newAppointmentData.visitDate;
 
-    this.appointmentService.getSetupFormData(dateToFetch).subscribe({
-      next: (data) => {
-        console.log('Datos de infraestructura recibidos:', data);
-        
-        if (data) {
-          this.doctorsList.set(data.doctors|| []);
-          this.boxesList.set(data.boxes|| []);
-        }
-      },
-      error: (err) => console.error('Error carregant setup:', err)
-    });
-  }
+  this.appointmentService.getSetupFormData(dateToFetch).subscribe({
+    next: (data) => {
+      console.log('--- REVISIÓN DE DATOS ---');
+      console.log('Objeto completo recibido:', data);
+      
+      if (data) {
+        // Esto nos dirá en la consola si 'doctors' existe y qué tiene dentro
+        if (data.doctors) console.table(data.doctors);
+        if (data.boxes) console.table(data.boxes);
+
+        this.doctorsList.set(data.doctors || []);
+        this.boxesList.set(data.boxes || []);
+      }
+    },
+    error: (err) => console.error('Error al cargar infraestructura:', err)
+  });
+}
 
   onDateChange(): void {
     console.log('Nueva fecha detectada:', this.newAppointmentData.visitDate);
