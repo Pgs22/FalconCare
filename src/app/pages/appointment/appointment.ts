@@ -79,46 +79,38 @@ export class AppointmentComponent implements OnInit {
   }
 
   onPatientChange(patientId: any): void {
-      if (!patientId) {
-        this.treatmentsList.set([]);
-        this.newAppointmentData.treatmentId = '';
-        this.newAppointmentData.pathologyId = '';
-        return;
-      }
+    this.treatmentsList.set([]);
+    this.newAppointmentData.treatmentId = '';
+    this.newAppointmentData.pathologyId = '';
 
-      this.newAppointmentData.treatmentId = '';
+    if (!patientId) return;
+
+    this.appointmentService.getPatientTreatments(patientId).subscribe({
+      next: (data) => {
+        console.log('Tratamientos recibidos de la API:', data);
+        this.treatmentsList.set(data);
+      },
+      error: (err) => console.error('Error al cargar tratamientos', err)
+    });
+  }
+
+  onTreatmentSelect(tId: any): void {
+    if (!tId || tId === "") {
+      this.newAppointmentData.durationMinutes = 30;
       this.newAppointmentData.pathologyId = '';
-
-      this.appointmentService.getPatientTreatments(patientId).subscribe({
-        next: (data) => {
-          const active = data.filter((t: any) => 
-            t.status && t.status.toLowerCase() === 'actiu'
-          );
-          this.treatmentsList.set(active);
-        },
-        error: (err) => console.error('Error al carregar tractaments del pacient', err)
-      });
+      return;
     }
 
-    onTreatmentSelect(event: any): void {
-      const tId = event.target.value;
-
-      if (!tId || tId === "") {
-        this.newAppointmentData.treatmentId = '';
-        this.newAppointmentData.pathologyId = '';
-        this.newAppointmentData.durationMinutes = 30;
-        return;
-      }
-
-      const selected = this.treatmentsList().find(t => t.treatmentId == tId);
+    const selected = this.treatmentsList().find(t => t.treatmentId == tId);
+    
+    if (selected) {
+      this.newAppointmentData.pathologyId = selected.pathologyId;
+      this.newAppointmentData.durationMinutes = selected.duration;
+      this.newAppointmentData.consultationReason = `Seguiment: ${selected.treatmentName}`;
       
-      if (selected) {
-        this.newAppointmentData.treatmentId = selected.treatmentId;
-        this.newAppointmentData.pathologyId = selected.pathologyId;
-        this.newAppointmentData.durationMinutes = selected.duration;
-        this.newAppointmentData.consultationReason = `Seguiment de: ${selected.pathologyTypeName}`;
-      }
+      console.log('Tratamiento aplicado:', selected);
     }
+  }
 
   fetchAppointments(): void {
     this.error.set(null);

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Appointment {
@@ -57,7 +57,7 @@ export class AppointmentService {
     return this.http.post(`${this.patientsUrl}/new`, patientData);
   }
 
-  getPatientTreatments(patientId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.treatmentsUrl}/patient/${patientId}`);
+  getPatientTreatments(patientId: number): Observable<any> {
+    return this.http.get(`${this.treatmentsUrl}/patient/${patientId}`);
   }
 }

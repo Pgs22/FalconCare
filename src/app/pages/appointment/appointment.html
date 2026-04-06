@@ -130,7 +130,7 @@
           <label class="text-primary text-xs mb-1 d-block font-weight-bold">CONTINUAR TRACTAMENT ACTIU:</label>
           <select [(ngModel)]="newAppointmentData.treatmentId" 
                   name="treatmentId" 
-                  (change)="onTreatmentSelect(newAppointmentData.treatmentId)"
+                  (change)="onTreatmentSelect(newAppointmentData.treatmentId)" 
                   class="form-control border-primary shadow-sm">
             <option value="">-- No vincular (Cita lliure) --</option>
             <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId">
