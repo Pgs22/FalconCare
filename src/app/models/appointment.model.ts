@@ -12,4 +12,6 @@ export interface Appointment {
   color: string;
   isUrgency: boolean;
   isFirstVisit: boolean;
+  treatmentId?: number;
+  pathologyId?: number;
 }

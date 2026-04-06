@@ -1,5 +1,4 @@
 <div class="agenda-wrapper">
-  
   <header class="agenda-header">
     <div class="header-main">
       <h1>{{ today | date:'EEEE, d MMMM' }}</h1>
@@ -16,19 +15,15 @@
 
   <div class="agenda-grid">
     <div class="box-column" *ngFor="let b of boxesList()">
-      <div class="box-header"><h3>{{ b.boxName || b.box }}</h3></div>
+      <div class="box-header">
+        <h3>{{ b.name }}</h3>
+      </div>
       
       <div class="appointments-container">
         <ng-container *ngFor="let cita of appointments()">
-          <div class="appointment-block" *ngIf="cita.box === (b.boxName || b.box)">
-            
-            <div class="card-appointment" 
-                 [ngClass]="cita.status"
-                 [style.border-left-color]="cita.color">
-              
-              <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">
-                URGÈNCIA
-              </div>
+          <div class="appointment-block" *ngIf="cita.box === b.name">
+            <div class="card-appointment" [ngClass]="cita.status" [style.border-left-color]="cita.color">
+              <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">URGÈNCIA</div>
               
               <div class="info">
                 <span class="time">{{ cita.time }} ({{ cita.duration }}min)</span>
@@ -49,7 +44,6 @@
             <div class="cleaning-block" *ngIf="cita.cleaningTime > 0">
               <span>🧹 Neteja de Box ({{ cita.cleaningTime }}min)</span>
             </div>
-
           </div>
         </ng-container>
       </div>
@@ -57,14 +51,14 @@
   </div>
 
   <div class="side-panel-overlay" *ngIf="showForm()" (click)="closePanel()"></div>
-  
   <div class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
-      <h2>{{ isEditMode ? 'Editar Cita' : 'Detall de la Cita' }}</h2>
+      <h2>{{ isEditMode ? 'Editar Cita' : 'Nova Cita' }}</h2>
       <button (click)="closePanel()" class="close-btn">×</button>
     </div>
 
     <form (ngSubmit)="saveAppointment()" #appointmentForm="ngForm" class="appointment-form">
+      
       <div class="form-group">
         <div class="label-header">
           <label>PACIENT</label>
@@ -73,15 +67,18 @@
           </button>
         </div>
 
-        <select *ngIf="!isNewPatientMode" [(ngModel)]="newAppointmentData.patient" name="patient" class="form-control" required>
+        <select *ngIf="!isNewPatientMode" 
+                [(ngModel)]="newAppointmentData.patient" 
+                name="patient" 
+                class="form-control" 
+                required 
+                (change)="onPatientChange(newAppointmentData.patient)">
           <option value="" disabled selected>Selecciona un pacient...</option>
-          <option *ngFor="let p of patientsList()" [value]="p.id">
-            {{ p.firstName }} {{ p.lastName }}
-          </option>
+          <option *ngFor="let p of patientsList()" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
         </select>
 
         <div *ngIf="isNewPatientMode" class="quick-patient-box">
-          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" placeholder="Nom complet" class="form-control mb-2" required>
+          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" placeholder="Nom complet" class="form-control mb-2" [required]="isNewPatientMode">
           <input type="text" [(ngModel)]="newAppointmentData.newPatientDni" name="newPatientDni" placeholder="DNI / NIE" class="form-control">
         </div>
       </div>
@@ -98,41 +95,75 @@
       </div>
 
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group col">
           <label>DATA</label>
-          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" (change)="onDateChange()" class="form-control" required>
+          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required>
         </div>
-        <div class="form-group">
+        <div class="form-group col">
           <label>HORA</label>
           <input type="time" [(ngModel)]="newAppointmentData.visitTime" name="visitTime" class="form-control" required>
         </div>
       </div>
 
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group col">
           <label>DOCTOR</label>
           <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required>
-            <option value="" disabled selected>Selecciona doctor...</option>
-            <option *ngFor="let d of doctorsList()" [value]="d.id">
-              {{ d.name || d.firstName }}
-            </option>
+            <option value="" disabled selected>Doctor...</option>
+            <option *ngFor="let d of doctorsList()" [value]="d.id">{{ d.name || d.firstName }}</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group col">
           <label>BOX</label>
           <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required>
-            <option value="" disabled selected>Selecciona box...</option>
+            <option value="" disabled selected>Box...</option>
             <option *ngFor="let b of boxesList()" [value]="b.id">
-              {{ b.boxName || b.box || b.name }}
+              {{ b.name }}
             </option>
           </select>
         </div>
       </div>
+      <div class="form-group mt-3 bg-light p-3 rounded border">
+        <label class="font-weight-bold">MOTIU DE LA VISITA / TRACTAMENT</label>
+        
+        <div class="mb-3" *ngIf="treatmentsList().length > 0">
+          <label class="text-primary text-xs mb-1 d-block font-weight-bold">CONTINUAR TRACTAMENT ACTIU:</label>
+          <select [(ngModel)]="newAppointmentData.treatmentId" 
+                  name="treatmentId" 
+                  (change)="onTreatmentSelect(newAppointmentData.treatmentId)"
+                  class="form-control border-primary shadow-sm">
+            <option value="">-- No vincular (Cita lliure) --</option>
+            <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId">
+              📌 {{ t.pathologyTypeName }} ({{ t.treatmentName }})
+            </option>
+          </select>
+        </div>
 
-      <div class="panel-footer">
+        <div>
+          <label class="text-xs mb-1 d-block">
+            {{ treatmentsList().length > 0 ? 'O SELECCIONAR NOVA PATOLOGIA:' : 'SELECCIONAR PATOLOGIA:' }}
+          </label>
+          <select [(ngModel)]="newAppointmentData.pathologyId" 
+                  name="pathologyId" 
+                  class="form-control"
+                  [disabled]="newAppointmentData.treatmentId !== ''"
+                  [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
+            <option value="" disabled selected>Selecciona tipus de patologia...</option>
+            <option *ngFor="let p of pathologiesList()" [value]="p.id">
+              {{ p.name }} ({{ p.duration }} min)
+            </option>
+          </select>
+        </div>
+
+        <small class="text-info d-block mt-2" *ngIf="treatmentsList().length > 0">
+          <i class="info-icon">ℹ</i> S'han detectat tractamientos actius. En seleccionar-ne un, la durada s'ajustarà automàticament.
+        </small>
+      </div>
+
+      <div class="panel-footer mt-4">
         <button type="button" (click)="closePanel()" class="btn-cancel">Cancel·lar</button>
         <button type="submit" class="btn-save" [disabled]="!appointmentForm.valid">
-          Guardar Cita
+          {{ isEditMode ? 'Actualitzar Cita' : 'Guardar Cita' }}
         </button>
       </div>
     </form>

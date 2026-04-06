@@ -24,6 +24,7 @@ export interface Appointment {
 export class AppointmentService {
   private apiUrl = 'http://localhost:8000/api/appointment';
   private patientsUrl = 'http://localhost:8000/api/patients';
+  private treatmentsUrl = 'http://localhost:8000/api/treatments';
 
   constructor(private http: HttpClient) { }
 
@@ -54,5 +55,9 @@ export class AppointmentService {
 
   createQuickPatient(patientData: any): Observable<any> {
     return this.http.post(`${this.patientsUrl}/new`, patientData);
+  }
+
+  getPatientTreatments(patientId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.treatmentsUrl}/patient/${patientId}`);
   }
 }

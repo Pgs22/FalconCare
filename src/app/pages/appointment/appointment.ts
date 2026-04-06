@@ -16,6 +16,8 @@ export class AppointmentComponent implements OnInit {
   patientsList = signal<any[]>([]);
   doctorsList = signal<any[]>([]);
   boxesList = signal<any[]>([]);
+  pathologiesList = signal<any[]>([]);
+  treatmentsList = signal<any[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   showForm = signal(false);
@@ -29,9 +31,10 @@ export class AppointmentComponent implements OnInit {
     newPatientDni: '',
     doctor: '',
     box: '',
+    pathologyId: '',
+    treatmentId: '',
     visitDate: new Date().toISOString().split('T')[0],
     visitTime: '',
-    treatment: '',
     consultationReason: '',
     durationMinutes: 30,
     isFirstVisit: false,
@@ -75,6 +78,48 @@ export class AppointmentComponent implements OnInit {
     }
   }
 
+  onPatientChange(patientId: any): void {
+      if (!patientId) {
+        this.treatmentsList.set([]);
+        this.newAppointmentData.treatmentId = '';
+        this.newAppointmentData.pathologyId = '';
+        return;
+      }
+
+      this.newAppointmentData.treatmentId = '';
+      this.newAppointmentData.pathologyId = '';
+
+      this.appointmentService.getPatientTreatments(patientId).subscribe({
+        next: (data) => {
+          const active = data.filter((t: any) => 
+            t.status && t.status.toLowerCase() === 'actiu'
+          );
+          this.treatmentsList.set(active);
+        },
+        error: (err) => console.error('Error al carregar tractaments del pacient', err)
+      });
+    }
+
+    onTreatmentSelect(event: any): void {
+      const tId = event.target.value;
+
+      if (!tId || tId === "") {
+        this.newAppointmentData.treatmentId = '';
+        this.newAppointmentData.pathologyId = '';
+        this.newAppointmentData.durationMinutes = 30;
+        return;
+      }
+
+      const selected = this.treatmentsList().find(t => t.treatmentId == tId);
+      
+      if (selected) {
+        this.newAppointmentData.treatmentId = selected.treatmentId;
+        this.newAppointmentData.pathologyId = selected.pathologyId;
+        this.newAppointmentData.durationMinutes = selected.duration;
+        this.newAppointmentData.consultationReason = `Seguiment de: ${selected.pathologyTypeName}`;
+      }
+    }
+
   fetchAppointments(): void {
     this.error.set(null);
     this.loading.set(true);
@@ -100,26 +145,27 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-loadSetupData(date?: string): void {
-  const dateToFetch = date || this.newAppointmentData.visitDate;
+  loadSetupData(date?: string): void {
+    const dateToFetch = date || this.newAppointmentData.visitDate;
 
-  this.appointmentService.getSetupFormData(dateToFetch).subscribe({
-    next: (data) => {
-      console.log('--- REVISIÓN DE DATOS ---');
-      console.log('Objeto completo recibido:', data);
-      
-      if (data) {
-        // Esto nos dirá en la consola si 'doctors' existe y qué tiene dentro
-        if (data.doctors) console.table(data.doctors);
-        if (data.boxes) console.table(data.boxes);
+    this.appointmentService.getSetupFormData(dateToFetch).subscribe({
+      next: (data) => {
+        console.log('--- REVISIÓN DE DATOS ---');
+        console.log('Objeto completo recibido:', data);
+        
+        if (data) {
+          // Esto nos dirá en la consola si 'doctors' existe y qué tiene dentro
+          if (data.doctors) console.table(data.doctors);
+          if (data.boxes) console.table(data.boxes);
+          this.pathologiesList.set(data.pathologies || []);
 
-        this.doctorsList.set(data.doctors || []);
-        this.boxesList.set(data.boxes || []);
-      }
-    },
-    error: (err) => console.error('Error al cargar infraestructura:', err)
-  });
-}
+          this.doctorsList.set(data.doctors || []);
+          this.boxesList.set(data.boxes || []);
+        }
+      },
+      error: (err) => console.error('Error al cargar infraestructura:', err)
+    });
+  }
 
   onDateChange(): void {
     console.log('Nueva fecha detectada:', this.newAppointmentData.visitDate);
@@ -142,9 +188,10 @@ loadSetupData(date?: string): void {
       newPatientDni: '',
       doctor: '',
       box: '',
+      pathologyId: '',
+      treatmentId: '',
       visitDate: new Date().toISOString().split('T')[0],
       visitTime: '',
-      treatment: '',
       consultationReason: '',
       durationMinutes: 30,
       isFirstVisit: false,
