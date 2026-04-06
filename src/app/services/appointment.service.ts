@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Appointment {
@@ -29,8 +29,12 @@ export class AppointmentService {
     return this.http.get<Appointment[]>(url);
   }
 
-  getSetupFormData(): Observable<{doctors: any[], boxes: any[]}> {
-    return this.http.get<{doctors: any[], boxes: any[]}>(`${this.apiUrl}/setup-appointment-form`);
+  getSetupFormData(date: string): Observable<any> {
+    const params = new HttpParams().set('date', date);
+    return this.http.get<{doctors: any[], boxes: any[]}>(
+        `${this.apiUrl}/setup-appointment-form`, 
+        { params }
+      );
   }
 
   createAppointment(appointmentData: any): Observable<any> {

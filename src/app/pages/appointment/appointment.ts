@@ -22,18 +22,17 @@ export class AppointmentComponent implements OnInit {
 
   isNewPatientMode = false;
 
-  // Data model for the new appointment form
   newAppointmentData = {
     patient: '',
     newPatientName: '',
     newPatientDni: '',
     doctor: '',
     box: '',
-    visitDate: '',
+    visitDate: new Date().toISOString().split('T')[0],
     visitTime: '',
     treatment: '',
     consultationReason: '',
-    durationMinutes: 30, // Valor per defecte inicial
+    durationMinutes: 30,
     isFirstVisit: false,
     isUrgency: false
   };
@@ -43,37 +42,34 @@ export class AppointmentComponent implements OnInit {
   ngOnInit(): void {
     this.fetchAppointments();
     this.loadPatients();
-    this.loadSetupData();
+    this.loadSetupData(this.newAppointmentData.visitDate);
   }
 
-  // Alterna entre cercar pacient o crear-ne un de nou
   toggleNewPatientMode(): void {
     this.isNewPatientMode = !this.isNewPatientMode;
     
     if (this.isNewPatientMode) {
       this.newAppointmentData.patient = '';
       this.newAppointmentData.isFirstVisit = true;
-      this.onFirstVisitChange(); // Apliquem suggeriments automàtics
+      this.onFirstVisitChange();
     } else {
       this.newAppointmentData.isFirstVisit = false;
       this.newAppointmentData.durationMinutes = 30;
     }
   }
 
-  // Lògica de suggeriment per a Primera Visita
   onFirstVisitChange(): void {
     if (this.newAppointmentData.isFirstVisit) {
       this.newAppointmentData.isUrgency = false;
-      this.newAppointmentData.durationMinutes = 60; // Suggerim més temps
+      this.newAppointmentData.durationMinutes = 60;
       this.newAppointmentData.consultationReason = 'Primera Visita / Revisió';
     }
   }
 
-  // Lògica de suggeriment per a Urgència
   onUrgencyChange(): void {
     if (this.newAppointmentData.isUrgency) {
       this.newAppointmentData.isFirstVisit = false;
-      this.newAppointmentData.durationMinutes = 30; // Suggerim temps d'urgència
+      this.newAppointmentData.durationMinutes = 30;
       this.newAppointmentData.consultationReason = 'Urgència';
     }
   }
@@ -103,40 +99,51 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-loadSetupData(): void {
-    this.appointmentService.getSetupFormData().subscribe({
+  loadSetupData(date?: string): void {
+    const dateToFetch = date || this.newAppointmentData.visitDate;
+
+    this.appointmentService.getSetupFormData(dateToFetch).subscribe({
       next: (data) => {
-        console.log('Configuración recibida de Symfony:', data);
-        // Validamos que la data traiga lo que esperamos
-        if (data && data.doctors && data.boxes) {
-          this.doctorsList.set(data.doctors);
-          this.boxesList.set(data.boxes);
+        console.log('Datos de infraestructura recibidos:', data);
+        
+        if (data) {
+          this.doctorsList.set(data.doctors|| []);
+          this.boxesList.set(data.boxes|| []);
         }
       },
-      error: (err) => {
-        console.error('Error crítico cargando Doctors/Boxes:', err);
-        this.error.set('Error de comunicación con el servidor (Form Data)');
-      }
+      error: (err) => console.error('Error carregant setup:', err)
     });
   }
 
-openNewAppointmentPanel(): void {
-    // 1. Mostramos el formulario inmediatamente
+  onDateChange(): void {
+    console.log('Nueva fecha detectada:', this.newAppointmentData.visitDate);
+    this.newAppointmentData.doctor = ''; 
+    this.loadSetupData(this.newAppointmentData.visitDate);
+  }
+
+  openNewAppointmentPanel(): void {
     this.showForm.set(true);
-
-    // 2. Cargamos los pacientes (por si hay nuevos desde que se abrió la página)
     this.loadPatients();
-
-    // 3. Verificamos si los doctores/boxes ya están cargados. 
-    // Si la lista está vacía (por un error previo o lentitud), reintentamos la carga.
-    if (this.doctorsList().length === 0 || this.boxesList().length === 0) {
-      this.loadSetupData();
-    }
+    this.loadSetupData(this.newAppointmentData.visitDate);
   }
 
   closePanel(): void {
     this.showForm.set(false);
     this.isNewPatientMode = false;
+    this.newAppointmentData = {
+      patient: '',
+      newPatientName: '',
+      newPatientDni: '',
+      doctor: '',
+      box: '',
+      visitDate: new Date().toISOString().split('T')[0],
+      visitTime: '',
+      treatment: '',
+      consultationReason: '',
+      durationMinutes: 30,
+      isFirstVisit: false,
+      isUrgency: false
+    };
   }
 
   saveAppointment(): void {
