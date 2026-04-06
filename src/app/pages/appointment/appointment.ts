@@ -96,7 +96,7 @@ export class AppointmentComponent implements OnInit {
 
   onTreatmentSelect(tId: any): void {
     if (!tId || tId === "") {
-      this.newAppointmentData.durationMinutes = 30;
+      this.newAppointmentData.durationMinutes = 30; // Valor por defecto si desmarcas
       this.newAppointmentData.pathologyId = '';
       return;
     }
@@ -105,10 +105,10 @@ export class AppointmentComponent implements OnInit {
     
     if (selected) {
       this.newAppointmentData.pathologyId = selected.pathologyId;
-      this.newAppointmentData.durationMinutes = selected.duration;
-      this.newAppointmentData.consultationReason = `Seguiment: ${selected.treatmentName}`;
       
-      console.log('Tratamiento aplicado:', selected);
+      this.newAppointmentData.durationMinutes = selected.duration; 
+      
+      this.newAppointmentData.consultationReason = `Seguiment: ${selected.treatmentName}`;
     }
   }
 
@@ -146,7 +146,6 @@ export class AppointmentComponent implements OnInit {
         console.log('Objeto completo recibido:', data);
         
         if (data) {
-          // Esto nos dirá en la consola si 'doctors' existe y qué tiene dentro
           if (data.doctors) console.table(data.doctors);
           if (data.boxes) console.table(data.boxes);
           this.pathologiesList.set(data.pathologies || []);
@@ -212,13 +211,38 @@ export class AppointmentComponent implements OnInit {
   }
 
   private executeSave(): void {
-    this.appointmentService.createAppointment(this.newAppointmentData).subscribe({
+    const dataToSend = {
+      patient: Number(this.newAppointmentData.patient),
+      doctor: Number(this.newAppointmentData.doctor),
+      box: Number(this.newAppointmentData.box),
+      visitDate: this.newAppointmentData.visitDate,
+      visitTime: this.newAppointmentData.visitTime,
+      
+      // PRUEBA ESTO: Envía ambos nombres si no estás seguro de cuál usa el backend
+      // Si el FormType usa 'duration', recibirá 'duration'. Si usa 'durationMinutes', también.
+      duration: Number(this.newAppointmentData.durationMinutes),
+      durationMinutes: Number(this.newAppointmentData.durationMinutes),
+      
+      consultationReason: this.newAppointmentData.consultationReason || '',
+      
+      // Asegúrate de que este nombre coincida con el ->add('treatment') del FormType
+      treatment: this.newAppointmentData.treatmentId ? Number(this.newAppointmentData.treatmentId) : null,
+      
+      isFirstVisit: !!this.newAppointmentData.isFirstVisit,
+      isUrgency: !!this.newAppointmentData.isUrgency
+    };
+
+    this.appointmentService.createAppointment(dataToSend).subscribe({
       next: () => {
-        alert('Cita creada correctament');
+        alert('Cita creada!');
         this.closePanel();
         this.fetchAppointments();
       },
-      error: (err: any) => alert(err.error?.error || 'Error en crear la cita')
+      error: (err) => {
+        // ESTO ES CLAVE: Mira la pestaña "Network" -> "Response" en Chrome
+        console.error('Respuesta cruda del servidor:', err.error);
+        alert('Error: ' + (err.error?.errors || 'Dades invàlides'));
+      }
     });
   }
 

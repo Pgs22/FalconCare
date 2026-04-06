@@ -97,11 +97,28 @@
       <div class="form-row">
         <div class="form-group col">
           <label>DATA</label>
-          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required>
+          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (change)="onDateChange()">
         </div>
         <div class="form-group col">
           <label>HORA</label>
           <input type="time" [(ngModel)]="newAppointmentData.visitTime" name="visitTime" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label>DURACIÓ ESTIMADA (MINUTS)</label>
+          <div class="duration-input-wrapper">
+            <input type="number" 
+                   [(ngModel)]="newAppointmentData.durationMinutes" 
+                   name="durationMinutes" 
+                   class="form-control border-info" 
+                   min="5" 
+                   step="5" 
+                   required>
+            <span class="input-unit">min</span>
+          </div>
+          <small class="text-muted">Pots ajustar el temps manualment.</small>
         </div>
       </div>
 
@@ -123,8 +140,9 @@
           </select>
         </div>
       </div>
+
       <div class="form-group mt-3 bg-light p-3 rounded border">
-        <label class="font-weight-bold">MOTIU DE LA VISITA / TRACTAMENT</label>
+        <label class="font-weight-bold">VINCULAR TRACTAMENT / PATOLOGIA</label>
         
         <div class="mb-3" *ngIf="treatmentsList().length > 0">
           <label class="text-primary text-xs mb-1 d-block font-weight-bold">CONTINUAR TRACTAMENT ACTIU:</label>
@@ -155,9 +173,10 @@
           </select>
         </div>
 
-        <small class="text-info d-block mt-2" *ngIf="treatmentsList().length > 0">
-          <i class="info-icon">ℹ</i> S'han detectat tractamientos actius. En seleccionar-ne un, la durada s'ajustarà automàticament.
-        </small>
+        <div class="form-group mt-2">
+          <label>MOTIU / OBSERVACIONS</label>
+          <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="2" placeholder="Motiu de la visita..."></textarea>
+        </div>
       </div>
 
       <div class="panel-footer mt-4">
