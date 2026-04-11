@@ -18,7 +18,7 @@
   font-weight: bold;
 }
 
-.agenda-grid {
+.appointment-grid {
   display: flex;
   gap: 20px;
   background: #f8f9fa;
@@ -39,7 +39,6 @@
   border-bottom: 2px solid #00bcd4;
 }
 
-/* Contenedor que agrupa Cita + Limpieza */
 .appointment-block {
   margin: 10px;
   display: flex;
@@ -48,7 +47,7 @@
 
 .card-appointment {
   padding: 15px;
-  border-radius: 12px 12px 0 0; /* Redondeado solo arriba */
+  border-radius: 12px 12px 0 0;
   border-left: 5px solid #00bcd4;
   background: #e0f7fa;
   display: flex;
@@ -62,7 +61,6 @@
   opacity: 0.8;
 }
 
-/* BLOQUE DE LIMPIEZA */
 .cleaning-block {
   background: repeating-linear-gradient(
     45deg,
@@ -73,7 +71,7 @@
   );
   border: 1px dashed #ccc;
   border-top: none;
-  border-radius: 0 0 12px 12px; /* Redondeado solo abajo */
+  border-radius: 0 0 12px 12px;
   padding: 5px;
   text-align: center;
   color: #888;
@@ -88,7 +86,6 @@
   margin-top: 10px;
 }
 
-/* --- SIDE PANEL STYLES --- */
 .side-panel-overlay {
   position: fixed;
   top: 0;
@@ -171,4 +168,36 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* add frame left */
+.appointment-layout {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  width: 250px;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.appointment-main {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+.custom-datepicker {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #2fb9c3;
+  cursor: pointer;
 }

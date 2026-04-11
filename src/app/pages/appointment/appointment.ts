@@ -115,15 +115,24 @@ export class AppointmentComponent implements OnInit {
   fetchAppointments(): void {
     this.error.set(null);
     this.loading.set(true);
-    const dateStr = this.newAppointmentData.visitDate;
+
+    // --- CAMBIO AQUÍ ---
+    // Nos aseguramos de que la fecha sea un string limpio
+    const rawDate = this.newAppointmentData.visitDate; 
+    const dateStr = rawDate ? new Date(rawDate).toISOString().split('T')[0] : '';
+    // -------------------
+
+    console.log('Enviando fecha limpia al servidor:', dateStr);
+
     this.appointmentService.getAppointments(dateStr).subscribe({
       next: (data) => {
-        console.log('Citas cargadas para la fecha ' + dateStr + ':', data);
+        console.log('¡Éxito! Citas recibidas:', data);
         this.appointments.set(data);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set('No s’ha pogut connectar amb el servidor.');
+      error: (err) => {
+        console.error('El servidor sigue fallando:', err);
+        this.error.set('El servidor no acepta el formato de fecha.');
         this.loading.set(false);
       }
     });
@@ -160,10 +169,17 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-  onDateChange(): void {
-    console.log('Nueva fecha detectada:', this.newAppointmentData.visitDate);
-    this.newAppointmentData.doctor = ''; 
-    this.loadSetupData(this.newAppointmentData.visitDate);
+  // onDateChange(): void {
+  //   console.log('Nueva fecha detectada:', this.newAppointmentData.visitDate);
+  //   this.newAppointmentData.doctor = ''; 
+  //   this.loadSetupData(this.newAppointmentData.visitDate);
+  // }
+
+  onDateChange(newDate?: string): void {
+    if (newDate) {
+      this.newAppointmentData.visitDate = newDate;
+    }
+    this.fetchAppointments(); 
   }
 
   openNewAppointmentPanel(): void {
