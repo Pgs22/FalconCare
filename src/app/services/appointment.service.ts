@@ -11,6 +11,7 @@ export interface Appointment {
   status: string;
   patientName: string;
   doctorName: string;
+  boxId: number | null;
   box: string;
   reason: string;
   color: string;

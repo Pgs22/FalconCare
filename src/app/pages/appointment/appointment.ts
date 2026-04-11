@@ -96,7 +96,7 @@ export class AppointmentComponent implements OnInit {
 
   onTreatmentSelect(tId: any): void {
     if (!tId || tId === "") {
-      this.newAppointmentData.durationMinutes = 30; // Valor por defecto si desmarcas
+      this.newAppointmentData.durationMinutes = 30;
       this.newAppointmentData.pathologyId = '';
       return;
     }
@@ -115,8 +115,10 @@ export class AppointmentComponent implements OnInit {
   fetchAppointments(): void {
     this.error.set(null);
     this.loading.set(true);
-    this.appointmentService.getAppointments().subscribe({
+    const dateStr = this.newAppointmentData.visitDate;
+    this.appointmentService.getAppointments(dateStr).subscribe({
       next: (data) => {
+        console.log('Citas cargadas para la fecha ' + dateStr + ':', data);
         this.appointments.set(data);
         this.loading.set(false);
       },
@@ -132,8 +134,8 @@ export class AppointmentComponent implements OnInit {
       next: (data) => {
         console.log('Pacients rebuts:', data);
         this.patientsList.set(data);
-      },
-      error: () => console.error('Error carregant pacients')
+        },
+        error: () => console.error('Error carregant pacients')
     });
   }
 
@@ -218,14 +220,11 @@ export class AppointmentComponent implements OnInit {
       visitDate: this.newAppointmentData.visitDate,
       visitTime: this.newAppointmentData.visitTime,
       
-      // PRUEBA ESTO: Envía ambos nombres si no estás seguro de cuál usa el backend
-      // Si el FormType usa 'duration', recibirá 'duration'. Si usa 'durationMinutes', también.
-      duration: Number(this.newAppointmentData.durationMinutes),
+      duration: Number(this.newAppointmentData.durationMinutes), // REVISAR 
       durationMinutes: Number(this.newAppointmentData.durationMinutes),
       
       consultationReason: this.newAppointmentData.consultationReason || '',
       
-      // Asegúrate de que este nombre coincida con el ->add('treatment') del FormType
       treatment: this.newAppointmentData.treatmentId ? Number(this.newAppointmentData.treatmentId) : null,
       
       isFirstVisit: !!this.newAppointmentData.isFirstVisit,
@@ -233,13 +232,13 @@ export class AppointmentComponent implements OnInit {
     };
 
     this.appointmentService.createAppointment(dataToSend).subscribe({
-      next: () => {
-        alert('Cita creada!');
+      next: (res) => {
+        console.log('ID recibido:', res.id);
         this.closePanel();
         this.fetchAppointments();
+        alert('Cita creada!');
       },
       error: (err) => {
-        // ESTO ES CLAVE: Mira la pestaña "Network" -> "Response" en Chrome
         console.error('Respuesta cruda del servidor:', err.error);
         alert('Error: ' + (err.error?.errors || 'Dades invàlides'));
       }
@@ -258,4 +257,23 @@ export class AppointmentComponent implements OnInit {
       });
     }
   }
+
+  updateAgendaView() {
+    this.appointmentService.getAppointments().subscribe({
+      next: (data) => {
+        const processedAppointments = data.map(app => ({
+          ...app,
+          duration: Number(app.duration),
+          cleaningTime: Number(app.cleaningTime),
+          totalBlockTime: Number(app.duration) + Number(app.cleaningTime)
+        }));
+
+        this.appointments.set(processedAppointments);
+        
+        console.log("Agenda actualizada con tiempos de bloqueo");
+      },
+      error: (err) => console.error("Error al refrescar agenda", err)
+    });
+  }
+
 }

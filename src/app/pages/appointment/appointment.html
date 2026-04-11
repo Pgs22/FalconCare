@@ -17,11 +17,15 @@
     <div class="box-column" *ngFor="let b of boxesList()">
       <div class="box-header">
         <h3>{{ b.name }}</h3>
+        <pre style="font-size: 10px;">{{ b | json }}</pre>
       </div>
       
       <div class="appointments-container">
         <ng-container *ngFor="let cita of appointments()">
-          <div class="appointment-block" *ngIf="cita.box === b.name">
+          <!-- <div class="appointment-block" *ngIf="cita.box === b.name || cita.box === b.box_name"> -->
+
+
+          <div class="appointment-block" *ngIf="cita.boxId == b.id || cita.box == b.name">
             <div class="card-appointment" [ngClass]="cita.status" [style.border-left-color]="cita.color">
               <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">URGÈNCIA</div>
               
