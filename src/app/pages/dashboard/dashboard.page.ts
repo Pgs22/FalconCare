@@ -15,6 +15,17 @@ import { RouterLink } from '@angular/router';
       </nav>
     </main>
   `,
+  styles: [
+    `
+      :host {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+      }
+    `,
+  ],
 })
 export class DashboardPageComponent {}
 

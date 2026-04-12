@@ -11,6 +11,17 @@ import { CommonModule } from '@angular/common';
       <p>Vista mínima para comprobar conexión con Symfony y subida/descarga.</p>
     </main>
   `,
+  styles: [
+    `
+      :host {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+      }
+    `,
+  ],
 })
 export class DocumentsPageComponent {}
 
