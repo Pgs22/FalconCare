@@ -28,8 +28,9 @@ export class AuthService {
     const body: LoginRequest = { email, password };
     return this.http.post<LoginResponse>(url, body).pipe(
       tap((res) => {
-        if (res?.accessToken) {
-          localStorage.setItem(AuthService.tokenStorageKey, res.accessToken);
+        const token = res.accessToken ?? res.access_token;
+        if (token) {
+          localStorage.setItem(AuthService.tokenStorageKey, token);
         }
         if (res?.user) {
           localStorage.setItem(AuthService.userStorageKey, JSON.stringify(res.user));
@@ -70,6 +71,10 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  setCurrentUser(user: LoginResponse['user']): void {
+    localStorage.setItem(AuthService.userStorageKey, JSON.stringify(user));
   }
 }
 

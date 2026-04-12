@@ -8,21 +8,31 @@ import { AuthService } from '../services/auth.service';
 
 const API_PREFIX = `${environment.apiBaseUrl}/api`;
 const LOGIN_URL = `${API_PREFIX}/auth/login`;
+const REGISTER_DOCTOR_URL = `${API_PREFIX}/auth/register-doctor`;
+/** OpenAPI / Swagger UI habitual en API Platform (`/api/docs`, `/api/docs.json`, etc.). */
 const DOCS_PREFIX = `${API_PREFIX}/docs`;
 const HEALTH_URL = `${API_PREFIX}/health`;
-const PATIENTS_URL = `${API_PREFIX}/patients`;
+/** Registro público de paciente: sin JWT. */
+const PATIENTS_COLLECTION_URL = `${API_PREFIX}/patients`;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const url = req.url;
 
   const isApiCall = url.startsWith(API_PREFIX);
   const isLogin = url === LOGIN_URL;
+  const isRegisterDoctor = url === REGISTER_DOCTOR_URL;
   const isDocs = url.startsWith(DOCS_PREFIX);
   const isHealth = url === HEALTH_URL;
-  // El registro de pacientes debe ser público: no adjuntar Bearer y no redirigir a login.
-  const isPatientRegistration = url === PATIENTS_URL && req.method === 'POST';
+  const isPublicPatientRegister = req.method === 'POST' && url === PATIENTS_COLLECTION_URL;
 
-  if (!isApiCall || isLogin || isDocs || isHealth || isPatientRegistration) {
+  if (
+    !isApiCall ||
+    isLogin ||
+    isRegisterDoctor ||
+    isDocs ||
+    isHealth ||
+    isPublicPatientRegister
+  ) {
     return next(req);
   }
 

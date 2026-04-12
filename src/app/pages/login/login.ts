@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -12,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
   email = '';
   password = '';
   showPassword = false;
@@ -20,6 +21,7 @@ export class LoginComponent {
   loading = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+  private messageDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly auth: AuthService,
@@ -28,10 +30,16 @@ export class LoginComponent {
   ) {
     if (this.route.snapshot.queryParamMap.get('sessionExpired') === '1') {
       this.error.set('Tu sesión ha expirado o no es válida. Inicia sesión de nuevo.');
+      this.scheduleMessagesAutoHide();
     }
     if (this.route.snapshot.queryParamMap.get('registered') === '1') {
       this.success.set('Registro completado correctamente. Inicia sesión para acceder al panel.');
+      this.scheduleMessagesAutoHide();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.clearMessageDismissTimer();
   }
 
   togglePasswordVisibility(): void {
@@ -57,6 +65,7 @@ export class LoginComponent {
 
   onSubmit(): void {
     this.showSubmitError = true;
+    this.clearMessageDismissTimer();
     this.error.set(null);
     this.success.set(null);
     if (this.hasAnyFormatError()) return;
@@ -76,11 +85,28 @@ export class LoginComponent {
         } else {
           this.error.set('No se pudo iniciar sesión. Revisa tus datos e inténtalo de nuevo.');
         }
+        this.scheduleMessagesAutoHide();
         this.loading.set(false);
       },
       complete: () => {
         this.loading.set(false);
       },
     });
+  }
+
+  private scheduleMessagesAutoHide(): void {
+    this.clearMessageDismissTimer();
+    this.messageDismissTimer = setTimeout(() => {
+      this.error.set(null);
+      this.success.set(null);
+      this.messageDismissTimer = null;
+    }, FEEDBACK_MESSAGE_AUTO_HIDE_MS);
+  }
+
+  private clearMessageDismissTimer(): void {
+    if (this.messageDismissTimer) {
+      clearTimeout(this.messageDismissTimer);
+      this.messageDismissTimer = null;
+    }
   }
 }
