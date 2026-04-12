@@ -1,5 +1,11 @@
+/**
+ * Producción: misma URL pública que `API_BASE_URL` en el backend (sin barra final).
+ * Configurar CORS en Symfony (`CORS_ALLOW_ORIGIN`, nelmio, etc.).
+ */
+const apiUrl = 'https://api.tu-dominio.com';
+
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://127.0.0.1:8000',
+  apiBaseUrl: apiUrl,
+  apiUrl,
 } as const;
-

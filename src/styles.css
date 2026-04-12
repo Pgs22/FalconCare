@@ -4,6 +4,49 @@ body {
   -webkit-font-smoothing: antialiased;
   background-color: #ffffff;
 }
+
+/**
+ * Encabezados de cajas (patient-panel / doctor-panel): título negrita #000,
+ * subtítulo inmediato debajo, cursiva, más pequeño, mismo color (modo oscuro: #fff).
+ */
+.panel-box-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.125rem;
+}
+
+.panel-box-title {
+  margin: 0;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  color: #000000;
+}
+
+.panel-box-subtitle {
+  margin: 0;
+  font-family: inherit;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #000000;
+}
+
+.dark .panel-box-title,
+.dark .panel-box-subtitle {
+  color: #ffffff;
+}
+
+/** Título con icono material (misma línea). */
+.panel-box-title.panel-box-title--row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 20;
   font-size: 20px;
@@ -14,4 +57,37 @@ body {
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/** Scrollbars discretos: doctor-panel y patient-panel (misma UX). */
+.doctor-panel-shell ::-webkit-scrollbar,
+.patient-panel-shell ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.doctor-panel-shell ::-webkit-scrollbar-track,
+.patient-panel-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.doctor-panel-shell ::-webkit-scrollbar-thumb,
+.patient-panel-shell ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.doctor-panel-shell ::-webkit-scrollbar-thumb:hover,
+.patient-panel-shell ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .doctor-panel-shell ::-webkit-scrollbar-thumb,
+.dark .patient-panel-shell ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .doctor-panel-shell ::-webkit-scrollbar-thumb:hover,
+.dark .patient-panel-shell ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
