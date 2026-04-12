@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
+import { PROFILE_IMAGE_DEFAULT_URL } from '../../constants/profile-image-upload-feedback';
 import { AuthService } from '../../services/auth.service';
 import { AppUser, UserService } from '../../services/user.service';
 
@@ -13,7 +15,7 @@ import { AppUser, UserService } from '../../services/user.service';
   templateUrl: './settings.html',
   styleUrl: './settings.css',
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
   email = '';
   password = '';
   confirmPassword = '';
@@ -25,8 +27,15 @@ export class SettingsComponent implements OnInit {
   deleting = signal(false);
   success = signal<string | null>(null);
   error = signal<string | null>(null);
+  profileImageUrl = signal<string | null>(null);
+  imageUploading = signal(false);
+  imageError = signal<string | null>(null);
+  imageSuccess = signal<string | null>(null);
+  readonly defaultAvatarUrl = PROFILE_IMAGE_DEFAULT_URL;
 
   private userId: number | null = null;
+  private formMessageDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private imageMessageDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly auth: AuthService,
@@ -38,6 +47,25 @@ export class SettingsComponent implements OnInit {
     const currentUser = this.auth.getCurrentUser();
     this.email = currentUser?.email ?? '';
     this.userId = currentUser?.id ?? null;
+    this.profileImageUrl.set(
+      currentUser?.profile_image ?? currentUser?.profile_image_url ?? currentUser?.profileImageUrl ?? null
+    );
+    if (this.userId) {
+      this.userService.getById(this.userId).subscribe({
+        next: (user) => {
+          this.profileImageUrl.set(user.profileImageUrl);
+          this.storeCurrentUserImage(user.profileImageUrl);
+        },
+        error: () => {
+          // Carga silenciosa: se mantiene cache de sesión si existe.
+        },
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.clearFormMessageDismissTimer();
+    this.clearImageMessageDismissTimer();
   }
 
   togglePasswordVisibility(): void {
@@ -75,6 +103,7 @@ export class SettingsComponent implements OnInit {
 
   onSubmit(): void {
     this.showSubmitError = true;
+    this.clearFormMessageDismissTimer();
     this.success.set(null);
     this.error.set(null);
 
@@ -82,6 +111,79 @@ export class SettingsComponent implements OnInit {
 
     this.loading.set(true);
     this.resolveUserIdAndUpdate();
+  }
+
+  onProfileImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    this.clearImageMessageDismissTimer();
+    this.imageError.set(null);
+    this.imageSuccess.set(null);
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      this.imageError.set('Solo se permiten archivos de imagen.');
+      this.scheduleImageMessagesAutoHide();
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      this.imageError.set('La imagen es demasiado grande o inválida.');
+      this.scheduleImageMessagesAutoHide();
+      input.value = '';
+      return;
+    }
+
+    if (!this.userId) {
+      this.imageError.set('No se pudo identificar tu usuario. Vuelve a iniciar sesión.');
+      this.scheduleImageMessagesAutoHide();
+      input.value = '';
+      return;
+    }
+
+    this.imageUploading.set(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        this.imageUploading.set(false);
+        this.imageError.set('No se pudo procesar la imagen seleccionada.');
+        this.scheduleImageMessagesAutoHide();
+        input.value = '';
+        return;
+      }
+
+      this.userService.updateProfileImage(this.userId as number, result).subscribe({
+        next: (user) => {
+          this.profileImageUrl.set(user.profileImageUrl);
+          this.storeCurrentUserImage(user.profileImageUrl);
+          this.imageSuccess.set('Imagen de perfil actualizada correctamente.');
+          this.scheduleImageMessagesAutoHide();
+          this.imageUploading.set(false);
+          input.value = '';
+        },
+        error: (err: unknown) => {
+          const http = err as HttpErrorResponse;
+          if (http?.status === 400) {
+            this.imageError.set('La imagen es demasiado grande o inválida.');
+          } else if (http?.status === 403) {
+            this.imageError.set('No tienes permisos para editar este perfil.');
+          } else if (http?.status === 401) {
+            this.imageError.set('Tu sesión ha expirado. Vuelve a iniciar sesión.');
+          } else {
+            this.imageError.set('No se pudo actualizar la imagen. Inténtalo de nuevo.');
+          }
+          this.scheduleImageMessagesAutoHide();
+          this.imageUploading.set(false);
+          input.value = '';
+        },
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   private resolveUserIdAndUpdate(): void {
@@ -95,6 +197,7 @@ export class SettingsComponent implements OnInit {
         const found = this.findCurrentUser(users);
         if (!found) {
           this.error.set('No se pudo identificar tu usuario para actualizar los datos.');
+          this.scheduleFormMessagesAutoHide();
           this.loading.set(false);
           return;
         }
@@ -103,6 +206,7 @@ export class SettingsComponent implements OnInit {
       },
       error: () => {
         this.error.set('No se pudo identificar tu usuario. Vuelve a iniciar sesión e inténtalo de nuevo.');
+        this.scheduleFormMessagesAutoHide();
         this.loading.set(false);
       },
     });
@@ -132,16 +236,19 @@ export class SettingsComponent implements OnInit {
     this.userService.updateUser(userId, payload).subscribe({
       next: (updated) => {
         this.success.set('Datos actualizados correctamente.');
+        this.scheduleFormMessagesAutoHide();
         this.password = '';
         this.confirmPassword = '';
-        localStorage.setItem(
-          AuthService.userStorageKey,
-          JSON.stringify({
-            id: updated.id,
-            email: updated.email,
-            roles: updated.roles,
-          })
-        );
+        const current = this.auth.getCurrentUser();
+        this.auth.setCurrentUser({
+          id: updated.id,
+          email: updated.email,
+          roles: updated.roles,
+          fullName: current?.fullName,
+          profileImageUrl: this.profileImageUrl(),
+          profile_image_url: this.profileImageUrl(),
+          profile_image: this.profileImageUrl(),
+        });
         this.loading.set(false);
       },
       error: (err: unknown) => {
@@ -153,6 +260,7 @@ export class SettingsComponent implements OnInit {
         } else {
           this.error.set('No se pudieron actualizar los datos. Inténtalo de nuevo.');
         }
+        this.scheduleFormMessagesAutoHide();
         this.loading.set(false);
       },
     });
@@ -163,6 +271,7 @@ export class SettingsComponent implements OnInit {
     const confirmed = window.confirm('Esta acción eliminará tu cuenta de doctor de forma permanente. ¿Deseas continuar?');
     if (!confirmed) return;
 
+    this.clearFormMessageDismissTimer();
     this.error.set(null);
     this.success.set(null);
     this.deleting.set(true);
@@ -180,8 +289,58 @@ export class SettingsComponent implements OnInit {
         } else {
           this.error.set('No se pudo eliminar la cuenta. Inténtalo de nuevo.');
         }
+        this.scheduleFormMessagesAutoHide();
         this.deleting.set(false);
       },
+    });
+  }
+
+  private scheduleFormMessagesAutoHide(): void {
+    this.clearFormMessageDismissTimer();
+    this.formMessageDismissTimer = setTimeout(() => {
+      this.success.set(null);
+      this.error.set(null);
+      this.formMessageDismissTimer = null;
+    }, FEEDBACK_MESSAGE_AUTO_HIDE_MS);
+  }
+
+  private clearFormMessageDismissTimer(): void {
+    if (this.formMessageDismissTimer) {
+      clearTimeout(this.formMessageDismissTimer);
+      this.formMessageDismissTimer = null;
+    }
+  }
+
+  private scheduleImageMessagesAutoHide(): void {
+    this.clearImageMessageDismissTimer();
+    this.imageMessageDismissTimer = setTimeout(() => {
+      this.imageSuccess.set(null);
+      this.imageError.set(null);
+      this.imageMessageDismissTimer = null;
+    }, FEEDBACK_MESSAGE_AUTO_HIDE_MS);
+  }
+
+  private clearImageMessageDismissTimer(): void {
+    if (this.imageMessageDismissTimer) {
+      clearTimeout(this.imageMessageDismissTimer);
+      this.imageMessageDismissTimer = null;
+    }
+  }
+
+  resolvedProfileImageUrl(): string {
+    return this.profileImageUrl() ?? this.defaultAvatarUrl;
+  }
+
+  private storeCurrentUserImage(profileImage: string | null): void {
+    const current = this.auth.getCurrentUser();
+    if (!current) {
+      return;
+    }
+    this.auth.setCurrentUser({
+      ...current,
+      profileImageUrl: profileImage,
+      profile_image_url: profileImage,
+      profile_image: profileImage,
     });
   }
 }

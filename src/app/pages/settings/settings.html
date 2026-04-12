@@ -1,4 +1,4 @@
-<div class="text-on-surface min-h-screen flex flex-col selection:bg-primary/30">
+<div class="text-on-surface flex-1 flex flex-col min-h-0 selection:bg-primary/30">
   <main class="flex-grow flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-[440px] space-y-8">
       <header class="flex flex-col items-center text-center space-y-4">
@@ -16,6 +16,47 @@
       </header>
 
       <div class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.02]">
+        <div class="mb-6 rounded-2xl border border-outline-variant/50 bg-surface-container p-5">
+          <div class="flex items-center gap-4">
+            <img
+              [src]="resolvedProfileImageUrl()"
+              alt="Foto de perfil del doctor"
+              class="h-16 w-16 rounded-full object-cover border border-primary/30"
+            />
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-on-surface mb-2">Imagen de perfil</p>
+              <label
+                for="settings-profile-image-input"
+                class="inline-flex cursor-pointer items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark transition-colors"
+              >
+                {{ imageUploading() ? 'Subiendo...' : 'Cambiar imagen' }}
+              </label>
+              <input
+                id="settings-profile-image-input"
+                class="hidden"
+                type="file"
+                accept="image/*"
+                (change)="onProfileImageSelected($event)"
+                [disabled]="imageUploading() || loading() || deleting()"
+              />
+            </div>
+          </div>
+          <p
+            *ngIf="imageError()"
+            class="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-[13px] font-medium text-red-700"
+            role="alert"
+          >
+            {{ imageError() }}
+          </p>
+          <p
+            *ngIf="imageSuccess()"
+            class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-[13px] font-medium text-emerald-700"
+            role="status"
+          >
+            {{ imageSuccess() }}
+          </p>
+        </div>
+
         <form class="space-y-5" (ngSubmit)="onSubmit()" novalidate>
           <div
             *ngIf="showSubmitError && (getEmailError() || getPasswordError() || getConfirmPasswordError())"
@@ -153,7 +194,7 @@
         </div>
       </div>
 
-      <footer class="text-center pt-4 space-y-4">
+      <div class="text-center pt-4">
         <div class="flex justify-center gap-6">
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
             >Términos</a
@@ -165,10 +206,7 @@
             >Ayuda</a
           >
         </div>
-        <p class="text-[11px] uppercase tracking-[0.2em] text-outline/50 font-medium">
-          © 2026 Clínica Dental FalconCare. Hecho por Patricia, Maxime & Adrián
-        </p>
-      </footer>
+      </div>
     </div>
 
     <div class="fixed top-0 right-0 w-[500px] h-[500px] -z-10 opacity-[0.03] pointer-events-none overflow-hidden">

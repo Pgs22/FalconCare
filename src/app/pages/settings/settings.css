@@ -1,2 +1,9 @@
 /* Misma base visual que login/register: Tailwind (CDN en index.html) + .apple-input-focus en styles.css. */
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
 

@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
+import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -13,7 +14,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './doctor-register.html',
   styleUrl: './doctor-register.css',
 })
-export class DoctorRegisterComponent {
+export class DoctorRegisterComponent implements OnDestroy {
   fullName = '';
   email = '';
   password = '';
@@ -22,11 +23,16 @@ export class DoctorRegisterComponent {
   loading = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+  private messageDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router
   ) {}
+
+  ngOnDestroy(): void {
+    this.clearMessageDismissTimer();
+  }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -61,6 +67,7 @@ export class DoctorRegisterComponent {
 
   onSubmit(): void {
     this.showSubmitError = true;
+    this.clearMessageDismissTimer();
     this.error.set(null);
     this.success.set(null);
     if (this.hasAnyFormatError()) return;
@@ -74,6 +81,7 @@ export class DoctorRegisterComponent {
     ).subscribe({
       next: () => {
         this.success.set('Registro completado correctamente. Redirigiendo al panel del doctor...');
+        this.scheduleMessagesAutoHide();
         this.loading.set(false);
         setTimeout(() => this.router.navigate(['/doctor-panel']), 700);
       },
@@ -88,8 +96,25 @@ export class DoctorRegisterComponent {
         } else {
           this.error.set('No se pudo registrar el doctor. Inténtalo de nuevo más tarde.');
         }
+        this.scheduleMessagesAutoHide();
         this.loading.set(false);
       },
     });
+  }
+
+  private scheduleMessagesAutoHide(): void {
+    this.clearMessageDismissTimer();
+    this.messageDismissTimer = setTimeout(() => {
+      this.error.set(null);
+      this.success.set(null);
+      this.messageDismissTimer = null;
+    }, FEEDBACK_MESSAGE_AUTO_HIDE_MS);
+  }
+
+  private clearMessageDismissTimer(): void {
+    if (this.messageDismissTimer) {
+      clearTimeout(this.messageDismissTimer);
+      this.messageDismissTimer = null;
+    }
   }
 }

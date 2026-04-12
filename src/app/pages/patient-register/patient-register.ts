@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
+import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
 import { PatientService, RegisterPatientPayload } from '../../services/patient.service';
 
 @Component({
@@ -12,7 +13,7 @@ import { PatientService, RegisterPatientPayload } from '../../services/patient.s
   templateUrl: './patient-register.html',
   styleUrl: './patient-register.css',
 })
-export class PatientRegisterComponent {
+export class PatientRegisterComponent implements OnDestroy {
   idNumber = '';
   fullName = '';
   phone = '';
@@ -22,21 +23,36 @@ export class PatientRegisterComponent {
   serverError: string | null = null;
   successMessage: string | null = null;
   loading = signal(false);
+  private messageDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly patientService: PatientService,
     private readonly router: Router
   ) {}
 
+  ngOnDestroy(): void {
+    this.clearMessageDismissTimer();
+  }
+
   goToDoctorPanel(): void {
     if (this.loading()) return;
     this.router.navigate(['/doctor-panel']);
   }
 
+  /** Acepta respuesta JSON en camelCase o snake_case del API. */
+  private extractCreatedPatientId(body: unknown): number | undefined {
+    if (!body || typeof body !== 'object') return undefined;
+    const o = body as Record<string, unknown>;
+    const raw = o['id'] ?? o['patientId'] ?? o['patient_id'];
+    if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+    if (typeof raw === 'string' && /^\d+$/.test(raw)) return Number(raw);
+    return undefined;
+  }
+
   private normalizePhone(value: string): string {
     const v = value.trim();
     const startsWithPlus = v.startsWith('+');
-    const withoutSeparators = v.replace(/[ \-]/g, '');
+    const withoutSeparators = v.replace(/[\s\-().]/g, '');
     if (!startsWithPlus) return withoutSeparators.replace(/\+/g, '');
     return '+' + withoutSeparators.replace(/\+/g, '');
   }
@@ -72,9 +88,9 @@ export class PatientRegisterComponent {
   getPhoneError(): string | null {
     const normalized = this.normalizePhone(this.phone);
     if (!normalized) return 'Este campo es obligatorio.';
-    const re = /^\+34\d{9}$/;
+    const re = /^\+?\d{7,15}$/;
     if (re.test(normalized)) return null;
-    return 'Formato de teléfono inválido. Ejemplo: +34 000 00 00 00';
+    return 'Formato de teléfono inválido. Usa un número internacional válido (7-15 dígitos), por ejemplo: +1 212 555 0199';
   }
 
   getEmailError(): string | null {
@@ -106,6 +122,7 @@ export class PatientRegisterComponent {
 
   onSubmit(form: NgForm): void {
     this.showSubmitError = true;
+    this.clearMessageDismissTimer();
     this.serverError = null;
     this.successMessage = null;
     if (form.invalid) return;
@@ -132,12 +149,22 @@ export class PatientRegisterComponent {
     };
 
     this.patientService.registerPatient(payload).subscribe({
-      next: () => {
+      next: (created) => {
         this.showSubmitError = false;
         form.resetForm();
-        this.successMessage = 'Paciente registrado correctamente. Redirigiendo al panel del doctor...';
+        const newId = this.extractCreatedPatientId(created);
+        if (newId == null) {
+          this.serverError =
+            'El paciente se registró, pero no se recibió el identificador. Vuelve al panel del doctor e inténtalo de nuevo.';
+          this.scheduleMessagesAutoHide();
+          this.loading.set(false);
+          return;
+        }
+        this.successMessage =
+          'Paciente registrado correctamente. Abriendo el expediente del paciente...';
+        this.scheduleMessagesAutoHide();
         this.loading.set(false);
-        setTimeout(() => this.router.navigate(['/doctor-panel']), 700);
+        setTimeout(() => this.router.navigate(['/patient-panel', newId]), 700);
       },
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
@@ -148,8 +175,25 @@ export class PatientRegisterComponent {
         } else {
           this.serverError = 'No se pudo completar el registro. Inténtalo de nuevo.';
         }
+        this.scheduleMessagesAutoHide();
         this.loading.set(false);
       },
     });
+  }
+
+  private scheduleMessagesAutoHide(): void {
+    this.clearMessageDismissTimer();
+    this.messageDismissTimer = setTimeout(() => {
+      this.serverError = null;
+      this.successMessage = null;
+      this.messageDismissTimer = null;
+    }, FEEDBACK_MESSAGE_AUTO_HIDE_MS);
+  }
+
+  private clearMessageDismissTimer(): void {
+    if (this.messageDismissTimer) {
+      clearTimeout(this.messageDismissTimer);
+      this.messageDismissTimer = null;
+    }
   }
 }

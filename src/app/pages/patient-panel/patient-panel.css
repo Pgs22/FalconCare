@@ -1,0 +1,179 @@
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.apple-input {
+  width: 100%;
+  background: rgb(248 250 252);
+  border: 1px solid transparent;
+  color: #111818;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-radius: 0.75rem;
+  /* Sin shorthand `padding:`: si no, anula utilidades como pl-12 y el texto se solapa con el icono */
+  padding-top: 0.75rem;
+  padding-right: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+/* Icono absoluto a la izquierda (left-4 + ancho del glifo) */
+.apple-input.apple-input--with-icon {
+  padding-left: 3rem;
+}
+
+.dark .apple-input {
+  background: rgb(30 41 59 / 0.5);
+  color: #fff;
+}
+
+.apple-input:focus {
+  border-color: #00d2da;
+  outline: none;
+  box-shadow: none;
+}
+
+.apple-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #60898a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.375rem;
+  display: block;
+  margin-left: 0.25rem;
+}
+
+/**
+ * CTA ámbar único «Agendar Primera Visita» (cabecera del historial).
+ * Tipografía: Outfit vía `font-sans` en el shell (igual que doctor-panel / index.html).
+ */
+.patient-panel-shell a.patient-cta-first-visit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background-color: #d97706;
+  border: 1px solid rgb(217 119 6 / 0.45);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+}
+
+.dark .patient-panel-shell a.patient-cta-first-visit {
+  border-color: rgb(251 191 36 / 0.35);
+}
+
+.patient-panel-shell a.patient-cta-first-visit:hover {
+  background-color: #b45309;
+  color: #fff;
+}
+
+.patient-panel-shell a.patient-cta-first-visit:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #fbbf24;
+}
+
+.dark .patient-panel-shell a.patient-cta-first-visit:focus-visible {
+  box-shadow:
+    0 0 0 2px #162a2a,
+    0 0 0 4px #fbbf24;
+}
+
+/* Historial de visitas: mismo aspecto en todas las citas (referencia UI). */
+.visit-history-timeline {
+  background-color: #f8f9fa;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.dark .visit-history-timeline {
+  background-color: rgb(15 23 42 / 0.35);
+}
+
+.visit-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  margin: 0;
+}
+
+.visit-history-item.visit-history-item--last {
+  padding-bottom: 0;
+}
+
+.visit-history-item__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 0.75rem;
+  flex-shrink: 0;
+  padding-top: 0.2rem;
+}
+
+.visit-history-item__dot {
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background-color: #d1d5db;
+  flex-shrink: 0;
+}
+
+.visit-history-item__line {
+  flex: 1 1 auto;
+  width: 2px;
+  min-height: 1rem;
+  margin-top: 0.25rem;
+  background-color: #d1d5db;
+  border-radius: 1px;
+}
+
+.dark .visit-history-item__dot,
+.dark .visit-history-item__line {
+  background-color: #6b7280;
+}
+
+.visit-history-item__body {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding-top: 0;
+}
+
+.visit-history-item__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #000000;
+}
+
+.visit-history-item__meta {
+  margin: 0.375rem 0 0;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 400;
+  font-style: normal;
+  color: #000000;
+}
+
+.dark .visit-history-item__title,
+.dark .visit-history-item__meta {
+  color: #ffffff;
+}

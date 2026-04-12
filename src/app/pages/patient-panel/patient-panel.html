@@ -1,0 +1,645 @@
+@if (loading()) {
+  <div
+    class="flex-1 flex min-h-0 items-center justify-center bg-background-light dark:bg-background-dark font-sans text-text-main dark:text-white px-4"
+  >
+    <p class="text-text-muted text-sm font-medium">Cargando expediente del paciente...</p>
+  </div>
+} @else if (loadError()) {
+  <div
+    class="flex-1 flex min-h-0 flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark font-sans text-text-main dark:text-white px-4 text-center"
+  >
+    <p class="text-red-700 dark:text-red-300 max-w-md text-sm font-medium">{{ loadError() }}</p>
+    <button
+      type="button"
+      (click)="onBackToDoctorPanel()"
+      class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-colors"
+    >
+      Volver al panel del doctor
+    </button>
+  </div>
+} @else if (patient(); as p) {
+<div
+  class="patient-panel-shell bg-background-light dark:bg-background-dark font-sans text-text-main dark:text-white transition-colors duration-200 flex-1 flex flex-col min-h-0"
+>
+  <div class="flex flex-col flex-1 min-h-0">
+    <header
+      class="sticky top-0 z-50 flex items-center whitespace-nowrap border-b border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] px-6 py-3"
+    >
+      <div class="flex items-center gap-3 text-text-main dark:text-white">
+        <img
+          alt="Clínica Dental FalconCare"
+          class="block h-auto w-full max-h-10 object-contain"
+          src="/assets/branding/logo-fullname.png"
+        />
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <aside
+        class="hidden lg:flex w-64 flex-col border-r border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="mb-4 pb-4 border-b border-[#e5e7eb] dark:border-[#1f3636]">
+            <div class="flex flex-col items-center text-center px-2 py-2 w-full">
+              <img
+                [src]="profileImageUrl()"
+                alt="Foto de perfil del paciente"
+                class="rounded-full size-16 object-cover border border-primary/30 dark:border-primary/30 shrink-0 mb-3 shadow-sm"
+              />
+              <div class="flex flex-col items-center min-w-0 w-full gap-0.5">
+                <p class="text-sm font-bold text-text-main dark:text-white max-w-full truncate px-1">
+                  {{ displayName(p) }}
+                </p>
+                <p class="text-xs text-text-muted font-medium">ID: #{{ p.id }}</p>
+                <label
+                  class="mt-1.5 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                  for="patient-profile-upload"
+                >
+                  Cambiar foto
+                </label>
+                <button
+                  type="button"
+                  class="mt-1 text-[11px] font-semibold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:underline cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:no-underline text-center w-full max-w-full"
+                  [disabled]="!patientProfilePhotoRemovable()"
+                  (click)="onRemovePatientProfilePhoto()"
+                >
+                  Eliminar foto
+                </button>
+                <input
+                  id="patient-profile-upload"
+                  class="hidden"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                  (change)="onPatientProfileFileSelected($event)"
+                />
+              </div>
+            </div>
+            @if (profileImageToast(); as t) {
+              <div class="px-2 pb-1 pt-2 w-full">
+                @switch (t.kind) {
+                  @case ('success') {
+                    <p
+                      class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-[14px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                      role="status"
+                    >
+                      {{ t.text }}
+                    </p>
+                  }
+                  @case ('pending') {
+                    <p
+                      class="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-center text-[14px] font-medium text-primary dark:border-primary/40 dark:bg-primary/15 dark:text-primary"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {{ t.text }}
+                    </p>
+                  }
+                  @default {
+                    <p
+                      class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-[14px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                      role="alert"
+                    >
+                      {{ t.text }}
+                    </p>
+                  }
+                }
+              </div>
+            }
+            <div class="flex justify-center pt-1">
+              <span
+                class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold rounded-full"
+              >
+                Tratamiento Activo
+              </span>
+            </div>
+          </div>
+          <nav class="flex flex-col gap-2">
+            <a
+              class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined text-[24px] text-primary transition-colors group-hover:text-primary"
+              >person</span>
+              <span class="text-sm font-bold">Expediente Integral</span>
+            </a>
+            <a
+              class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary"
+              >clinical_notes</span>
+              <span class="text-sm font-semibold">Odontogramas</span>
+            </a>
+          </nav>
+        </div>
+        <div class="mt-auto p-6 border-t border-[#e5e7eb] dark:border-[#1f3636]">
+          <button (click)="onBackToDoctorPanel()" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-primary hover:bg-primary-dark transition-colors">
+            <span class="material-symbols-outlined text-lg text-white">arrow_back</span>
+            Volver a mi panel
+          </button>
+        </div>
+      </aside>
+
+      <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:p-10">
+        <div class="max-w-5xl mx-auto space-y-8">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="panel-box-heading gap-1">
+              <h1 class="text-2xl font-bold text-text-main dark:text-white tracking-tight">
+                Expediente Integral de {{ displayName(p) }}
+              </h1>
+              <p class="panel-box-subtitle max-w-2xl">
+                Información clínica centralizada y gestión documental.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div class="md:col-span-12 lg:col-span-4">
+              <div
+                class="flex flex-col bg-red-100 dark:bg-red-950/40 rounded-xl shadow-md border-2 border-red-500 dark:border-red-600 overflow-hidden h-full min-h-[14rem]"
+              >
+                <div
+                  class="shrink-0 px-6 py-4 border-b border-red-300/80 dark:border-red-800/60 bg-red-200/90 dark:bg-red-950/55 flex items-start justify-between gap-3"
+                >
+                  <div class="panel-box-heading min-w-0 flex-1">
+                    <h3 class="panel-box-title panel-box-title--row">
+                      <span class="material-symbols-outlined text-red-600 dark:text-red-400 shrink-0" aria-hidden="true"
+                        >warning_amber</span
+                      >
+                      Alergias Críticas
+                    </h3>
+                    <p class="panel-box-subtitle">
+                      Reacciones que condicionan medicación y materiales clínicos.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="toggleAllergyInput()"
+                    [disabled]="allergySaving()"
+                    class="text-red-700 dark:text-red-200 hover:bg-red-100/80 dark:hover:bg-red-900/40 p-1 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
+                    aria-label="Añadir alergia"
+                  >
+                    <span class="material-symbols-outlined text-lg">add</span>
+                  </button>
+                </div>
+                <div
+                  class="flex flex-col flex-1 min-h-0 p-6 space-y-3 bg-red-100/95 dark:bg-red-950/25"
+                >
+                  @if (allergyFeedbackError()) {
+                    <p
+                      class="rounded-2xl border border-red-300 bg-red-200/70 px-4 py-3 text-[14px] font-medium text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
+                      role="alert"
+                    >
+                      {{ allergyFeedbackError() }}
+                    </p>
+                  }
+                  @if (allergyFeedbackOk()) {
+                    <p
+                      class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                      role="status"
+                    >
+                      {{ allergyFeedbackOk() }}
+                    </p>
+                  }
+                  @if (allergyAdding()) {
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <label class="sr-only" for="new_allergy_input">Nueva alergia</label>
+                      <input
+                        id="new_allergy_input"
+                        name="new_allergy_input"
+                        class="flex-1 min-w-0 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-950 placeholder:text-red-300 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-950/20 dark:border-red-800 dark:text-red-100"
+                        type="text"
+                        placeholder="Nombre de la alergia"
+                        [(ngModel)]="newAllergyText"
+                        (keydown.enter)="submitNewAllergy()"
+                        [disabled]="allergySaving()"
+                      />
+                      <div class="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          (click)="submitNewAllergy()"
+                          [disabled]="allergySaving()"
+                          class="px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-50"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          (click)="toggleAllergyInput()"
+                          [disabled]="allergySaving()"
+                          class="px-4 py-2.5 rounded-xl border border-red-300 text-red-800 text-sm font-semibold hover:bg-red-200/60 dark:hover:bg-red-900/40 disabled:opacity-50"
+                        >
+                          Cerrar
+                        </button>
+                      </div>
+                    </div>
+                  }
+                  @if (getAllergyItems().length === 0 && !allergyAdding()) {
+                    <div
+                      class="flex flex-1 items-center justify-center px-2 py-4 text-center min-h-[10rem]"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <p class="text-sm text-text-muted max-w-[20rem]">
+                        No hay alergias críticas registradas. Pulsa + para añadir.
+                      </p>
+                    </div>
+                  }
+                  @for (allergy of getAllergyItems(); track allergy; let idx = $index) {
+                    <div
+                      class="flex items-center justify-between p-3 rounded-lg bg-red-200/75 dark:bg-red-900/35 border border-red-300 dark:border-red-700"
+                    >
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div
+                          class="w-2.5 h-2.5 shrink-0 rounded-full bg-red-600"
+                          [class.animate-pulse]="idx === 0"
+                        ></div>
+                        <span class="font-bold text-red-900 dark:text-red-200 uppercase tracking-wide truncate">{{
+                          allergy
+                        }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="removeAllergy(idx)"
+                        [disabled]="allergySaving()"
+                        class="text-red-400 hover:text-red-600 transition-colors shrink-0 disabled:opacity-50"
+                        [attr.aria-label]="'Quitar alergia ' + allergy"
+                      >
+                        <span class="material-symbols-outlined text-lg">close</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-12 lg:col-span-8">
+              <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 h-full">
+                <div class="panel-box-heading mb-4">
+                  <h3 class="panel-box-title">Enfermedades y Condiciones</h3>
+                  <p class="panel-box-subtitle">Estado de salud y hábitos de vida registrados en el expediente.</p>
+                </div>
+                @if (conditionsFeedbackError()) {
+                  <p
+                    class="mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                    role="alert"
+                  >
+                    {{ conditionsFeedbackError() }}
+                  </p>
+                }
+                @if (conditionsFeedbackOk()) {
+                  <p
+                    class="mb-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                    role="status"
+                  >
+                    {{ conditionsFeedbackOk() }}
+                  </p>
+                }
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="apple-label" for="condition_health_status">Estado de salud</label>
+                    <div class="relative flex items-start">
+                      <span class="material-symbols-outlined absolute left-4 top-3 text-primary text-xl pointer-events-none">health_and_safety</span>
+                      <textarea
+                        id="condition_health_status"
+                        name="condition_health_status"
+                        aria-label="Estado de salud del paciente"
+                        placeholder="Sin información registrada"
+                        class="apple-input apple-input--with-icon resize-none italic"
+                        rows="3"
+                        [disabled]="conditionsSaving()"
+                        [(ngModel)]="draftHealthStatus"
+                        (ngModelChange)="onConditionsInputChange()"
+                        (blur)="onConditionsBlur()"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="apple-label" for="condition_lifestyle_habits">Hábitos de vida</label>
+                    <div class="relative flex items-start">
+                      <span class="material-symbols-outlined absolute left-4 top-3 text-primary text-xl pointer-events-none">self_improvement</span>
+                      <textarea
+                        id="condition_lifestyle_habits"
+                        name="condition_lifestyle_habits"
+                        aria-label="Hábitos de vida del paciente"
+                        placeholder="Sin información registrada"
+                        class="apple-input apple-input--with-icon resize-none italic"
+                        rows="3"
+                        [disabled]="conditionsSaving()"
+                        [(ngModel)]="draftLifestyleHabits"
+                        (ngModelChange)="onConditionsInputChange()"
+                        (blur)="onConditionsBlur()"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                @if (conditionsSaving()) {
+                  <p class="mt-2 text-xs text-text-muted italic">Guardando cambios automáticamente…</p>
+                }
+              </div>
+            </div>
+
+            <div class="md:col-span-12 lg:col-span-4">
+              <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 h-full">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start gap-3">
+                  <div class="panel-box-heading min-w-0 flex-1">
+                    <h3 class="panel-box-title">Datos de Contacto</h3>
+                    <p class="panel-box-subtitle">Teléfono, correo y dirección para comunicación con el paciente.</p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="toggleContactEdit()"
+                    class="text-primary hover:text-primary-dark transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-tight"
+                  >
+                    <span class="material-symbols-outlined text-base">{{ contactEditMode() ? 'close' : 'edit' }}</span>
+                    {{ contactEditMode() ? 'Cancelar' : 'Editar' }}
+                  </button>
+                </div>
+                <div class="p-6 space-y-6">
+                  @if (contactFeedbackError()) {
+                    <p
+                      class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                      role="alert"
+                    >
+                      {{ contactFeedbackError() }}
+                    </p>
+                  }
+                  @if (contactFeedbackOk()) {
+                    <p
+                      class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                      role="status"
+                    >
+                      {{ contactFeedbackOk() }}
+                    </p>
+                  }
+                  <div>
+                    <label class="apple-label" for="contact_phone">Teléfono Móvil</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-4 text-primary text-xl pointer-events-none">call</span>
+                      <input
+                        id="contact_phone"
+                        name="contact_phone"
+                        aria-label="Teléfono móvil"
+                        class="apple-input apple-input--with-icon"
+                        [class.opacity-70]="!contactEditMode()"
+                        type="tel"
+                        [(ngModel)]="draftPhone"
+                        [readonly]="!contactEditMode()"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="apple-label" for="contact_email">Correo Electrónico</label>
+                    <div class="relative flex items-center">
+                      <span class="material-symbols-outlined absolute left-4 text-primary text-xl pointer-events-none">mail</span>
+                      <input
+                        id="contact_email"
+                        name="contact_email"
+                        aria-label="Correo electrónico"
+                        class="apple-input apple-input--with-icon"
+                        [class.opacity-70]="!contactEditMode()"
+                        type="email"
+                        [(ngModel)]="draftEmail"
+                        [readonly]="!contactEditMode()"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="apple-label" for="contact_address">Dirección</label>
+                    <div class="relative flex items-start">
+                      <span class="material-symbols-outlined absolute left-4 top-3 text-primary text-xl pointer-events-none">location_on</span>
+                      <textarea
+                        id="contact_address"
+                        name="contact_address"
+                        aria-label="Dirección"
+                        class="apple-input apple-input--with-icon resize-none"
+                        [class.opacity-70]="!contactEditMode()"
+                        rows="2"
+                        [(ngModel)]="draftAddress"
+                        [readonly]="!contactEditMode()"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="onConfirmContact()"
+                    [disabled]="contactSaving() || !contactEditMode()"
+                    class="w-full bg-primary/10 hover:bg-primary text-primary-dark hover:text-white dark:text-primary font-bold py-3 rounded-lg text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-primary/20 hover:border-primary shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    <span class="material-symbols-outlined text-lg">check_circle</span>
+                    {{ contactSaving() ? 'Guardando...' : 'Confirmar Datos' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-12 lg:col-span-8">
+              <div
+                id="patient-visit-history-card"
+                class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6"
+              >
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+                  <div class="panel-box-heading min-w-0 flex-1">
+                    <h3 class="panel-box-title">Historial de Visitas</h3>
+                    <p class="panel-box-subtitle">Cada visita incluye su propio odontograma</p>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
+                    @if (showAgendarVisitaCta()) {
+                      <a
+                        [routerLink]="['/appointments']"
+                        [queryParams]="scheduleFirstVisitQueryParams(p)"
+                        class="patient-cta-first-visit"
+                        [attr.title]="
+                          visitHistoryError()
+                            ? 'Ir a la agenda con paciente #' + p.id
+                            : 'Ir a la agenda: paciente #' + p.id + ' (query firstVisit según historial)'
+                        "
+                        [attr.aria-label]="agendarVisitaCtaLabel() + ' para el paciente número ' + p.id"
+                      >
+                        <span class="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">event_available</span>
+                        {{ agendarVisitaCtaLabel() }}
+                      </a>
+                    }
+                    <button
+                      type="button"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                      (click)="onVisitHistoryRefresh()"
+                      [disabled]="visitHistoryLoading()"
+                      title="Actualizar historial desde el servidor y ver el bloque"
+                    >
+                      <span class="material-symbols-outlined text-sm" aria-hidden="true">history</span>
+                      Ver Todo el Historial
+                    </button>
+                  </div>
+                </div>
+                @if (visitHistoryLoading()) {
+                  <p class="text-sm text-text-muted py-2">Cargando historial de visitas…</p>
+                } @else if (visitHistoryError()) {
+                  <p class="text-sm text-red-600 dark:text-red-400 py-2" role="alert">{{ visitHistoryError() }}</p>
+                } @else if (visitHistory().length === 0) {
+                  <p class="text-sm text-text-muted py-2">Sin visitas registradas todavía.</p>
+                } @else {
+                  <div id="patient-visit-history-timeline" class="visit-history-timeline">
+                    @for (visit of visitHistory(); track visit.id; let last = $last) {
+                      <article
+                        class="visit-history-item"
+                        [class.visit-history-item--last]="last"
+                        [attr.aria-label]="
+                          visitDateLabel(visit) ? visit.title + ', ' + visitDateLabel(visit) : visit.title
+                        "
+                      >
+                        <div class="visit-history-item__rail" aria-hidden="true">
+                          <span class="visit-history-item__dot"></span>
+                          @if (!last) {
+                            <span class="visit-history-item__line"></span>
+                          }
+                        </div>
+                        <div class="visit-history-item__body">
+                          <h4 class="visit-history-item__title">{{ visit.title }}</h4>
+                          <p class="visit-history-item__meta">
+                            @if (visit.metaLine && visit.detail) {
+                              {{ visit.metaLine }} · {{ visit.detail }}
+                            } @else if (visit.metaLine) {
+                              {{ visit.metaLine }}
+                            } @else if (visit.detail) {
+                              {{ visit.detail }}
+                            } @else {
+                              Sin notas clínicas registradas.
+                            }
+                          </p>
+                        </div>
+                      </article>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <section
+            id="patient-documents-section"
+            class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6"
+            aria-labelledby="patient-documents-heading"
+          >
+            <input
+              #patientDocsUpload
+              type="file"
+              class="sr-only"
+              multiple
+              [attr.accept]="'*/*'"
+              [disabled]="patientDocumentsZoneLocked()"
+              aria-label="Seleccionar archivos clínicos para subir al expediente de este paciente"
+              (change)="onPatientDocumentsFileSelected($event)"
+            />
+            <div class="flex flex-wrap gap-4 justify-between items-start mb-4">
+              <div class="flex flex-wrap items-start gap-x-3 gap-y-1 min-w-0 flex-1">
+                <div class="panel-box-heading min-w-0">
+                  <h3 id="patient-documents-heading" class="panel-box-title">
+                    Gestión de Archivos y Radiografías
+                  </h3>
+                  <p class="panel-box-subtitle">
+                    Radiografías, consentimientos y documentación clínica asociada a este expediente.
+                  </p>
+                </div>
+                @if (patientDocumentsLoading() && patientDocuments().length > 0) {
+                  <span class="text-xs font-medium text-primary self-center shrink-0" aria-live="polite">Actualizando…</span>
+                }
+              </div>
+              <button
+                type="button"
+                class="flex items-center gap-2 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+                [disabled]="patientDocumentsZoneLocked()"
+                (click)="openPatientDocumentsFilePicker(patientDocsUpload)"
+              >
+                <span class="material-symbols-outlined text-lg">upload_file</span>
+                Subir Nuevo Archivo
+              </button>
+            </div>
+            @if (patientFileFeedback(); as pf) {
+              @switch (pf.kind) {
+                @case ('success') {
+                  <p
+                    class="mb-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-[14px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                    role="status"
+                  >
+                    {{ pf.text }}
+                  </p>
+                }
+                @default {
+                  <p
+                    class="mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-[14px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                    role="alert"
+                  >
+                    {{ pf.text }}
+                  </p>
+                }
+              }
+            }
+            @if (patientDocumentsError()) {
+              <p class="text-sm text-red-600 dark:text-red-400 mb-3" role="alert">{{ patientDocumentsError() }}</p>
+            }
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              @if (patientDocumentsLoading() && patientDocuments().length === 0) {
+                <p class="text-sm text-text-muted col-span-full py-4">Cargando documentos…</p>
+              }
+              @if (!patientDocumentsLoading() && patientDocuments().length === 0 && !patientDocumentsError()) {
+                <p class="text-sm text-text-muted col-span-full py-2">
+                  Sin archivos todavía. Sube radiografías, consentimientos u otros documentos del paciente.
+                </p>
+              }
+              @for (doc of patientDocuments(); track doc.id) {
+                <button
+                  type="button"
+                  class="group relative text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-primary/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  (click)="onPatientDocumentDownload(doc)"
+                  [attr.aria-label]="'Descargar ' + doc.displayName"
+                >
+                  <div class="aspect-video bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                    @switch (doc.iconKind) {
+                      @case ('image') {
+                        <span class="material-symbols-outlined text-4xl text-slate-400">landscape</span>
+                      }
+                      @case ('pdf') {
+                        <span class="material-symbols-outlined text-4xl text-red-400">picture_as_pdf</span>
+                      }
+                      @default {
+                        <span class="material-symbols-outlined text-4xl text-slate-500">description</span>
+                      }
+                    }
+                  </div>
+                  <div class="p-4">
+                    <p class="font-bold text-sm text-text-main dark:text-white break-words">{{ doc.displayName }}</p>
+                    <p class="text-[10px] text-text-muted mt-1">Pulsa para descargar</p>
+                  </div>
+                </button>
+              }
+              <div
+                role="button"
+                [attr.tabindex]="patientDocumentsZoneLocked() ? -1 : 0"
+                [attr.aria-disabled]="patientDocumentsZoneLocked() ? true : null"
+                class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-slate-800/20 min-h-[140px] hover:border-primary/50 transition-colors cursor-pointer disabled:opacity-50"
+                [class.pointer-events-none]="patientDocumentsZoneLocked()"
+                [class.opacity-50]="patientDocumentsZoneLocked()"
+                (click)="openPatientDocumentsFilePicker(patientDocsUpload)"
+                (keydown.enter)="openPatientDocumentsFilePicker(patientDocsUpload)"
+                (keydown.space)="$event.preventDefault(); openPatientDocumentsFilePicker(patientDocsUpload)"
+                (dragover)="onPatientDocumentsDragOver($event)"
+                (drop)="onPatientDocumentsDrop($event)"
+              >
+                <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">add_circle</span>
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">Arrastrar nuevos archivos</p>
+                <p class="text-[10px] text-slate-400 text-center mt-1">Cualquier formato (máx. 15 MB por archivo)</p>
+                @if (patientDocumentsUploading()) {
+                  <p class="text-xs text-primary font-bold mt-2">Subiendo…</p>
+                }
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+}
