@@ -7,7 +7,8 @@
     "save": "Desar",
     "cancel": "Cancel·lar",
     "retry": "Reintentar",
-    "loading": "Carregant..."
+    "loading": "Carregant...",
+    "logout": "Tancar la sessió"
   },
   "login": {
     "title": "Benvingut de nou",
