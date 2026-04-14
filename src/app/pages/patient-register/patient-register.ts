@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
 import { PatientService, RegisterPatientPayload } from '../../services/patient.service';
@@ -9,7 +10,7 @@ import { PatientService, RegisterPatientPayload } from '../../services/patient.s
 @Component({
   selector: 'app-patient-register',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './patient-register.html',
   styleUrl: './patient-register.css',
 })
@@ -27,7 +28,8 @@ export class PatientRegisterComponent implements OnDestroy {
 
   constructor(
     private readonly patientService: PatientService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnDestroy(): void {
@@ -66,46 +68,46 @@ export class PatientRegisterComponent implements OnDestroy {
 
   getIdNumberError(): string | null {
     const v = this.idNumber.trim().toUpperCase();
-    if (!v) return 'Este campo es obligatorio.';
+    if (!v) return this.t('patientRegister.errors.required');
     const dni = /^\d{8}[A-Z]$/;
     const nie = /^[XYZ]\d{7}[A-Z]$/;
     const passport = /^[A-Z0-9]{5,9}$/;
     if (dni.test(v) || nie.test(v) || passport.test(v)) return null;
-    return 'Formato de identidad inválido. Usa DNI (12345678A), NIE (X1234567A) o pasaporte (5-9 caracteres).';
+    return this.t('patientRegister.errors.identityInvalid');
   }
 
   getFullNameError(): string | null {
     const split = this.splitFullName(this.fullName);
-    if (!split) return 'Introduce un nombre y apellidos completos (mínimo 2 palabras).';
+    if (!split) return this.t('patientRegister.errors.fullNameIncomplete');
     const normalized = this.fullName.trim().replace(/\s+/g, ' ');
     const allowed = /^[\p{L}\s'’-]+$/u;
     if (!allowed.test(normalized)) {
-      return 'El nombre solo debe contener letras (y espacios). Evita números o caracteres especiales.';
+      return this.t('patientRegister.errors.fullNameInvalid');
     }
     return null;
   }
 
   getPhoneError(): string | null {
     const normalized = this.normalizePhone(this.phone);
-    if (!normalized) return 'Este campo es obligatorio.';
+    if (!normalized) return this.t('patientRegister.errors.required');
     const re = /^\+?\d{7,15}$/;
     if (re.test(normalized)) return null;
-    return 'Formato de teléfono inválido. Usa un número internacional válido (7-15 dígitos), por ejemplo: +1 212 555 0199';
+    return this.t('patientRegister.errors.phoneInvalid');
   }
 
   getEmailError(): string | null {
     const v = this.email.trim();
-    if (!v) return 'Este campo es obligatorio.';
+    if (!v) return this.t('patientRegister.errors.required');
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (re.test(v)) return null;
-    return 'Correo electrónico inválido. Usa un formato tipo: correo@ejemplo.com';
+    return this.t('patientRegister.errors.emailInvalid');
   }
 
   getAddressError(): string | null {
     const v = this.address.trim();
     if (!v) return null;
     if (!v.includes(',') || (v.match(/,/g)?.length ?? 0) < 2) {
-      return 'Dirección con formato inválido. Usa “Calle, número, ciudad”.';
+      return this.t('patientRegister.errors.addressInvalid');
     }
     return null;
   }
@@ -140,11 +142,11 @@ export class PatientRegisterComponent implements OnDestroy {
       phone: this.normalizePhone(this.phone),
       email: this.email.trim(),
       address: this.address.trim() || 'N/A',
-      consultationReason: 'Sin información inicial',
-      familyHistory: 'Sin información inicial',
-      healthStatus: 'Sin información inicial',
-      lifestyleHabits: 'Sin información inicial',
-      medicationAllergies: 'Sin información inicial',
+      consultationReason: this.t('patientRegister.defaults.noInitialInfo'),
+      familyHistory: this.t('patientRegister.defaults.noInitialInfo'),
+      healthStatus: this.t('patientRegister.defaults.noInitialInfo'),
+      lifestyleHabits: this.t('patientRegister.defaults.noInitialInfo'),
+      medicationAllergies: this.t('patientRegister.defaults.noInitialInfo'),
       registrationDate: new Date().toISOString(),
     };
 
@@ -155,13 +157,13 @@ export class PatientRegisterComponent implements OnDestroy {
         const newId = this.extractCreatedPatientId(created);
         if (newId == null) {
           this.serverError =
-            'El paciente se registró, pero no se recibió el identificador. Vuelve al panel del doctor e inténtalo de nuevo.';
+            this.t('patientRegister.errors.createdWithoutId');
           this.scheduleMessagesAutoHide();
           this.loading.set(false);
           return;
         }
         this.successMessage =
-          'Paciente registrado correctamente. Abriendo el expediente del paciente...';
+          this.t('patientRegister.messages.registerOkOpeningRecord');
         this.scheduleMessagesAutoHide();
         this.loading.set(false);
         setTimeout(() => this.router.navigate(['/patient-panel', newId]), 700);
@@ -169,11 +171,11 @@ export class PatientRegisterComponent implements OnDestroy {
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
         if (httpError?.status === 400) {
-          this.serverError = 'Datos inválidos o paciente ya existente.';
+          this.serverError = this.t('patientRegister.errors.badRequest');
         } else if (httpError?.status === 0) {
-          this.serverError = 'No se pudo conectar con el backend.';
+          this.serverError = this.t('patientRegister.errors.backendConnection');
         } else {
-          this.serverError = 'No se pudo completar el registro. Inténtalo de nuevo.';
+          this.serverError = this.t('patientRegister.errors.generic');
         }
         this.scheduleMessagesAutoHide();
         this.loading.set(false);
@@ -195,5 +197,9 @@ export class PatientRegisterComponent implements OnDestroy {
       clearTimeout(this.messageDismissTimer);
       this.messageDismissTimer = null;
     }
+  }
+
+  private t(key: string, params?: Record<string, unknown>): string {
+    return this.translate.instant(key, params);
   }
 }

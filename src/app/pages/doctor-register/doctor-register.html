@@ -3,14 +3,15 @@
     <div class="w-full max-w-[440px] space-y-8">
       <header class="flex flex-col items-center text-center space-y-4">
         <img
-          alt="Logotipo FalconCare"
+          [attr.alt]="'app.brandLogoAlt' | translate"
+          [title]="'app.brandLogoAlt' | translate"
           class="h-[188px] w-auto object-contain"
           src="/assets/branding/logo-icon.png"
         />
         <div class="space-y-1">
-          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Registro de doctor</h1>
+          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">{{ 'doctorRegister.title' | translate }}</h1>
           <p class="text-[17px] text-outline font-normal">
-            Crea tu cuenta profesional para acceder a tu panel y gestionar tus pacientes.
+            {{ 'doctorRegister.subtitle' | translate }}
           </p>
         </div>
       </header>
@@ -21,7 +22,7 @@
             class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
             role="alert"
           >
-            Revisa los campos marcados como obligatorios (*) antes de registrarte.
+            {{ 'doctorRegister.validation.reviewRequired' | translate }}
           </div>
           <p
             *ngIf="error()"
@@ -39,7 +40,7 @@
           </p>
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="fullName">
-              Nombre y Apellidos <span class="text-primary">*</span>
+              {{ 'doctorRegister.fields.fullNameLabel' | translate }} <span class="text-primary">*</span>
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -50,7 +51,7 @@
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
                 id="fullName"
                 name="fullName"
-                placeholder="Tu nombre completo"
+                [placeholder]="'doctorRegister.fields.fullNamePlaceholder' | translate"
                 [(ngModel)]="fullName"
                 required
                 type="text"
@@ -62,7 +63,7 @@
           </div>
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="email">
-              Correo Electrónico <span class="text-primary">*</span>
+              {{ 'doctorRegister.fields.emailLabel' | translate }} <span class="text-primary">*</span>
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -73,7 +74,7 @@
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
                 id="email"
                 name="email"
-                placeholder="nombre@ejemplo.com"
+                [placeholder]="'doctorRegister.fields.emailPlaceholder' | translate"
                 [(ngModel)]="email"
                 required
                 type="email"
@@ -85,7 +86,7 @@
           </div>
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="password">
-              Contraseña <span class="text-primary">*</span>
+              {{ 'doctorRegister.fields.passwordLabel' | translate }} <span class="text-primary">*</span>
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -96,7 +97,7 @@
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-12 text-[15px] placeholder:text-outline/50"
                 id="password"
                 name="password"
-                placeholder="Mínimo 8 caracteres"
+                [placeholder]="'doctorRegister.fields.passwordPlaceholder' | translate"
                 [(ngModel)]="password"
                 required
                 [type]="showPassword ? 'text' : 'password'"
@@ -119,15 +120,15 @@
               type="submit"
               [disabled]="loading()"
             >
-              {{ loading() ? 'Registrando doctor...' : 'Registrarme' }}
+              {{ loading() ? ('doctorRegister.actions.registering' | translate) : ('doctorRegister.actions.register' | translate) }}
             </button>
           </div>
         </form>
         <div class="mt-8 text-center">
           <p class="text-[14px] text-outline">
-            ¿Ya tienes una cuenta?
+            {{ 'doctorRegister.footer.hasAccount' | translate }}
             <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/login">
-              Iniciar sesión
+              {{ 'doctorRegister.footer.signIn' | translate }}
             </a>
           </p>
         </div>
@@ -135,13 +136,13 @@
       <div class="text-center pt-4">
         <div class="flex justify-center gap-6">
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Términos</a
+            >{{ 'login.links.terms' | translate }}</a
           >
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Privacidad</a
+            >{{ 'login.links.privacy' | translate }}</a
           >
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Ayuda</a
+            >{{ 'login.links.help' | translate }}</a
           >
         </div>
       </div>

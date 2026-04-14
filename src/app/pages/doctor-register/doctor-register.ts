@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
@@ -10,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-doctor-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule],
   templateUrl: './doctor-register.html',
   styleUrl: './doctor-register.css',
 })
@@ -27,7 +28,8 @@ export class DoctorRegisterComponent implements OnDestroy {
 
   constructor(
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnDestroy(): void {
@@ -40,24 +42,24 @@ export class DoctorRegisterComponent implements OnDestroy {
 
   getFullNameError(): string | null {
     const normalized = this.fullName.trim().replace(/\s+/g, ' ');
-    if (!normalized) return 'Este campo es obligatorio.';
-    if (normalized.split(' ').length < 2) return 'Introduce nombre y apellidos completos.';
+    if (!normalized) return this.t('doctorRegister.errors.required');
+    if (normalized.split(' ').length < 2) return this.t('doctorRegister.errors.fullNameIncomplete');
     const allowed = /^[\p{L}\s'’-]+$/u;
-    if (!allowed.test(normalized)) return 'El nombre solo debe contener letras y espacios.';
+    if (!allowed.test(normalized)) return this.t('doctorRegister.errors.fullNameInvalid');
     return null;
   }
 
   getEmailError(): string | null {
     const value = this.email.trim();
-    if (!value) return 'Este campo es obligatorio.';
+    if (!value) return this.t('doctorRegister.errors.required');
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    if (!re.test(value)) return 'Correo electrónico inválido. Usa un formato tipo: correo@ejemplo.com';
+    if (!re.test(value)) return this.t('doctorRegister.errors.invalidEmail');
     return null;
   }
 
   getPasswordError(): string | null {
-    if (!this.password) return 'Este campo es obligatorio.';
-    if (this.password.length < 8) return 'La contraseña debe tener mínimo 8 caracteres.';
+    if (!this.password) return this.t('doctorRegister.errors.required');
+    if (this.password.length < 8) return this.t('doctorRegister.errors.passwordMin');
     return null;
   }
 
@@ -80,7 +82,7 @@ export class DoctorRegisterComponent implements OnDestroy {
       switchMap(() => this.auth.login(email, password))
     ).subscribe({
       next: () => {
-        this.success.set('Registro completado correctamente. Redirigiendo al panel del doctor...');
+        this.success.set(this.t('doctorRegister.messages.registerOkRedirecting'));
         this.scheduleMessagesAutoHide();
         this.loading.set(false);
         setTimeout(() => this.router.navigate(['/doctor-panel']), 700);
@@ -88,13 +90,13 @@ export class DoctorRegisterComponent implements OnDestroy {
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
         if (httpError?.status === 400) {
-          this.error.set('No se pudo completar el registro. Revisa los datos e inténtalo de nuevo.');
+          this.error.set(this.t('doctorRegister.errors.registerBadRequest'));
         } else if (httpError?.status === 401) {
-          this.error.set('El doctor se registró, pero no se pudo iniciar sesión automáticamente.');
+          this.error.set(this.t('doctorRegister.errors.registeredLoginFailed'));
         } else if (httpError?.status === 0) {
-          this.error.set('No se pudo conectar con el backend. Inténtalo de nuevo.');
+          this.error.set(this.t('doctorRegister.errors.backendConnection'));
         } else {
-          this.error.set('No se pudo registrar el doctor. Inténtalo de nuevo más tarde.');
+          this.error.set(this.t('doctorRegister.errors.registerGeneric'));
         }
         this.scheduleMessagesAutoHide();
         this.loading.set(false);
@@ -116,5 +118,9 @@ export class DoctorRegisterComponent implements OnDestroy {
       clearTimeout(this.messageDismissTimer);
       this.messageDismissTimer = null;
     }
+  }
+
+  private t(key: string, params?: Record<string, unknown>): string {
+    return this.translate.instant(key, params);
   }
 }
