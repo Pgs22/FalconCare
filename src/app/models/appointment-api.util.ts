@@ -1,6 +1,8 @@
 import type { Appointment } from './appointment.model';
 import type { PatientVisitHistoryEntry } from './patient-visit-history.model';
 
+const APPOINTMENT_TIME_ZONE = 'Europe/Berlin';
+
 /** Respuestas tipo API Platform / JSON-LD o array plano. */
 export function extractApiCollection(body: unknown): unknown[] {
   if (Array.isArray(body)) {
@@ -135,7 +137,7 @@ function parseOccurredAt(r: Record<string, unknown>): Date | null {
     const t = timeOnly.trim();
     const hm = /^\d{1,2}:\d{2}(:\d{2})?/.test(t) ? (t.length === 5 ? `${t}:00` : t) : '';
     if (hm) {
-      const combined = new Date(`${datePart.trim()}T${hm}`);
+      const combined = parseFrankfurtDateTime(`${datePart.trim()}T${hm}`);
       if (!Number.isNaN(combined.getTime())) {
         return combined;
       }
@@ -163,7 +165,7 @@ function parseOccurredAt(r: Record<string, unknown>): Date | null {
     'end_time',
   ]);
   if (raw) {
-    const d = new Date(raw);
+    const d = parseDatePreservingFrankfurt(raw);
     if (!Number.isNaN(d.getTime())) {
       return d;
     }
@@ -171,7 +173,7 @@ function parseOccurredAt(r: Record<string, unknown>): Date | null {
 
   /** Solo día calendario (sin hora): mediodía local para contadores por día sin colapsar orden arbitrario. */
   if (datePart && /^\d{4}-\d{2}-\d{2}/.test(datePart.trim())) {
-    const noon = new Date(`${datePart.trim()}T12:00:00`);
+    const noon = parseFrankfurtDateTime(`${datePart.trim()}T12:00:00`);
     if (!Number.isNaN(noon.getTime())) {
       return noon;
     }
@@ -311,11 +313,7 @@ export function rawAppointmentOccurredAt(raw: unknown): Date | null {
 }
 
 function isSameLocalCalendarDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return toFrankfurtYmd(a) === toFrankfurtYmd(b);
 }
 
 /** Citas cuyo instante cae en el día local indicado (p. ej. hoy). */
@@ -431,9 +429,8 @@ export function computeDoctorDashboardKpis(rows: unknown[], at: Date = new Date(
 export function rawToAgendaAppointment(raw: unknown): Appointment {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const id = Number(r['id'] ?? 0);
-  const time = String(
-    r['time'] ?? r['startTime'] ?? r['start_time'] ?? r['scheduledAt'] ?? ''
-  );
+  const occurredAt = parseOccurredAt(r);
+  const time = formatAppointmentTimeHm(occurredAt, r);
   const duration = Number(r['duration'] ?? r['durationMinutes'] ?? r['duration_minutes'] ?? 30) || 30;
   const status = String(r['status'] ?? 'pending');
   const patientName = String(
@@ -460,6 +457,7 @@ export function formatVisitDateLabel(d: Date | null): string {
   }
   try {
     return new Intl.DateTimeFormat('es-ES', {
+      timeZone: APPOINTMENT_TIME_ZONE,
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(d);
@@ -610,6 +608,7 @@ function formatAppointmentTimeHm(occurredAt: Date | null, r: Record<string, unkn
   if (occurredAt && !Number.isNaN(occurredAt.getTime())) {
     try {
       return new Intl.DateTimeFormat('es-ES', {
+        timeZone: APPOINTMENT_TIME_ZONE,
         hour: '2-digit',
         minute: '2-digit',
       }).format(occurredAt);
@@ -622,6 +621,115 @@ function formatAppointmentTimeHm(occurredAt: Date | null, r: Record<string, unkn
     return t.trim().slice(0, 5);
   }
   return '—';
+}
+
+function parseDatePreservingFrankfurt(raw: string): Date {
+  const trimmed = raw.trim();
+  const hasOffset = /(?:[zZ]|[+\-]\d{2}:\d{2})$/.test(trimmed);
+  if (hasOffset) {
+    return new Date(trimmed);
+  }
+  return parseFrankfurtDateTime(trimmed);
+}
+
+function parseFrankfurtDateTime(value: string): Date {
+  const m = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?$/
+  );
+  if (!m) {
+    return new Date(value);
+  }
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const hour = Number(m[4]);
+  const minute = Number(m[5]);
+  const second = Number(m[6] ?? '0');
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day) ||
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute) ||
+    !Number.isFinite(second)
+  ) {
+    return new Date(value);
+  }
+  const utcMs = zonedDateTimeToUtcMs(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    APPOINTMENT_TIME_ZONE
+  );
+  return new Date(utcMs);
+}
+
+function zonedDateTimeToUtcMs(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  timeZone: string
+): number {
+  let utcMs = Date.UTC(year, month - 1, day, hour, minute, second);
+  for (let i = 0; i < 2; i++) {
+    const offsetMs = getTimeZoneOffsetMs(new Date(utcMs), timeZone);
+    utcMs = Date.UTC(year, month - 1, day, hour, minute, second) - offsetMs;
+  }
+  return utcMs;
+}
+
+function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+
+  const map: Record<string, string> = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      map[part.type] = part.value;
+    }
+  }
+
+  const asUtc = Date.UTC(
+    Number(map['year']),
+    Number(map['month']) - 1,
+    Number(map['day']),
+    Number(map['hour']),
+    Number(map['minute']),
+    Number(map['second'])
+  );
+  return asUtc - date.getTime();
+}
+
+function toFrankfurtYmd(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: APPOINTMENT_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  let y = '';
+  let m = '';
+  let d = '';
+  for (const p of parts) {
+    if (p.type === 'year') y = p.value;
+    if (p.type === 'month') m = p.value;
+    if (p.type === 'day') d = p.value;
+  }
+  return `${y}-${m}-${d}`;
 }
 
 /** Heurística de tarjeta ámbar (sensibilidad) vs roja (resto), alineada con estilos `allergy-card-*`. */

@@ -12,9 +12,19 @@ import {
   pickMedicationAllergiesFromPatientApiPayload,
   pickMedicationAllergiesFromPatientRecord,
   rawAppointmentOccurredAt,
+  rawToAgendaAppointment,
 } from './appointment-api.util';
 
 describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
+  const fmtBerlinHm = (d: Date | null): string =>
+    d
+      ? new Intl.DateTimeFormat('es-ES', {
+          timeZone: 'Europe/Berlin',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(d)
+      : '';
+
   it('countAppointmentsOnLocalDate matches local calendar day', () => {
     const day = new Date(2026, 3, 8, 12, 0, 0);
     const rows = [
@@ -33,6 +43,38 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
     expect(d!.getFullYear()).toBe(2026);
     expect(d!.getMonth()).toBe(3);
     expect(d!.getDate()).toBe(8);
+    expect(fmtBerlinHm(d)).toBe('09:00');
+  });
+
+  it('rawAppointmentOccurredAt treats naive startTime as Frankfurt local time', () => {
+    const d = rawAppointmentOccurredAt({
+      startTime: '2026-01-15T09:00:00',
+    });
+    expect(d).not.toBeNull();
+    expect(fmtBerlinHm(d)).toBe('09:00');
+  });
+
+  it('rawAppointmentOccurredAt keeps explicit UTC/Z offsets consistent with Frankfurt', () => {
+    const d = rawAppointmentOccurredAt({
+      startTime: '2026-07-15T07:00:00Z',
+    });
+    expect(d).not.toBeNull();
+    // 07:00Z in summer equals 09:00 in Frankfurt (CEST).
+    expect(fmtBerlinHm(d)).toBe('09:00');
+  });
+
+  it('rawToAgendaAppointment renders time label in Frankfurt timezone', () => {
+    const appt = rawToAgendaAppointment({
+      id: 10,
+      appointment_date: '2026-07-15',
+      time: '09:30',
+      status: 'confirmed',
+      patientName: 'Paciente Demo',
+      doctorName: 'Dr Demo',
+      box: 'BOX 1',
+      reason: 'Control',
+    });
+    expect(appt.time).toBe('09:30');
   });
 
   it('countAppointmentsPendingClinicalReview detects review flags', () => {
