@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
 
 import { AppointmentService } from '../../services/appointment.service';
@@ -12,7 +13,7 @@ describe('DoctorPanelComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DoctorPanelComponent],
+      imports: [DoctorPanelComponent, TranslateModule.forRoot()],
       providers: [
         provideHttpClient(),
         provideRouter([]),

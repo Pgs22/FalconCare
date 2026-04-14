@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   Observable,
@@ -29,6 +30,7 @@ import {
   buildDoctorAllergyAlertsForToday,
   collectPatientIdsNeedingAllergyFetch,
   computeDoctorDashboardKpis,
+  rawAppointmentOccurredAt,
   type DoctorAgendaRow,
   type DoctorAgendaStatusPillVariant,
   type DoctorAllergyAlert,
@@ -43,16 +45,16 @@ import { AppUser, UserService } from '../../services/user.service';
 @Component({
   selector: 'app-doctor-panel',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule, TranslateModule],
   templateUrl: './doctor-panel.html',
   styleUrl: './doctor-panel.css',
 })
 export class DoctorPanelComponent implements OnInit, OnDestroy {
   readonly defaultAvatarUrl = PROFILE_IMAGE_DEFAULT_URL;
   profileImageUrl = this.defaultAvatarUrl;
-  doctorDisplayName = 'Usuario';
-  doctorSpecialty = 'Profesional';
-  timeGreeting = 'Buenos días';
+  doctorDisplayName = '';
+  doctorSpecialty = '';
+  timeGreetingKey = 'doctorPanel.greetings.morning';
   timeGreetingIcon = 'wb_sunny';
   private greetingTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -61,8 +63,14 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   /** `true` si la última carga de citas falló (red / servidor); no confundir con «0 citas». */
   dashboardLoadFailed = false;
   patientsTodayCount = 0;
+  patientsTodayDateLabel = '';
   pendingClinicalReviewCount = 0;
   patientsTodayDeltaPct: number | null = null;
+  weeklyPatientsCounts: number[] = [0, 0, 0, 0, 0];
+  weeklyPatientsMax = 0;
+  weeklyPatientsPolyline = '';
+  weeklyPatientsPoints: Array<{ dayIndex: number; dayKey: string; xPct: number; yPct: number; count: number }> = [];
+  hoveredWeeklyPointIndex: number | null = null;
   /** Citas de hoy con `medication_allergies` (paciente / Neon), enriquecido con `GET /api/patients/{id}` si hace falta. */
   allergyAlerts: DoctorAllergyAlert[] = [];
   /** Citas de hoy para «Agenda de Hoy» (misma carga que KPIs). */
@@ -97,10 +105,13 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private readonly patientService: PatientService,
     private readonly userService: UserService,
-    private readonly appointmentService: AppointmentService
+    private readonly appointmentService: AppointmentService,
+    private readonly translate: TranslateService
   ) {
     this.refreshJwtPayload();
     this.doctorDisplayName = this.getDoctorDisplayNameFromPayload(this.jwtPayload);
+    this.doctorSpecialty = this.safeInstant('doctorPanel.defaults.professional', 'Profesional');
+    this.patientsTodayDateLabel = this.formatDashboardDate(new Date());
     this.loadDoctorProfileImage();
     this.updateTimeGreeting();
   }
@@ -180,6 +191,8 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
           const ids = collectPatientIdsNeedingAllergyFetch(rows, at);
           if (ids.length === 0) {
             return of({
+              referenceDate: at,
+              rows,
               kpis,
               alerts: buildDoctorAllergyAlertsForToday(rows, at, new Map()),
               agendaRows,
@@ -201,6 +214,8 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
                 }
               }
               return {
+                referenceDate: at,
+                rows,
                 kpis,
                 alerts: buildDoctorAllergyAlertsForToday(rows, at, m),
                 agendaRows,
@@ -213,23 +228,113 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: ({ kpis, alerts, agendaRows }) => {
+        next: ({ referenceDate, rows, kpis, alerts, agendaRows }) => {
           this.dashboardLoadFailed = false;
+          this.patientsTodayDateLabel = this.formatDashboardDate(referenceDate);
           this.patientsTodayCount = kpis.patientsTodayCount;
           this.pendingClinicalReviewCount = kpis.pendingClinicalReviewCount;
           this.patientsTodayDeltaPct = kpis.patientsTodayDeltaPct;
           this.allergyAlerts = alerts;
           this.agendaRows = agendaRows;
+          this.rebuildWeeklyPatientsChart(rows);
         },
         error: () => {
           this.dashboardLoadFailed = true;
+          this.patientsTodayDateLabel = this.formatDashboardDate(new Date());
           this.patientsTodayCount = 0;
           this.pendingClinicalReviewCount = 0;
           this.patientsTodayDeltaPct = null;
           this.allergyAlerts = [];
           this.agendaRows = [];
+          this.resetWeeklyPatientsChart();
         },
       });
+  }
+
+  onWeeklyPointHover(index: number | null): void {
+    this.hoveredWeeklyPointIndex = index;
+  }
+
+  get weeklyTooltipPoint() {
+    if (this.hoveredWeeklyPointIndex == null) {
+      return null;
+    }
+    return this.weeklyPatientsPoints[this.hoveredWeeklyPointIndex] ?? null;
+  }
+
+  private rebuildWeeklyPatientsChart(rows: unknown[]): void {
+    const now = new Date();
+    const counts = [0, 0, 0, 0, 0];
+    const monday = this.startOfWeekMonday(now);
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+
+    for (const row of rows) {
+      const d = rawAppointmentOccurredAt(row);
+      if (!d) {
+        continue;
+      }
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      if (dayStart < monday || dayStart > friday) {
+        continue;
+      }
+      const dayIndex = this.weekdayMonToFriIndex(dayStart);
+      if (dayIndex >= 0 && dayIndex < 5) {
+        counts[dayIndex] += 1;
+      }
+    }
+    this.setWeeklyPatientsSeries(counts);
+  }
+
+  private setWeeklyPatientsSeries(counts: number[]): void {
+    this.weeklyPatientsCounts = counts.slice(0, 5);
+    const max = Math.max(...this.weeklyPatientsCounts, 0);
+    this.weeklyPatientsMax = max;
+    const min = Math.min(...this.weeklyPatientsCounts);
+    const spread = max - min;
+    // Evita líneas "aplastadas" cuando la variación semanal es muy pequeña.
+    const effectiveSpread = spread > 0 ? Math.max(spread, 2) : 1;
+    // Márgenes simétricos en ambos ejes para una composición equilibrada.
+    const chartMargin = 2.5;
+    const chartXStart = chartMargin;
+    const chartXStep = (100 - chartMargin * 2) / 4;
+    const chartYTop = 4;
+    const chartYBottom = 32;
+    this.weeklyPatientsPoints = this.weeklyPatientsCounts.map((count, dayIndex) => {
+      const xPct = chartXStart + dayIndex * chartXStep;
+      const normalized = spread > 0 ? (count - min) / effectiveSpread : 0.5;
+      const yPct = chartYBottom - normalized * (chartYBottom - chartYTop);
+      const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'] as const;
+      return { dayIndex, dayKey: dayKeys[dayIndex]!, xPct, yPct, count };
+    });
+    this.weeklyPatientsPolyline = this.weeklyPatientsPoints
+      .map((p) => `${p.xPct},${p.yPct}`)
+      .join(' ');
+    this.hoveredWeeklyPointIndex = null;
+  }
+
+  private resetWeeklyPatientsChart(): void {
+    this.weeklyPatientsCounts = [0, 0, 0, 0, 0];
+    this.weeklyPatientsMax = 0;
+    this.weeklyPatientsPoints = [];
+    this.weeklyPatientsPolyline = '';
+    this.hoveredWeeklyPointIndex = null;
+  }
+
+  private startOfWeekMonday(reference: Date): Date {
+    const d = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate());
+    const day = d.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diffToMonday);
+    return d;
+  }
+
+  private weekdayMonToFriIndex(date: Date): number {
+    const day = date.getDay();
+    if (day >= 1 && day <= 5) {
+      return day - 1;
+    }
+    return -1;
   }
 
   onPatientSearchChange(value: string): void {
@@ -269,7 +374,10 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     if (name) {
       return name;
     }
-    return p.id != null ? `Paciente #${p.id}` : 'Paciente';
+    if (p.id != null) {
+      return this.translate.instant('doctorPanel.search.patientWithId', { id: p.id });
+    }
+    return this.translate.instant('doctorPanel.defaults.patient');
   }
 
   openPatientFromSearch(p: Patient): void {
@@ -349,10 +457,10 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
       list.find((r) => /ADMIN/i.test(r)) ??
       list.find((r) => r !== 'ROLE_USER');
     if (!primary) {
-      return 'Profesional';
+      return this.safeInstant('doctorPanel.defaults.professional', 'Profesional');
     }
     if (/ADMIN/i.test(primary)) {
-      return 'Profesional';
+      return this.safeInstant('doctorPanel.defaults.professional', 'Profesional');
     }
     return primary
       .replace(/^ROLE_/i, '')
@@ -581,7 +689,7 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
 
   private getDoctorDisplayNameFromPayload(payload: Record<string, unknown> | null): string {
     if (!payload) {
-      return 'Usuario';
+      return this.safeInstant('doctorPanel.defaults.user', 'Usuario');
     }
 
     const fullName =
@@ -593,11 +701,38 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
 
     const emailOrSub = this.getStringValue(payload, ['email', 'sub', 'username', 'preferred_username']);
     if (!emailOrSub) {
-      return 'Usuario';
+      return this.safeInstant('doctorPanel.defaults.user', 'Usuario');
     }
 
     const emailPrefix = emailOrSub.includes('@') ? emailOrSub.split('@')[0] : emailOrSub;
-    return this.toDisplayCase(emailPrefix.replace(/[._-]+/g, ' ').trim()) || 'Usuario';
+    return (
+      this.toDisplayCase(emailPrefix.replace(/[._-]+/g, ' ').trim()) ||
+      this.safeInstant('doctorPanel.defaults.user', 'Usuario')
+    );
+  }
+
+  private safeInstant(key: string, fallback: string): string {
+    const value = this.translate.instant(key);
+    return value === key ? fallback : value;
+  }
+
+  private formatDashboardDate(date: Date | null | undefined): string {
+    const safeDate = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+    const language = this.translate.currentLang || this.translate.getDefaultLang() || 'es';
+    const locale = language === 'ca' ? 'ca-ES' : language === 'fr' ? 'fr-FR' : language === 'en' ? 'en-GB' : 'es-ES';
+    try {
+      return new Intl.DateTimeFormat(locale, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(safeDate);
+    } catch {
+      return new Intl.DateTimeFormat('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(safeDate);
+    }
   }
 
   private buildNameFromParts(payload: Record<string, unknown>): string | null {
@@ -629,16 +764,16 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   private updateTimeGreeting(): void {
     const hour = new Date().getHours();
     if (hour >= 6 && hour < 12) {
-      this.timeGreeting = 'Buenos días';
+      this.timeGreetingKey = 'doctorPanel.greetings.morning';
       this.timeGreetingIcon = 'wb_sunny';
       return;
     }
     if (hour >= 12 && hour < 20) {
-      this.timeGreeting = 'Buenas tardes';
+      this.timeGreetingKey = 'doctorPanel.greetings.afternoon';
       this.timeGreetingIcon = 'wb_sunny';
       return;
     }
-    this.timeGreeting = 'Buenas noches';
+    this.timeGreetingKey = 'doctorPanel.greetings.night';
     this.timeGreetingIcon = 'bedtime';
   }
 
