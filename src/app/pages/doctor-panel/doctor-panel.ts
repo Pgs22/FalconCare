@@ -553,6 +553,11 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     });
   }
 
+  onLogout(): void {
+    this.authService.logout();
+    void this.router.navigate(['/login']);
+  }
+
   private persistDoctorProfileImage(profileImageData: string): void {
     const previousUrl = this.profileImageUrl;
 

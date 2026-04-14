@@ -71,6 +71,13 @@
             >
               {{ 'doctorPanel.profile.removePhoto' | translate }}
             </button>
+            <button
+              type="button"
+              class="mt-2 text-[11px] font-semibold text-text-muted hover:text-primary dark:text-slate-400 dark:hover:text-primary hover:underline cursor-pointer text-left w-full"
+              (click)="onLogout()"
+            >
+              {{ 'common.logout' | translate }}
+            </button>
             <input
               id="doctor-profile-upload"
               class="hidden"
