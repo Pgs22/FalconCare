@@ -1,5 +1,27 @@
 <div class="text-on-surface flex-1 flex flex-col min-h-0 selection:bg-primary/30">
-  <main class="flex-grow flex items-center justify-center px-4 py-12">
+  <main class="relative flex-grow flex items-center justify-center px-4 py-12">
+    <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+      <label class="sr-only" for="language-selector">{{ 'app.language' | translate }}</label>
+      <div
+        class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus shadow-sm"
+      >
+        <span class="material-symbols-outlined absolute left-3 text-outline text-[20px]">language</span>
+        <select
+          id="language-selector"
+          class="appearance-none bg-transparent border-none focus:ring-0 py-2.5 pl-10 pr-9 text-[14px] font-medium text-on-surface"
+          [ngModel]="selectedLanguage"
+          (ngModelChange)="onLanguageChange($event)"
+          [ngModelOptions]="{ standalone: true }"
+        >
+          @for (language of languageOptions; track language.code) {
+            <option [ngValue]="language.code">{{ language.label }}</option>
+          }
+        </select>
+        <span class="material-symbols-outlined absolute right-2 text-outline text-[20px] pointer-events-none"
+          >expand_more</span
+        >
+      </div>
+    </div>
     <div class="w-full max-w-[440px] space-y-8">
       <header class="flex flex-col items-center text-center space-y-4">
         <img
@@ -8,9 +30,9 @@
           src="/assets/branding/logo-icon.png"
         />
         <div class="space-y-1">
-          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Bienvenido de nuevo</h1>
+          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">{{ 'login.title' | translate }}</h1>
           <p class="text-[17px] text-outline font-normal">
-            Inicia sesión para acceder a tu panel y gestionar tus pacientes, historial clínico y citas programadas.
+            {{ 'login.subtitle' | translate }}
           </p>
         </div>
       </header>
@@ -21,7 +43,7 @@
             class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
             role="alert"
           >
-            Revisa los campos marcados como obligatorios (*) antes de iniciar sesión.
+            {{ 'login.validation.reviewRequiredFields' | translate }}
           </div>
           <p
             *ngIf="error()"
@@ -39,7 +61,7 @@
           </p>
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="email">
-              Correo Electrónico <span class="text-primary">*</span>
+              {{ 'login.fields.emailLabel' | translate }} <span class="text-primary">*</span>
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -50,7 +72,7 @@
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
                 id="email"
                 name="email"
-                placeholder="nombre@ejemplo.com"
+                [placeholder]="'login.fields.emailPlaceholder' | translate"
                 [(ngModel)]="email"
                 required
                 type="email"
@@ -62,7 +84,7 @@
           </div>
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="password">
-              Contraseña <span class="text-primary">*</span>
+              {{ 'login.fields.passwordLabel' | translate }} <span class="text-primary">*</span>
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -73,7 +95,7 @@
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-12 text-[15px] placeholder:text-outline/50"
                 id="password"
                 name="password"
-                placeholder="••••••••"
+                [placeholder]="'login.fields.passwordPlaceholder' | translate"
                 [(ngModel)]="password"
                 required
                 [type]="showPassword ? 'text' : 'password'"
@@ -96,15 +118,15 @@
               type="submit"
               [disabled]="loading()"
             >
-              {{ loading() ? 'Iniciando...' : 'Iniciar Sesión' }}
+              {{ loading() ? ('login.actions.loggingIn' | translate) : ('login.actions.signIn' | translate) }}
             </button>
           </div>
         </form>
         <div class="mt-8 text-center">
           <p class="text-[14px] text-outline">
-            ¿No tienes una cuenta?
+            {{ 'login.footer.noAccount' | translate }}
             <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/doctor-register">
-              Crear una cuenta
+              {{ 'login.footer.createAccount' | translate }}
             </a>
           </p>
         </div>
@@ -112,13 +134,13 @@
       <div class="text-center pt-4">
         <div class="flex justify-center gap-6">
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Términos</a
+            >{{ 'login.links.terms' | translate }}</a
           >
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Privacidad</a
+            >{{ 'login.links.privacy' | translate }}</a
           >
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Ayuda</a
+            >{{ 'login.links.help' | translate }}</a
           >
         </div>
       </div>
