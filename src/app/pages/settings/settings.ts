@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Router, RouterLink } from '@angular/router';
 import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
 import { PROFILE_IMAGE_DEFAULT_URL } from '../../constants/profile-image-upload-feedback';
@@ -11,7 +12,7 @@ import { AppUser, UserService } from '../../services/user.service';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
 })
@@ -40,7 +41,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   constructor(
     private readonly auth: AuthService,
     private readonly userService: UserService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -78,22 +80,22 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   getEmailError(): string | null {
     const v = this.email.trim();
-    if (!v) return 'Este campo es obligatorio.';
+    if (!v) return this.t('settings.errors.required');
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    if (!re.test(v)) return 'Correo electrónico inválido. Usa un formato tipo: correo@ejemplo.com';
+    if (!re.test(v)) return this.t('settings.errors.invalidEmail');
     return null;
   }
 
   getPasswordError(): string | null {
     if (!this.password) return null;
-    if (this.password.length < 6) return 'La contraseña debe tener al menos 6 caracteres.';
+    if (this.password.length < 6) return this.t('settings.errors.passwordMin');
     return null;
   }
 
   getConfirmPasswordError(): string | null {
     if (!this.password && !this.confirmPassword) return null;
-    if (!this.confirmPassword) return 'Debes confirmar la contraseña.';
-    if (this.password !== this.confirmPassword) return 'Las contraseñas no coinciden.';
+    if (!this.confirmPassword) return this.t('settings.errors.confirmPasswordRequired');
+    if (this.password !== this.confirmPassword) return this.t('settings.errors.passwordsDoNotMatch');
     return null;
   }
 
@@ -124,7 +126,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
 
     if (!file.type.startsWith('image/')) {
-      this.imageError.set('Solo se permiten archivos de imagen.');
+      this.imageError.set(this.t('settings.image.errors.onlyImages'));
       this.scheduleImageMessagesAutoHide();
       input.value = '';
       return;
@@ -132,14 +134,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     const maxBytes = 2 * 1024 * 1024;
     if (file.size > maxBytes) {
-      this.imageError.set('La imagen es demasiado grande o inválida.');
+      this.imageError.set(this.t('settings.image.errors.invalidOrTooLarge'));
       this.scheduleImageMessagesAutoHide();
       input.value = '';
       return;
     }
 
     if (!this.userId) {
-      this.imageError.set('No se pudo identificar tu usuario. Vuelve a iniciar sesión.');
+      this.imageError.set(this.t('settings.errors.cannotIdentifyUser'));
       this.scheduleImageMessagesAutoHide();
       input.value = '';
       return;
@@ -151,7 +153,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       const result = reader.result;
       if (typeof result !== 'string') {
         this.imageUploading.set(false);
-        this.imageError.set('No se pudo procesar la imagen seleccionada.');
+        this.imageError.set(this.t('settings.image.errors.cannotProcess'));
         this.scheduleImageMessagesAutoHide();
         input.value = '';
         return;
@@ -161,7 +163,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.profileImageUrl.set(user.profileImageUrl);
           this.storeCurrentUserImage(user.profileImageUrl);
-          this.imageSuccess.set('Imagen de perfil actualizada correctamente.');
+          this.imageSuccess.set(this.t('settings.image.messages.updatedOk'));
           this.scheduleImageMessagesAutoHide();
           this.imageUploading.set(false);
           input.value = '';
@@ -169,13 +171,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
         error: (err: unknown) => {
           const http = err as HttpErrorResponse;
           if (http?.status === 400) {
-            this.imageError.set('La imagen es demasiado grande o inválida.');
+            this.imageError.set(this.t('settings.image.errors.invalidOrTooLarge'));
           } else if (http?.status === 403) {
-            this.imageError.set('No tienes permisos para editar este perfil.');
+            this.imageError.set(this.t('settings.errors.noPermissionEditProfile'));
           } else if (http?.status === 401) {
-            this.imageError.set('Tu sesión ha expirado. Vuelve a iniciar sesión.');
+            this.imageError.set(this.t('settings.errors.sessionExpired'));
           } else {
-            this.imageError.set('No se pudo actualizar la imagen. Inténtalo de nuevo.');
+            this.imageError.set(this.t('settings.image.errors.updateGeneric'));
           }
           this.scheduleImageMessagesAutoHide();
           this.imageUploading.set(false);
@@ -196,7 +198,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       next: (users) => {
         const found = this.findCurrentUser(users);
         if (!found) {
-          this.error.set('No se pudo identificar tu usuario para actualizar los datos.');
+          this.error.set(this.t('settings.errors.cannotIdentifyUserForUpdate'));
           this.scheduleFormMessagesAutoHide();
           this.loading.set(false);
           return;
@@ -205,7 +207,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.updateUser(found.id);
       },
       error: () => {
-        this.error.set('No se pudo identificar tu usuario. Vuelve a iniciar sesión e inténtalo de nuevo.');
+        this.error.set(this.t('settings.errors.cannotIdentifyUserRetry'));
         this.scheduleFormMessagesAutoHide();
         this.loading.set(false);
       },
@@ -235,7 +237,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     this.userService.updateUser(userId, payload).subscribe({
       next: (updated) => {
-        this.success.set('Datos actualizados correctamente.');
+        this.success.set(this.t('settings.messages.updatedOk'));
         this.scheduleFormMessagesAutoHide();
         this.password = '';
         this.confirmPassword = '';
@@ -254,11 +256,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
         if (httpError?.status === 422) {
-          this.error.set('Los datos enviados no son válidos. Revisa el formulario.');
+          this.error.set(this.t('settings.errors.invalidPayload'));
         } else if (httpError?.status === 401 || httpError?.status === 403) {
-          this.error.set('No tienes permisos para actualizar estos datos.');
+          this.error.set(this.t('settings.errors.noPermissionUpdate'));
         } else {
-          this.error.set('No se pudieron actualizar los datos. Inténtalo de nuevo.');
+          this.error.set(this.t('settings.errors.updateGeneric'));
         }
         this.scheduleFormMessagesAutoHide();
         this.loading.set(false);
@@ -268,7 +270,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   onDeleteAccount(): void {
     if (this.loading() || this.deleting()) return;
-    const confirmed = window.confirm('Esta acción eliminará tu cuenta de doctor de forma permanente. ¿Deseas continuar?');
+    const confirmed = window.confirm(this.t('settings.delete.confirmPrompt'));
     if (!confirmed) return;
 
     this.clearFormMessageDismissTimer();
@@ -285,9 +287,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
         if (httpError?.status === 401 || httpError?.status === 403) {
-          this.error.set('No tienes permisos para eliminar esta cuenta.');
+          this.error.set(this.t('settings.delete.errors.noPermission'));
         } else {
-          this.error.set('No se pudo eliminar la cuenta. Inténtalo de nuevo.');
+          this.error.set(this.t('settings.delete.errors.generic'));
         }
         this.scheduleFormMessagesAutoHide();
         this.deleting.set(false);
@@ -342,6 +344,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       profile_image_url: profileImage,
       profile_image: profileImage,
     });
+  }
+
+  private t(key: string, params?: Record<string, unknown>): string {
+    return this.translate.instant(key, params);
   }
 }
 

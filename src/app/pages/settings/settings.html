@@ -3,14 +3,15 @@
     <div class="w-full max-w-[440px] space-y-8">
       <header class="flex flex-col items-center text-center space-y-4">
         <img
-          alt="Logotipo FalconCare"
+          [attr.alt]="'app.brandLogoAlt' | translate"
+          [title]="'app.brandLogoAlt' | translate"
           class="h-[188px] w-auto object-contain"
           src="/assets/branding/logo-icon.png"
         />
         <div class="space-y-1">
-          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">Configuración de cuenta</h1>
+          <h1 class="text-3xl font-semibold tracking-tight text-on-surface">{{ 'settings.title' | translate }}</h1>
           <p class="text-[17px] text-outline font-normal">
-            Actualiza tu correo electrónico y contraseña de acceso.
+            {{ 'settings.subtitle' | translate }}
           </p>
         </div>
       </header>
@@ -20,16 +21,17 @@
           <div class="flex items-center gap-4">
             <img
               [src]="resolvedProfileImageUrl()"
-              alt="Foto de perfil del doctor"
+              [attr.alt]="'settings.image.profilePhotoAlt' | translate"
+              [title]="'settings.image.profilePhotoAlt' | translate"
               class="h-16 w-16 rounded-full object-cover border border-primary/30"
             />
             <div class="flex-1">
-              <p class="text-sm font-semibold text-on-surface mb-2">Imagen de perfil</p>
+              <p class="text-sm font-semibold text-on-surface mb-2">{{ 'settings.image.title' | translate }}</p>
               <label
                 for="settings-profile-image-input"
                 class="inline-flex cursor-pointer items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark transition-colors"
               >
-                {{ imageUploading() ? 'Subiendo...' : 'Cambiar imagen' }}
+                {{ imageUploading() ? ('settings.image.actions.uploading' | translate) : ('settings.image.actions.changeImage' | translate) }}
               </label>
               <input
                 id="settings-profile-image-input"
@@ -63,7 +65,7 @@
             class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700"
             role="alert"
           >
-            Revisa los campos marcados antes de guardar los cambios.
+            {{ 'settings.validation.reviewFields' | translate }}
           </div>
 
           <p
@@ -84,7 +86,7 @@
 
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="settings-email">
-              Correo Electrónico <span class="text-primary">*</span>
+              {{ 'settings.fields.emailLabel' | translate }} <span class="text-primary">*</span>
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -95,7 +97,7 @@
                 id="settings-email"
                 name="settings-email"
                 class="w-full bg-transparent border-none focus:ring-0 py-3.5 pl-12 pr-4 text-[15px] placeholder:text-outline/50"
-                placeholder="nombre@ejemplo.com"
+                [placeholder]="'settings.fields.emailPlaceholder' | translate"
                 [(ngModel)]="email"
                 required
                 type="email"
@@ -108,7 +110,7 @@
 
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="settings-password">
-              Nueva Contraseña
+              {{ 'settings.fields.newPasswordLabel' | translate }}
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -138,7 +140,7 @@
 
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1" for="settings-confirm-password">
-              Confirmar Contraseña
+              {{ 'settings.fields.confirmPasswordLabel' | translate }}
             </label>
             <div
               class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus"
@@ -172,7 +174,7 @@
               type="submit"
               [disabled]="loading() || deleting()"
             >
-              {{ loading() ? 'Guardando...' : 'Guardar Cambios' }}
+              {{ loading() ? ('settings.actions.saving' | translate) : ('settings.actions.saveChanges' | translate) }}
             </button>
             <button
               class="w-full bg-red-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-red-600/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px] disabled:opacity-60 disabled:pointer-events-none"
@@ -180,15 +182,15 @@
               [disabled]="loading() || deleting()"
               (click)="onDeleteAccount()"
             >
-              {{ deleting() ? 'Eliminando cuenta...' : 'Eliminar Cuenta' }}
+              {{ deleting() ? ('settings.actions.deletingAccount' | translate) : ('settings.actions.deleteAccount' | translate) }}
             </button>
           </div>
         </form>
         <div class="mt-8 text-center">
           <p class="text-[14px] text-outline">
-            ¿Deseas volver al panel?
+            {{ 'settings.footer.backQuestion' | translate }}
             <a class="text-primary font-semibold hover:underline transition-all ml-1" routerLink="/doctor-panel">
-              Volver al panel
+              {{ 'settings.footer.backToPanel' | translate }}
             </a>
           </p>
         </div>
@@ -197,13 +199,13 @@
       <div class="text-center pt-4">
         <div class="flex justify-center gap-6">
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Términos</a
+            >{{ 'login.links.terms' | translate }}</a
           >
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Privacidad</a
+            >{{ 'login.links.privacy' | translate }}</a
           >
           <a class="text-[11px] uppercase tracking-widest text-outline/60 hover:text-primary transition-colors" href="#"
-            >Ayuda</a
+            >{{ 'login.links.help' | translate }}</a
           >
         </div>
       </div>
