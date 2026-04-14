@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -23,13 +23,14 @@ export class LoginComponent implements OnDestroy {
   loading = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
-  readonly languageOptions: ReadonlyArray<{ code: SupportedLanguage; label: string }> = [
-    { code: 'es', label: 'Español' },
-    { code: 'ca', label: 'Català' },
-    { code: 'en', label: 'English' },
-    { code: 'fr', label: 'Français' },
+  readonly languageOptions: ReadonlyArray<{ code: SupportedLanguage; label: string; flagSrc: string; flagAlt: string }> = [
+    { code: 'es', label: 'Español', flagSrc: '/assets/flags/es.svg', flagAlt: 'Bandera de España' },
+    { code: 'ca', label: 'Català', flagSrc: '/assets/flags/ca.svg', flagAlt: 'Bandera de Cataluña' },
+    { code: 'en', label: 'English', flagSrc: '/assets/flags/gb.svg', flagAlt: 'Flag of the United Kingdom' },
+    { code: 'fr', label: 'Français', flagSrc: '/assets/flags/fr.svg', flagAlt: 'Drapeau de la France' },
   ];
   selectedLanguage: SupportedLanguage;
+  languageMenuOpen = false;
   private messageDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
@@ -37,7 +38,8 @@ export class LoginComponent implements OnDestroy {
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     private readonly languageService: LanguageService,
-    private readonly translate: TranslateService
+    private readonly translate: TranslateService,
+    private readonly elementRef: ElementRef<HTMLElement>
   ) {
     this.selectedLanguage = this.languageService.current();
     if (this.route.snapshot.queryParamMap.get('sessionExpired') === '1') {
@@ -58,9 +60,32 @@ export class LoginComponent implements OnDestroy {
     this.showPassword = !this.showPassword;
   }
 
+  get selectedLanguageOption() {
+    return this.languageOptions.find((l) => l.code === this.selectedLanguage) ?? this.languageOptions[0];
+  }
+
+  toggleLanguageMenu(): void {
+    this.languageMenuOpen = !this.languageMenuOpen;
+  }
+
   onLanguageChange(language: SupportedLanguage): void {
     this.selectedLanguage = language;
     this.languageService.use(language);
+    this.languageMenuOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (!this.languageMenuOpen) {
+      return;
+    }
+    const target = event.target as Node | null;
+    if (!target) {
+      return;
+    }
+    if (!this.elementRef.nativeElement.contains(target)) {
+      this.languageMenuOpen = false;
+    }
   }
 
   getEmailError(): string | null {

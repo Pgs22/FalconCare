@@ -1,25 +1,65 @@
 <div class="text-on-surface flex-1 flex flex-col min-h-0 selection:bg-primary/30">
   <main class="relative flex-grow flex items-center justify-center px-4 py-12">
     <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
-      <label class="sr-only" for="language-selector">{{ 'app.language' | translate }}</label>
+      <label class="sr-only" for="language-selector-trigger">{{ 'app.language' | translate }}</label>
       <div
-        class="relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus shadow-sm"
+        class="relative"
       >
-        <span class="material-symbols-outlined absolute left-3 text-outline text-[20px]">language</span>
-        <select
-          id="language-selector"
-          class="appearance-none bg-transparent border-none focus:ring-0 py-2.5 pl-10 pr-9 text-[14px] font-medium text-on-surface"
-          [ngModel]="selectedLanguage"
-          (ngModelChange)="onLanguageChange($event)"
-          [ngModelOptions]="{ standalone: true }"
+        <button
+          id="language-selector-trigger"
+          type="button"
+          class="language-trigger relative flex items-center border border-outline-variant bg-surface-container rounded-xl transition-all duration-200 apple-input-focus shadow-sm py-2.5 pl-10 pr-9 text-[14px] font-medium text-on-surface min-w-[11rem]"
+          (click)="toggleLanguageMenu()"
+          [attr.aria-expanded]="languageMenuOpen"
+          aria-haspopup="menu"
+          [attr.aria-label]="'app.language' | translate"
         >
-          @for (language of languageOptions; track language.code) {
-            <option [ngValue]="language.code">{{ language.label }}</option>
-          }
-        </select>
-        <span class="material-symbols-outlined absolute right-2 text-outline text-[20px] pointer-events-none"
-          >expand_more</span
-        >
+          <span class="material-symbols-outlined absolute left-3 text-outline text-[20px]">language</span>
+          <img
+            class="language-flag"
+            [src]="selectedLanguageOption.flagSrc"
+            alt="{{ selectedLanguageOption.flagAlt }}"
+            title="{{ selectedLanguageOption.flagAlt }}"
+            width="20"
+            height="15"
+            loading="eager"
+            decoding="sync"
+          />
+          <span>{{ selectedLanguageOption.label }}</span>
+          <span class="material-symbols-outlined absolute right-2 text-outline text-[20px] pointer-events-none">expand_more</span>
+        </button>
+        @if (languageMenuOpen) {
+          <ul
+            class="language-menu absolute right-0 mt-2 w-full min-w-[12.5rem] rounded-xl border border-outline-variant bg-surface shadow-lg p-1.5"
+            role="menu"
+            [attr.aria-label]="'app.language' | translate"
+            [attr.title]="'app.language' | translate"
+          >
+            @for (language of languageOptions; track language.code) {
+              <li role="none">
+                <button
+                  type="button"
+                  class="language-option w-full text-left rounded-lg px-3 py-2 text-sm font-medium"
+                  [class.language-option--active]="language.code === selectedLanguage"
+                  role="menuitem"
+                  (click)="onLanguageChange(language.code)"
+                >
+                  <img
+                    class="language-flag"
+                    [src]="language.flagSrc"
+                    alt="{{ language.flagAlt }}"
+                    title="{{ language.flagAlt }}"
+                    width="20"
+                    height="15"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span>{{ language.label }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
       </div>
     </div>
     <div class="w-full max-w-[440px] space-y-8">

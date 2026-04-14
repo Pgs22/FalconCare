@@ -6,3 +6,36 @@
   min-height: 0;
   min-width: 0;
 }
+
+.language-trigger {
+  justify-content: flex-start;
+  gap: 0.55rem;
+}
+
+.language-menu {
+  z-index: 30;
+}
+
+.language-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgb(15 23 42);
+}
+
+.language-option:hover {
+  background: rgb(240 245 245);
+}
+
+.language-option--active {
+  background: rgb(224 242 254);
+  color: rgb(3 105 161);
+}
+
+.language-flag {
+  width: 1.25rem;
+  height: 0.9375rem;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 0.12);
+}
