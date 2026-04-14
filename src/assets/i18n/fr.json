@@ -1,0 +1,386 @@
+{
+  "app": {
+    "language": "Langue",
+    "brandLogoAlt": "Logo FalconCare"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "loading": "Chargement..."
+  },
+  "login": {
+    "title": "Bon retour",
+    "subtitle": "Connectez-vous pour accéder à votre tableau de bord et gérer vos patients, l'historique clinique et les rendez-vous programmés.",
+    "validation": {
+      "reviewRequiredFields": "Vérifiez les champs marqués comme obligatoires (*) avant de vous connecter."
+    },
+    "fields": {
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "nom@exemple.com",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "••••••••"
+    },
+    "actions": {
+      "signIn": "Se connecter",
+      "loggingIn": "Connexion..."
+    },
+    "footer": {
+      "noAccount": "Vous n'avez pas de compte ?",
+      "createAccount": "Créer un compte"
+    },
+    "links": {
+      "terms": "Conditions",
+      "privacy": "Confidentialité",
+      "help": "Aide"
+    },
+    "messages": {
+      "registered": "Inscription effectuée avec succès. Connectez-vous pour accéder au tableau de bord."
+    },
+    "errors": {
+      "sessionExpired": "Votre session a expiré ou n'est pas valide. Veuillez vous reconnecter.",
+      "required": "Ce champ est obligatoire.",
+      "invalidEmail": "Adresse e-mail invalide. Utilisez un format comme : nom@exemple.com",
+      "invalidCredentials": "Utilisateur non enregistré ou mot de passe incorrect.",
+      "backendUnavailable": "Impossible de se connecter pour le moment. Veuillez réessayer.",
+      "generic": "Impossible de se connecter. Vérifiez vos informations et réessayez."
+    }
+  },
+  "doctorRegister": {
+    "title": "Inscription du médecin",
+    "subtitle": "Créez votre compte professionnel pour accéder à votre panneau et gérer vos patients.",
+    "validation": { "reviewRequired": "Vérifiez les champs obligatoires (*) avant de vous inscrire." },
+    "fields": {
+      "fullNameLabel": "Nom et prénom",
+      "fullNamePlaceholder": "Votre nom complet",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "nom@exemple.com",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Minimum 8 caractères"
+    },
+    "actions": { "registering": "Inscription du médecin...", "register": "M'inscrire" },
+    "footer": { "hasAccount": "Vous avez déjà un compte ?", "signIn": "Se connecter" },
+    "messages": { "registerOkRedirecting": "Inscription réussie. Redirection vers le panneau du médecin..." },
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "fullNameIncomplete": "Saisissez nom et prénom complets.",
+      "fullNameInvalid": "Le nom ne doit contenir que des lettres et des espaces.",
+      "invalidEmail": "Adresse e-mail invalide. Utilisez un format comme : nom@exemple.com",
+      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "registerBadRequest": "Impossible de terminer l'inscription. Vérifiez les informations et réessayez.",
+      "registeredLoginFailed": "Le médecin a été inscrit, mais la connexion automatique a échoué.",
+      "backendConnection": "Impossible de finaliser la connexion pour le moment. Réessayez.",
+      "registerGeneric": "Impossible d'inscrire le médecin. Réessayez plus tard."
+    }
+  },
+  "patientRegister": {
+    "title": "Créez votre compte",
+    "subtitle": "Nous soignons chaque détail avec la précision de ceux qui visent plus haut.",
+    "validation": { "reviewRequired": "Vérifiez les champs obligatoires (*) avant de vous inscrire." },
+    "fields": {
+      "identityLabel": "Numéro d'identité",
+      "identityPlaceholder": "DNI, NIE ou Passeport",
+      "fullNameLabel": "Nom et prénom",
+      "fullNamePlaceholder": "Nom complet",
+      "phoneLabel": "Numéro de téléphone",
+      "phonePlaceholder": "+1 212 555 0199",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "email@exemple.com",
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "Rue, numéro, ville",
+      "optional": "Optionnel"
+    },
+    "actions": { "registering": "Inscription du patient...", "register": "Inscrire le patient", "backToPanel": "Retour au panneau" },
+    "defaults": { "noInitialInfo": "Aucune information initiale" },
+    "messages": { "registerOkOpeningRecord": "Patient inscrit avec succès. Ouverture du dossier patient..." },
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "identityInvalid": "Format d'identité invalide. Utilisez DNI (12345678A), NIE (X1234567A) ou passeport (5-9 caractères).",
+      "fullNameIncomplete": "Saisissez nom et prénom complets (minimum 2 mots).",
+      "fullNameInvalid": "Le nom ne doit contenir que des lettres (et espaces).",
+      "phoneInvalid": "Format de téléphone invalide. Utilisez un numéro international valide (7-15 chiffres), ex. : +1 212 555 0199",
+      "emailInvalid": "Adresse e-mail invalide. Utilisez un format comme : email@exemple.com",
+      "addressInvalid": "Format d'adresse invalide. Utilisez « Rue, numéro, ville ».",
+      "createdWithoutId": "Le patient a été enregistré, mais l'identifiant n'a pas été reçu. Retournez au panneau du médecin et réessayez.",
+      "badRequest": "Données invalides ou patient déjà existant.",
+      "backendConnection": "Impossible de finaliser la connexion pour le moment.",
+      "generic": "Impossible de terminer l'inscription. Réessayez."
+    }
+  },
+  "settings": {
+    "title": "Paramètres du compte",
+    "subtitle": "Mettez à jour votre e-mail et votre mot de passe d'accès.",
+    "validation": { "reviewFields": "Vérifiez les champs indiqués avant d'enregistrer les modifications." },
+    "fields": {
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "nom@exemple.com",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe"
+    },
+    "actions": {
+      "saving": "Enregistrement...",
+      "saveChanges": "Enregistrer les modifications",
+      "deletingAccount": "Suppression du compte...",
+      "deleteAccount": "Supprimer le compte"
+    },
+    "image": {
+      "title": "Image de profil",
+      "profilePhotoAlt": "Photo de profil du médecin",
+      "actions": { "uploading": "Téléversement...", "changeImage": "Changer l'image" },
+      "messages": { "updatedOk": "Image de profil mise à jour avec succès." },
+      "errors": {
+        "onlyImages": "Seuls les fichiers image sont autorisés.",
+        "invalidOrTooLarge": "L'image est trop volumineuse ou invalide.",
+        "cannotProcess": "Impossible de traiter l'image sélectionnée.",
+        "updateGeneric": "Impossible de mettre à jour l'image. Réessayez."
+      }
+    },
+    "footer": { "backQuestion": "Souhaitez-vous revenir au panneau ?", "backToPanel": "Retour au panneau" },
+    "delete": {
+      "confirmPrompt": "Cette action supprimera définitivement votre compte médecin. Voulez-vous continuer ?",
+      "errors": { "noPermission": "Vous n'avez pas l'autorisation de supprimer ce compte.", "generic": "Impossible de supprimer le compte. Réessayez." }
+    },
+    "messages": { "updatedOk": "Données mises à jour avec succès." },
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "invalidEmail": "Adresse e-mail invalide. Utilisez un format comme : nom@exemple.com",
+      "passwordMin": "Le mot de passe doit contenir au moins 6 caractères.",
+      "confirmPasswordRequired": "Vous devez confirmer le mot de passe.",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
+      "cannotIdentifyUser": "Impossible d'identifier votre utilisateur. Reconnectez-vous.",
+      "cannotIdentifyUserForUpdate": "Impossible d'identifier votre utilisateur pour mettre à jour les informations.",
+      "cannotIdentifyUserRetry": "Impossible d'identifier votre utilisateur. Reconnectez-vous et réessayez.",
+      "noPermissionEditProfile": "Vous n'avez pas l'autorisation de modifier ce profil.",
+      "sessionExpired": "Votre session a expiré. Reconnectez-vous.",
+      "invalidPayload": "Les informations envoyées sont invalides. Vérifiez le formulaire.",
+      "noPermissionUpdate": "Vous n'avez pas l'autorisation de mettre à jour ces informations.",
+      "updateGeneric": "Impossible de mettre à jour les informations. Réessayez."
+    }
+  },
+  "doctorPanel": {
+    "defaults": {
+      "user": "Utilisateur",
+      "professional": "Professionnel",
+      "patient": "Patient"
+    },
+    "greetings": {
+      "morning": "Bonjour",
+      "afternoon": "Bon après-midi",
+      "night": "Bonsoir"
+    },
+    "nav": {
+      "main": "Navigation principale",
+      "dashboard": "Tableau de bord",
+      "agenda": "Agenda",
+      "patients": "Patients",
+      "settings": "Paramètres"
+    },
+    "profile": {
+      "changePhoto": "Changer la photo",
+      "removePhoto": "Supprimer la photo",
+      "uploadNewPhoto": "Téléverser une nouvelle photo de profil"
+    },
+    "header": {
+      "summaryTitle": "Résumé général",
+      "summarySubtitle": "Recherche de patients et accès rapides de la journée."
+    },
+    "actions": {
+      "newPatient": "Nouveau patient"
+    },
+    "search": {
+      "label": "Rechercher des patients par nom ou ID",
+      "inputTitle": "Rechercher des patients par nom ou numéro de dossier",
+      "placeholder": "Rechercher des patients par nom ou ID…",
+      "resultsAria": "Résultats de recherche de patients",
+      "searching": "Recherche des patients…",
+      "noResults": "Aucun patient trouvé.",
+      "idLabel": "ID",
+      "patientWithId": "Patient n°{{id}}"
+    },
+    "dashboard": {
+      "loadFailed": "Impossible de charger les rendez-vous pour le moment. Vérifiez la connexion puis réessayez.",
+      "greetingSubtitle": "Voici le résumé de votre pratique quotidienne."
+    },
+    "kpis": {
+      "vsYesterday": "pourcentage par rapport a hier",
+      "patientsTodayTitle": "Patients aujourd'hui",
+      "patientsTodaySubtitle": "Rendez-vous prévus aujourd'hui selon les informations disponibles.",
+      "loadErrorTitle": "Erreur de chargement",
+      "actionRequired": "Action requise",
+      "pendingResultsTitle": "Résultats en attente",
+      "pendingResultsSubtitle": "Dossiers nécessitant une révision clinique ou un résultat en attente."
+    },
+    "agenda": {
+      "title": "Agenda du jour",
+      "subtitle": "Rendez-vous du jour triés par heure de début.",
+      "viewFullCalendar": "Voir le calendrier complet",
+      "loading": "Chargement des rendez-vous du jour…",
+      "loadFailed": "Impossible de charger les rendez-vous du jour.",
+      "empty": "Aucun rendez-vous programmé pour aujourd'hui.",
+      "goToCalendar": "Aller au calendrier",
+      "actionsMenu": "Actions du rendez-vous",
+      "confirmVisit": "Confirmer",
+      "cancelVisit": "Annuler",
+      "openPatientRecord": "Ouvrir le dossier patient",
+      "patientUnavailableHint": "Ce rendez-vous n'inclut pas de patient ; impossible d'ouvrir le dossier"
+    },
+    "allergies": {
+      "title": "Alertes d'allergies",
+      "subtitle": "Rendez-vous du jour avec allergies enregistrées.",
+      "todayBadge": "Aujourd'hui",
+      "loading": "Chargement des alertes depuis l'agenda…",
+      "loadFailed": "Impossible de charger les alertes (mêmes rendez-vous que l'agenda).",
+      "empty": "Aucun rendez-vous avec allergies enregistrées.",
+      "openPatientRecord": "Ouvrir le dossier patient",
+      "missingPatientId": "Identifiant patient manquant dans ce rendez-vous"
+    },
+    "weeklyPatients": {
+      "title": "Patients par semaine",
+      "subtitle": "Rendez-vous du lundi au vendredi (mise à jour en temps réel).",
+      "maxLabel": "Pic hebdomadaire",
+      "pointAria": "{{day}} : {{count}} patients",
+      "days": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven"
+      }
+    }
+  },
+  "patientPanel": {
+    "title": "Dossier du patient",
+    "loadingRecord": "Chargement du dossier patient...",
+    "defaults": { "patient": "Patient", "noInitialInfo": "Aucune information initiale" },
+    "actions": {
+      "backToDoctorPanel": "Retour au panneau du médecin",
+      "backToMyPanel": "Retour à mon panneau",
+      "close": "Fermer",
+      "edit": "Modifier",
+      "saving": "Enregistrement..."
+    },
+    "header": { "recordOf": "Dossier complet de {{name}}", "subtitle": "Informations cliniques centralisées et gestion documentaire." },
+    "profile": { "changePhoto": "Changer la photo", "removePhoto": "Supprimer la photo", "activeTreatment": "Traitement actif" },
+    "nav": { "fullRecord": "Dossier complet", "odontograms": "Odontogrammes" },
+    "allergies": {
+      "title": "Allergies critiques",
+      "subtitle": "Réactions influençant les médicaments et matériaux cliniques.",
+      "addAria": "Ajouter une allergie",
+      "newLabel": "Nouvelle allergie",
+      "newPlaceholder": "Nom de l'allergie",
+      "empty": "Aucune allergie critique enregistrée. Appuyez sur + pour en ajouter.",
+      "removeAria": "Retirer l'allergie",
+      "messages": { "updatedOk": "Les allergies critiques ont été mises à jour avec succès." },
+      "errors": {
+        "enterAllergyName": "Saisissez le nom de l'allergie.",
+        "alreadyRegistered": "Cette allergie est déjà enregistrée.",
+        "saveBadRequest": "Impossible d'enregistrer les allergies. Vérifiez les informations.",
+        "saveGeneric": "Impossible d'enregistrer les allergies. Veuillez réessayer."
+      }
+    },
+    "conditions": {
+      "title": "Maladies et conditions",
+      "subtitle": "État de santé et habitudes de vie enregistrés dans le dossier.",
+      "healthStatusLabel": "État de santé",
+      "healthStatusAria": "État de santé du patient",
+      "lifestyleLabel": "Habitudes de vie",
+      "lifestyleAria": "Habitudes de vie du patient",
+      "placeholder": "Aucune information enregistrée",
+      "savingAuto": "Enregistrement automatique des modifications…",
+      "messages": { "savedAuto": "État de santé et habitudes de vie enregistrés automatiquement." },
+      "errors": {
+        "serverConnection": "Impossible d'enregistrer pour le moment.",
+        "noPermission": "Vous n'avez pas la permission de mettre à jour ces champs.",
+        "saveGeneric": "Impossible d'enregistrer les modifications de ce bloc."
+      }
+    },
+    "contact": {
+      "title": "Coordonnées",
+      "subtitle": "Téléphone, e-mail et adresse pour communiquer avec le patient.",
+      "phoneLabel": "Téléphone mobile",
+      "phoneAria": "Téléphone mobile",
+      "emailLabel": "E-mail",
+      "emailAria": "E-mail",
+      "addressLabel": "Adresse",
+      "addressAria": "Adresse",
+      "confirmData": "Confirmer les informations",
+      "messages": { "savedOk": "Les coordonnées du patient ont été enregistrées avec succès." },
+      "errors": {
+        "pressEditFirst": "Appuyez sur « Modifier » pour changer les coordonnées.",
+        "reviewData": "Vérifiez les coordonnées.",
+        "saveBadRequest": "Impossible d'enregistrer les informations. Vérifiez le format puis réessayez.",
+        "saveGeneric": "Impossible d'enregistrer les informations. Veuillez réessayer.",
+        "phoneRequired": "Le téléphone est obligatoire.",
+        "phoneInvalid": "Format de téléphone invalide. Utilisez un numéro international valide (7-15 chiffres), par exemple : +1 212 555 0199",
+        "emailRequired": "L'e-mail est obligatoire.",
+        "emailInvalid": "E-mail invalide.",
+        "addressInvalid": "Format d'adresse invalide. Utilisez « Rue, numéro, ville »."
+      }
+    },
+    "visitHistory": {
+      "title": "Historique des visites",
+      "subtitle": "Chaque visite inclut son propre odontogramme",
+      "loading": "Chargement de l'historique des visites…",
+      "empty": "Aucune visite enregistrée pour le moment.",
+      "noClinicalNotes": "Aucune note clinique enregistrée.",
+      "refreshTitle": "Mettre à jour l'historique et afficher ce bloc",
+      "actions": { "viewAll": "Voir tout l'historique", "scheduleFirstVisit": "Planifier première visite", "scheduleVisit": "Planifier visite" },
+      "errors": {
+        "sessionExpired": "Session expirée ou invalide. Veuillez vous reconnecter.",
+        "forbidden": "Vous n'avez pas la permission de voir ces rendez-vous (vérifiez rôle/affectation médecin).",
+        "badRequest": "La demande de rendez-vous est invalide. Vérifiez les informations puis réessayez.",
+        "serverConnection": "Impossible de charger les visites pour le moment.",
+        "serverError": "Une erreur est survenue lors du chargement de l'historique des rendez-vous.",
+        "generic": "Impossible de charger l'historique des visites."
+      }
+    },
+    "documents": {
+      "title": "Gestion des fichiers et radiographies",
+      "subtitle": "Radiographies, consentements et documentation clinique associée à ce dossier.",
+      "updating": "Mise à jour…",
+      "uploadNew": "Téléverser un nouveau fichier",
+      "loading": "Chargement des documents…",
+      "empty": "Aucun fichier pour le moment. Téléversez radiographies, consentements ou autres documents du patient.",
+      "downloadAria": "Télécharger",
+      "tapToDownload": "Appuyez pour télécharger",
+      "dragFiles": "Glisser de nouveaux fichiers",
+      "anyFormatMax": "Tout format (max. 15 Mo par fichier)",
+      "uploading": "Téléversement…",
+      "selectFilesAria": "Sélectionner des fichiers cliniques à téléverser dans le dossier de ce patient",
+      "defaults": { "fileName": "document" },
+      "messages": { "savedOne": "Document enregistré avec succès.", "savedMany": "{{count}} documents enregistrés avec succès." },
+      "errors": {
+        "invalidPatientContext": "Aucun dossier patient valide ou non correspondant à l'URL. Rechargez la page.",
+        "emptyFiles": "Les fichiers vides (0 octet) ne peuvent pas être téléversés.",
+        "noFiles": "Aucun fichier.",
+        "fileTooLarge": "Un ou plusieurs fichiers dépassent {{maxMb}} Mo.",
+        "uploadGeneric": "Impossible de téléverser le document.",
+        "uploadBadRequest": "Impossible de téléverser ce fichier ou des informations sont manquantes (vérifiez le type et le patient).",
+        "uploadTooLargeServer": "Le fichier est trop volumineux.",
+        "uploadForbidden": "Vous n'avez pas la permission de téléverser des documents.",
+        "downloadGeneric": "Impossible de télécharger le document.",
+        "downloadBadRequest": "Contexte patient manquant ou invalide pour ce téléchargement.",
+        "downloadForbidden": "Vous n'avez pas la permission de télécharger ce document.",
+        "downloadNotFound": "Le document n'est plus disponible.",
+        "downloadServerError": "Une erreur est survenue lors du téléchargement du document.",
+        "sessionExpired": "Session expirée ou invalide. Veuillez vous reconnecter.",
+        "forbidden": "Vous n'avez pas la permission de voir les documents de ce patient.",
+        "badRequest": "La demande de documents est invalide. Vérifiez les informations puis réessayez.",
+        "serverConnection": "Impossible de charger les documents pour le moment.",
+        "serverError": "Une erreur est survenue lors du chargement des documents.",
+        "generic": "Impossible de charger les documents du patient."
+      }
+    },
+    "errors": {
+      "missingPatientIdInUrl": "Identifiant patient manquant dans l'URL.",
+      "invalidPatientId": "L'identifiant patient n'est pas valide.",
+      "serverConnection": "Impossible de finaliser la connexion pour le moment.",
+      "serverConnectionWithHint": "Impossible de finaliser la connexion. Réessayez dans quelques instants.",
+      "noPermissionUpdatePatient": "Vous n'avez pas la permission de mettre à jour ce patient.",
+      "patientNotFoundById": "Aucun patient avec l'ID {{id}}.",
+      "noSessionOrPermission": "Vous n'avez pas de session ou de permission pour voir ce patient. Reconnectez-vous.",
+      "serverLoadPatient": "Une erreur est survenue lors du chargement du patient. Veuillez réessayer.",
+      "loadPatientGeneric": "Impossible de charger le patient. Vérifiez qu'il existe ou revenez au panneau médecin."
+    }
+  }
+}

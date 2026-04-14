@@ -1,0 +1,386 @@
+{
+  "app": {
+    "language": "Idioma",
+    "brandLogoAlt": "Logotip FalconCare"
+  },
+  "common": {
+    "save": "Desar",
+    "cancel": "Cancel·lar",
+    "retry": "Reintentar",
+    "loading": "Carregant..."
+  },
+  "login": {
+    "title": "Benvingut de nou",
+    "subtitle": "Inicia sessió per accedir al teu panell i gestionar els teus pacients, historial clínic i cites programades.",
+    "validation": {
+      "reviewRequiredFields": "Revisa els camps marcats com a obligatoris (*) abans d'iniciar sessió."
+    },
+    "fields": {
+      "emailLabel": "Correu electrònic",
+      "emailPlaceholder": "nom@exemple.com",
+      "passwordLabel": "Contrasenya",
+      "passwordPlaceholder": "••••••••"
+    },
+    "actions": {
+      "signIn": "Iniciar sessió",
+      "loggingIn": "Iniciant..."
+    },
+    "footer": {
+      "noAccount": "No tens un compte?",
+      "createAccount": "Crear un compte"
+    },
+    "links": {
+      "terms": "Termes",
+      "privacy": "Privacitat",
+      "help": "Ajuda"
+    },
+    "messages": {
+      "registered": "Registre completat correctament. Inicia sessió per accedir al panell."
+    },
+    "errors": {
+      "sessionExpired": "La teva sessió ha caducat o no és vàlida. Inicia sessió de nou.",
+      "required": "Aquest camp és obligatori.",
+      "invalidEmail": "Correu electrònic invàlid. Usa un format com: correu@exemple.com",
+      "invalidCredentials": "Usuari no registrat o contrasenya incorrecta.",
+      "backendUnavailable": "No s'ha pogut connectar amb el servei en aquest moment. Torna-ho a provar.",
+      "generic": "No s'ha pogut iniciar sessió. Revisa la teva informació i torna-ho a provar."
+    }
+  },
+  "doctorRegister": {
+    "title": "Registre de doctor",
+    "subtitle": "Crea el teu compte professional per accedir al teu panell i gestionar els teus pacients.",
+    "validation": { "reviewRequired": "Revisa els camps obligatoris (*) abans de registrar-te." },
+    "fields": {
+      "fullNameLabel": "Nom i cognoms",
+      "fullNamePlaceholder": "El teu nom complet",
+      "emailLabel": "Correu electrònic",
+      "emailPlaceholder": "nom@exemple.com",
+      "passwordLabel": "Contrasenya",
+      "passwordPlaceholder": "Mínim 8 caràcters"
+    },
+    "actions": { "registering": "Registrant doctor...", "register": "Registrar-me" },
+    "footer": { "hasAccount": "Ja tens un compte?", "signIn": "Iniciar sessió" },
+    "messages": { "registerOkRedirecting": "Registre completat correctament. Redirigint al panell del doctor..." },
+    "errors": {
+      "required": "Aquest camp és obligatori.",
+      "fullNameIncomplete": "Introdueix nom i cognoms complets.",
+      "fullNameInvalid": "El nom només pot contenir lletres i espais.",
+      "invalidEmail": "Correu electrònic invàlid. Usa un format com: correu@exemple.com",
+      "passwordMin": "La contrasenya ha de tenir mínim 8 caràcters.",
+      "registerBadRequest": "No s'ha pogut completar el registre. Revisa la informació i torna-ho a provar.",
+      "registeredLoginFailed": "El doctor s'ha registrat, però no s'ha pogut iniciar sessió automàticament.",
+      "backendConnection": "No s'ha pogut completar la connexió en aquest moment. Torna-ho a provar.",
+      "registerGeneric": "No s'ha pogut registrar el doctor. Torna-ho a provar més tard."
+    }
+  },
+  "patientRegister": {
+    "title": "Crea el seu compte",
+    "subtitle": "Cuidem cada detall amb la precisió de qui mira més amunt.",
+    "validation": { "reviewRequired": "Revisa els camps obligatoris (*) abans de registrar-te." },
+    "fields": {
+      "identityLabel": "Número d'identitat",
+      "identityPlaceholder": "DNI, NIE o Passaport",
+      "fullNameLabel": "Nom i cognoms",
+      "fullNamePlaceholder": "El seu nom complet",
+      "phoneLabel": "Número de telèfon",
+      "phonePlaceholder": "+1 212 555 0199",
+      "emailLabel": "Correu electrònic",
+      "emailPlaceholder": "correu@exemple.com",
+      "addressLabel": "Adreça",
+      "addressPlaceholder": "Carrer, número, ciutat",
+      "optional": "Opcional"
+    },
+    "actions": { "registering": "Registrant pacient...", "register": "Registrar pacient", "backToPanel": "Tornar al panell" },
+    "defaults": { "noInitialInfo": "Sense informació inicial" },
+    "messages": { "registerOkOpeningRecord": "Pacient registrat correctament. Obrint l'expedient del pacient..." },
+    "errors": {
+      "required": "Aquest camp és obligatori.",
+      "identityInvalid": "Format d'identitat invàlid. Usa DNI (12345678A), NIE (X1234567A) o passaport (5-9 caràcters).",
+      "fullNameIncomplete": "Introdueix nom i cognoms complets (mínim 2 paraules).",
+      "fullNameInvalid": "El nom només pot contenir lletres (i espais).",
+      "phoneInvalid": "Format de telèfon invàlid. Usa un número internacional vàlid (7-15 dígits), ex.: +1 212 555 0199",
+      "emailInvalid": "Correu electrònic invàlid. Usa un format com: correu@exemple.com",
+      "addressInvalid": "Format d'adreça invàlid. Usa “Carrer, número, ciutat”.",
+      "createdWithoutId": "El pacient s'ha registrat, però no s'ha rebut l'identificador. Torna al panell del doctor i torna-ho a provar.",
+      "badRequest": "Dades invàlides o pacient ja existent.",
+      "backendConnection": "No s'ha pogut completar la connexió en aquest moment.",
+      "generic": "No s'ha pogut completar el registre. Torna-ho a provar."
+    }
+  },
+  "settings": {
+    "title": "Configuració del compte",
+    "subtitle": "Actualitza el teu correu electrònic i la contrasenya d'accés.",
+    "validation": { "reviewFields": "Revisa els camps marcats abans de desar els canvis." },
+    "fields": {
+      "emailLabel": "Correu electrònic",
+      "emailPlaceholder": "nom@exemple.com",
+      "newPasswordLabel": "Nova contrasenya",
+      "confirmPasswordLabel": "Confirmar contrasenya"
+    },
+    "actions": {
+      "saving": "Desant...",
+      "saveChanges": "Desar canvis",
+      "deletingAccount": "Eliminant compte...",
+      "deleteAccount": "Eliminar compte"
+    },
+    "image": {
+      "title": "Imatge de perfil",
+      "profilePhotoAlt": "Foto de perfil del doctor",
+      "actions": { "uploading": "Pujant...", "changeImage": "Canviar imatge" },
+      "messages": { "updatedOk": "Imatge de perfil actualitzada correctament." },
+      "errors": {
+        "onlyImages": "Només es permeten arxius d'imatge.",
+        "invalidOrTooLarge": "La imatge és massa gran o invàlida.",
+        "cannotProcess": "No s'ha pogut processar la imatge seleccionada.",
+        "updateGeneric": "No s'ha pogut actualitzar la imatge. Torna-ho a provar."
+      }
+    },
+    "footer": { "backQuestion": "Vols tornar al panell?", "backToPanel": "Tornar al panell" },
+    "delete": {
+      "confirmPrompt": "Aquesta acció eliminarà permanentment el teu compte de doctor. Vols continuar?",
+      "errors": { "noPermission": "No tens permisos per eliminar aquest compte.", "generic": "No s'ha pogut eliminar el compte. Torna-ho a provar." }
+    },
+    "messages": { "updatedOk": "Dades actualitzades correctament." },
+    "errors": {
+      "required": "Aquest camp és obligatori.",
+      "invalidEmail": "Correu electrònic invàlid. Usa un format com: correu@exemple.com",
+      "passwordMin": "La contrasenya ha de tenir almenys 6 caràcters.",
+      "confirmPasswordRequired": "Has de confirmar la contrasenya.",
+      "passwordsDoNotMatch": "Les contrasenyes no coincideixen.",
+      "cannotIdentifyUser": "No s'ha pogut identificar el teu usuari. Torna a iniciar sessió.",
+      "cannotIdentifyUserForUpdate": "No s'ha pogut identificar el teu usuari per actualitzar la informació.",
+      "cannotIdentifyUserRetry": "No s'ha pogut identificar el teu usuari. Torna a iniciar sessió i prova de nou.",
+      "noPermissionEditProfile": "No tens permisos per editar aquest perfil.",
+      "sessionExpired": "La teva sessió ha caducat. Torna a iniciar sessió.",
+      "invalidPayload": "La informació enviada no és vàlida. Revisa el formulari.",
+      "noPermissionUpdate": "No tens permisos per actualitzar aquesta informació.",
+      "updateGeneric": "No s'ha pogut actualitzar la informació. Torna-ho a provar."
+    }
+  },
+  "doctorPanel": {
+    "defaults": {
+      "user": "Usuari",
+      "professional": "Professional",
+      "patient": "Pacient"
+    },
+    "greetings": {
+      "morning": "Bon dia",
+      "afternoon": "Bona tarda",
+      "night": "Bona nit"
+    },
+    "nav": {
+      "main": "Navegació principal",
+      "dashboard": "Panell de control",
+      "agenda": "Agenda",
+      "patients": "Pacients",
+      "settings": "Configuració"
+    },
+    "profile": {
+      "changePhoto": "Canviar foto",
+      "removePhoto": "Eliminar foto",
+      "uploadNewPhoto": "Pujar una nova foto de perfil"
+    },
+    "header": {
+      "summaryTitle": "Resum general",
+      "summarySubtitle": "Cerca de pacients i accessos ràpids del dia."
+    },
+    "actions": {
+      "newPatient": "Nou pacient"
+    },
+    "search": {
+      "label": "Cercar pacients per nom o ID",
+      "inputTitle": "Cercar pacients per nom o número d'expedient",
+      "placeholder": "Cercar pacients per nom o ID…",
+      "resultsAria": "Resultats de cerca de pacients",
+      "searching": "Cercant pacients…",
+      "noResults": "No s'han trobat pacients.",
+      "idLabel": "ID",
+      "patientWithId": "Pacient #{{id}}"
+    },
+    "dashboard": {
+      "loadFailed": "No s'han pogut carregar les cites en aquest moment. Comprova la connexió i torna-ho a provar.",
+      "greetingSubtitle": "Aquí tens el resum de la teva pràctica diària."
+    },
+    "kpis": {
+      "vsYesterday": "percentatge respecte ahir",
+      "patientsTodayTitle": "Pacients avui",
+      "patientsTodaySubtitle": "Cites amb data d'avui segons la informació disponible.",
+      "loadErrorTitle": "Error en carregar",
+      "actionRequired": "Acció requerida",
+      "pendingResultsTitle": "Resultats pendents",
+      "pendingResultsSubtitle": "Registres que requereixen revisió clínica o resultat pendent."
+    },
+    "agenda": {
+      "title": "Agenda d'avui",
+      "subtitle": "Cites d'avui ordenades per hora d'inici.",
+      "viewFullCalendar": "Veure calendari complet",
+      "loading": "Carregant les cites d'avui…",
+      "loadFailed": "No s'han pogut carregar les cites d'avui.",
+      "empty": "No hi ha cites programades per avui.",
+      "goToCalendar": "Anar al calendari",
+      "actionsMenu": "Accions de la cita",
+      "confirmVisit": "Confirmar",
+      "cancelVisit": "Cancel·lar",
+      "openPatientRecord": "Obrir expedient del pacient",
+      "patientUnavailableHint": "Aquesta cita no inclou el pacient; no es pot obrir l'expedient"
+    },
+    "allergies": {
+      "title": "Alertes d'al·lèrgies",
+      "subtitle": "Cites d'avui amb al·lèrgies registrades.",
+      "todayBadge": "Avui",
+      "loading": "Carregant alertes des de l'agenda…",
+      "loadFailed": "No s'han pogut carregar les alertes (mateixes cites que l'agenda).",
+      "empty": "No hi ha cites amb al·lèrgies registrades.",
+      "openPatientRecord": "Obrir expedient del pacient",
+      "missingPatientId": "Sense identificador de pacient en aquesta cita"
+    },
+    "weeklyPatients": {
+      "title": "Pacients per setmana",
+      "subtitle": "Cites de dilluns a divendres (actualitzat en temps real).",
+      "maxLabel": "Màxim setmanal",
+      "pointAria": "{{day}}: {{count}} pacients",
+      "days": {
+        "mon": "Dl",
+        "tue": "Dt",
+        "wed": "Dc",
+        "thu": "Dj",
+        "fri": "Dv"
+      }
+    }
+  },
+  "patientPanel": {
+    "title": "Fitxa del pacient",
+    "loadingRecord": "Carregant expedient del pacient...",
+    "defaults": { "patient": "Pacient", "noInitialInfo": "Sense informació inicial" },
+    "actions": {
+      "backToDoctorPanel": "Tornar al panell del doctor",
+      "backToMyPanel": "Tornar al meu panell",
+      "close": "Tancar",
+      "edit": "Editar",
+      "saving": "Desant..."
+    },
+    "header": { "recordOf": "Expedient integral de {{name}}", "subtitle": "Informació clínica centralitzada i gestió documental." },
+    "profile": { "changePhoto": "Canviar foto", "removePhoto": "Eliminar foto", "activeTreatment": "Tractament actiu" },
+    "nav": { "fullRecord": "Expedient integral", "odontograms": "Odontogrames" },
+    "allergies": {
+      "title": "Al·lèrgies crítiques",
+      "subtitle": "Reaccions que condicionen medicació i materials clínics.",
+      "addAria": "Afegir al·lèrgia",
+      "newLabel": "Nova al·lèrgia",
+      "newPlaceholder": "Nom de l'al·lèrgia",
+      "empty": "No hi ha al·lèrgies crítiques registrades. Prem + per afegir-ne.",
+      "removeAria": "Treure al·lèrgia",
+      "messages": { "updatedOk": "Les al·lèrgies crítiques s'han actualitzat correctament." },
+      "errors": {
+        "enterAllergyName": "Escriu el nom de l'al·lèrgia.",
+        "alreadyRegistered": "Aquesta al·lèrgia ja està registrada.",
+        "saveBadRequest": "No s'han pogut desar les al·lèrgies. Revisa la informació.",
+        "saveGeneric": "No s'han pogut desar les al·lèrgies. Torna-ho a provar."
+      }
+    },
+    "conditions": {
+      "title": "Malalties i condicions",
+      "subtitle": "Estat de salut i hàbits de vida registrats a l'expedient.",
+      "healthStatusLabel": "Estat de salut",
+      "healthStatusAria": "Estat de salut del pacient",
+      "lifestyleLabel": "Hàbits de vida",
+      "lifestyleAria": "Hàbits de vida del pacient",
+      "placeholder": "Sense informació registrada",
+      "savingAuto": "Desant canvis automàticament…",
+      "messages": { "savedAuto": "Estat de salut i hàbits desats automàticament." },
+      "errors": {
+        "serverConnection": "No s'han pogut desar els canvis en aquest moment.",
+        "noPermission": "No tens permís per actualitzar aquests camps.",
+        "saveGeneric": "No s'han pogut desar els canvis en aquest bloc."
+      }
+    },
+    "contact": {
+      "title": "Dades de contacte",
+      "subtitle": "Telèfon, correu i adreça per comunicar-se amb el pacient.",
+      "phoneLabel": "Telèfon mòbil",
+      "phoneAria": "Telèfon mòbil",
+      "emailLabel": "Correu electrònic",
+      "emailAria": "Correu electrònic",
+      "addressLabel": "Adreça",
+      "addressAria": "Adreça",
+      "confirmData": "Confirmar informació",
+      "messages": { "savedOk": "La informació de contacte del pacient s'ha desat correctament." },
+      "errors": {
+        "pressEditFirst": "Prem «Editar» per modificar la informació de contacte.",
+        "reviewData": "Revisa la informació de contacte.",
+        "saveBadRequest": "No s'ha pogut desar la informació. Revisa el format o torna-ho a provar.",
+        "saveGeneric": "No s'ha pogut desar la informació. Torna-ho a provar.",
+        "phoneRequired": "El telèfon és obligatori.",
+        "phoneInvalid": "Format de telèfon invàlid. Usa un número internacional vàlid (7-15 dígits), per exemple: +1 212 555 0199",
+        "emailRequired": "El correu electrònic és obligatori.",
+        "emailInvalid": "Correu electrònic invàlid.",
+        "addressInvalid": "Format d'adreça invàlid. Usa “Carrer, número, ciutat”."
+      }
+    },
+    "visitHistory": {
+      "title": "Historial de visites",
+      "subtitle": "Cada visita inclou el seu propi odontograma",
+      "loading": "Carregant historial de visites…",
+      "empty": "Encara no hi ha visites registrades.",
+      "noClinicalNotes": "Sense notes clíniques registrades.",
+      "refreshTitle": "Actualitzar historial i veure el bloc",
+      "actions": { "viewAll": "Veure tot l'historial", "scheduleFirstVisit": "Programar primera visita", "scheduleVisit": "Programar visita" },
+      "errors": {
+        "sessionExpired": "Sessió caducada o no vàlida. Torna a iniciar sessió.",
+        "forbidden": "No tens permís per veure aquestes cites (comprova rol o assignació com a doctor).",
+        "badRequest": "La sol·licitud de cites no és vàlida. Revisa la informació i torna-ho a provar.",
+        "serverConnection": "No s'han pogut carregar les visites en aquest moment.",
+        "serverError": "Hi ha hagut un error en carregar l'historial de cites.",
+        "generic": "No s'ha pogut carregar l'historial de visites."
+      }
+    },
+    "documents": {
+      "title": "Gestió d'arxius i radiografies",
+      "subtitle": "Radiografies, consentiments i documentació clínica associada a aquest expedient.",
+      "updating": "Actualitzant…",
+      "uploadNew": "Pujar nou arxiu",
+      "loading": "Carregant documents…",
+      "empty": "Sense arxius encara. Puja radiografies, consentiments o altres documents del pacient.",
+      "downloadAria": "Descarregar",
+      "tapToDownload": "Prem per descarregar",
+      "dragFiles": "Arrossegar nous arxius",
+      "anyFormatMax": "Qualsevol format (màx. 15 MB per arxiu)",
+      "uploading": "Pujant…",
+      "selectFilesAria": "Seleccionar arxius clínics per pujar a l'expedient d'aquest pacient",
+      "defaults": { "fileName": "document" },
+      "messages": { "savedOne": "Document desat correctament.", "savedMany": "{{count}} documents desats correctament." },
+      "errors": {
+        "invalidPatientContext": "No hi ha un expedient de pacient vàlid o no coincideix amb la URL. Recarrega la pàgina.",
+        "emptyFiles": "No es poden pujar arxius buits (0 bytes).",
+        "noFiles": "No hi ha arxius.",
+        "fileTooLarge": "Un o més arxius superen {{maxMb}} MB.",
+        "uploadGeneric": "No s'ha pogut pujar el document.",
+        "uploadBadRequest": "No s'ha pogut pujar aquest arxiu o falta informació (revisa tipus i pacient).",
+        "uploadTooLargeServer": "L'arxiu és massa gran.",
+        "uploadForbidden": "No tens permís per pujar documents.",
+        "downloadGeneric": "No s'ha pogut descarregar el document.",
+        "downloadBadRequest": "Falta o és invàlid el context del pacient per a aquesta descàrrega.",
+        "downloadForbidden": "No tens permís per descarregar aquest document.",
+        "downloadNotFound": "El document ja no està disponible.",
+        "downloadServerError": "Hi ha hagut un error en descarregar el document.",
+        "sessionExpired": "Sessió caducada o no vàlida. Torna a iniciar sessió.",
+        "forbidden": "No tens permís per veure els documents d'aquest pacient.",
+        "badRequest": "La sol·licitud de documents no és vàlida. Revisa la informació i torna-ho a provar.",
+        "serverConnection": "No s'han pogut carregar els documents en aquest moment.",
+        "serverError": "Hi ha hagut un error en carregar els documents.",
+        "generic": "No s'han pogut carregar els documents del pacient."
+      }
+    },
+    "errors": {
+      "missingPatientIdInUrl": "Falta l'identificador del pacient a la URL.",
+      "invalidPatientId": "L'identificador del pacient no és vàlid.",
+      "serverConnection": "No s'ha pogut completar la connexió en aquest moment.",
+      "serverConnectionWithHint": "No s'ha pogut completar la connexió. Torna-ho a provar d'aquí a uns moments.",
+      "noPermissionUpdatePatient": "No tens permís per actualitzar aquest pacient.",
+      "patientNotFoundById": "No existeix cap pacient amb l'ID {{id}}.",
+      "noSessionOrPermission": "No tens sessió o permís per veure aquest pacient. Torna a iniciar sessió.",
+      "serverLoadPatient": "Hi ha hagut un error en carregar el pacient. Torna-ho a provar.",
+      "loadPatientGeneric": "No s'ha pogut carregar el pacient. Verifica que existeixi o torna al panell del doctor."
+    }
+  }
+}
