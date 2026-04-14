@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Subject,
@@ -66,7 +67,7 @@ const PATIENT_DOCUMENT_MAX_BYTES = 15 * 1024 * 1024;
 @Component({
   selector: 'app-patient-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule],
   templateUrl: './patient-panel.html',
   styleUrl: './patient-panel.css',
 })
@@ -78,6 +79,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
   private readonly appointmentService = inject(AppointmentService);
   private readonly documentService = inject(DocumentService);
   private readonly auth = inject(AuthService);
+  private readonly translate = inject(TranslateService);
 
   /** Misma imagen por defecto que el doctor: logotipo en `branding`. */
   readonly defaultPatientAvatarUrl = PROFILE_IMAGE_DEFAULT_URL;
@@ -199,13 +201,13 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
           this.patientFileFeedback.set(null);
           if (!idStr) {
             this.loading.set(false);
-            this.loadError.set('Falta el identificador del paciente en la URL.');
+            this.loadError.set(this.t('patientPanel.errors.missingPatientIdInUrl'));
             return EMPTY;
           }
           const id = Number(idStr);
           if (!Number.isFinite(id) || id < 1) {
             this.loading.set(false);
-            this.loadError.set('El identificador del paciente no es válido.');
+            this.loadError.set(this.t('patientPanel.errors.invalidPatientId'));
             return EMPTY;
           }
           this.loading.set(true);
@@ -288,14 +290,14 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     const label = this.toAllergyLabel(this.newAllergyText);
     if (!label) {
       this.allergyFeedbackOk.set(null);
-      this.allergyFeedbackError.set('Escribe el nombre de la alergia.');
+      this.allergyFeedbackError.set(this.t('patientPanel.allergies.errors.enterAllergyName'));
       this.scheduleAllergyFeedbackAutoHide();
       return;
     }
     const existing = this.getAllergyItems();
     if (existing.includes(label)) {
       this.allergyFeedbackOk.set(null);
-      this.allergyFeedbackError.set('Esta alergia ya está registrada.');
+      this.allergyFeedbackError.set(this.t('patientPanel.allergies.errors.alreadyRegistered'));
       this.scheduleAllergyFeedbackAutoHide();
       return;
     }
@@ -329,20 +331,20 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         this.patient.set(this.adaptPatient(raw as unknown));
         this.newAllergyText = '';
         this.allergyAdding.set(false);
-        this.allergyFeedbackOk.set('Las alergias críticas se han actualizado correctamente.');
+        this.allergyFeedbackOk.set(this.t('patientPanel.allergies.messages.updatedOk'));
         this.scheduleAllergyFeedbackAutoHide();
         this.allergySaving.set(false);
       },
       error: (err: unknown) => {
         const http = err as HttpErrorResponse;
         if (http?.status === 400) {
-          this.allergyFeedbackError.set('No se pudieron guardar las alergias. Revisa los datos.');
+          this.allergyFeedbackError.set(this.t('patientPanel.allergies.errors.saveBadRequest'));
         } else if (http?.status === 0) {
-          this.allergyFeedbackError.set('No se pudo conectar con el servidor.');
+          this.allergyFeedbackError.set(this.t('patientPanel.errors.serverConnection'));
         } else if (http?.status === 401 || http?.status === 403) {
-          this.allergyFeedbackError.set('No tienes permiso para actualizar este paciente.');
+          this.allergyFeedbackError.set(this.t('patientPanel.errors.noPermissionUpdatePatient'));
         } else {
-          this.allergyFeedbackError.set('No se pudieron guardar las alergias. Inténtalo de nuevo.');
+          this.allergyFeedbackError.set(this.t('patientPanel.allergies.errors.saveGeneric'));
         }
         this.scheduleAllergyFeedbackAutoHide();
         this.allergySaving.set(false);
@@ -352,7 +354,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
 
   private allergiesToStorageString(items: string[]): string {
     if (items.length === 0) {
-      return 'Sin información inicial';
+      return this.t('patientPanel.defaults.noInitialInfo');
     }
     return items.map((i) => this.toAllergyLabel(i)).join(', ');
   }
@@ -383,7 +385,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     this.contactFeedbackOk.set(null);
 
     if (!this.contactEditMode()) {
-      this.contactFeedbackError.set('Pulsa «Editar» para modificar los datos de contacto.');
+      this.contactFeedbackError.set(this.t('patientPanel.contact.errors.pressEditFirst'));
       this.scheduleContactFeedbackAutoHide();
       return;
     }
@@ -397,7 +399,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     const emailErr = this.getDraftEmailError();
     const addressErr = this.getDraftAddressError();
     if (phoneErr || emailErr || addressErr) {
-      this.contactFeedbackError.set(phoneErr ?? emailErr ?? addressErr ?? 'Revisa los datos de contacto.');
+      this.contactFeedbackError.set(phoneErr ?? emailErr ?? addressErr ?? this.t('patientPanel.contact.errors.reviewData'));
       this.scheduleContactFeedbackAutoHide();
       return;
     }
@@ -413,22 +415,20 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         this.patient.set(updated);
         this.resetContactDraftFromPatient();
         this.contactEditMode.set(false);
-        this.contactFeedbackOk.set(
-          'Los datos de contacto del paciente se han guardado correctamente.'
-        );
+        this.contactFeedbackOk.set(this.t('patientPanel.contact.messages.savedOk'));
         this.scheduleContactFeedbackAutoHide();
         this.contactSaving.set(false);
       },
       error: (err: unknown) => {
         const http = err as HttpErrorResponse;
         if (http?.status === 400) {
-          this.contactFeedbackError.set('No se pudieron guardar los datos. Revisa el formato o inténtalo de nuevo.');
+          this.contactFeedbackError.set(this.t('patientPanel.contact.errors.saveBadRequest'));
         } else if (http?.status === 0) {
-          this.contactFeedbackError.set('No se pudo conectar con el servidor.');
+          this.contactFeedbackError.set(this.t('patientPanel.errors.serverConnection'));
         } else if (http?.status === 401 || http?.status === 403) {
-          this.contactFeedbackError.set('No tienes permiso para actualizar este paciente.');
+          this.contactFeedbackError.set(this.t('patientPanel.errors.noPermissionUpdatePatient'));
         } else {
-          this.contactFeedbackError.set('No se pudieron guardar los datos. Inténtalo de nuevo.');
+          this.contactFeedbackError.set(this.t('patientPanel.contact.errors.saveGeneric'));
         }
         this.scheduleContactFeedbackAutoHide();
         this.contactSaving.set(false);
@@ -464,8 +464,8 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       return of(null);
     }
 
-    const healthStatus = this.draftHealthStatus.trim() || 'Sin información inicial';
-    const lifestyleHabits = this.draftLifestyleHabits.trim() || 'Sin información inicial';
+    const healthStatus = this.draftHealthStatus.trim() || this.t('patientPanel.defaults.noInitialInfo');
+    const lifestyleHabits = this.draftLifestyleHabits.trim() || this.t('patientPanel.defaults.noInitialInfo');
     const noChanges =
       (p.healthStatus ?? '').trim() === healthStatus &&
       (p.lifestyleHabits ?? '').trim() === lifestyleHabits;
@@ -481,18 +481,18 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         this.patient.set(updated);
         this.resetConditionsDraftFromPatient();
         this.conditionsDirty = false;
-        this.conditionsFeedbackOk.set('Estado de salud y hábitos guardados automáticamente.');
+        this.conditionsFeedbackOk.set(this.t('patientPanel.conditions.messages.savedAuto'));
         this.scheduleConditionsFeedbackAutoHide();
         return updated;
       }),
       catchError((err: unknown) => {
         const http = err as HttpErrorResponse;
         if (http?.status === 0) {
-          this.conditionsFeedbackError.set('No se pudo conectar con el servidor para guardar cambios.');
+          this.conditionsFeedbackError.set(this.t('patientPanel.conditions.errors.serverConnection'));
         } else if (http?.status === 401 || http?.status === 403) {
-          this.conditionsFeedbackError.set('No tienes permiso para actualizar estos campos.');
+          this.conditionsFeedbackError.set(this.t('patientPanel.conditions.errors.noPermission'));
         } else {
-          this.conditionsFeedbackError.set('No se pudieron guardar los cambios en este bloque.');
+          this.conditionsFeedbackError.set(this.t('patientPanel.conditions.errors.saveGeneric'));
         }
         this.scheduleConditionsFeedbackAutoHide();
         return of(null);
@@ -541,25 +541,25 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
   private getDraftPhoneError(): string | null {
     const normalized = this.normalizePhone(this.draftPhone);
     if (!normalized) {
-      return 'El teléfono es obligatorio.';
+      return this.t('patientPanel.contact.errors.phoneRequired');
     }
     const re = /^\+?\d{7,15}$/;
     if (re.test(normalized)) {
       return null;
     }
-    return 'Formato de teléfono inválido. Usa un número internacional válido (7-15 dígitos), por ejemplo: +1 212 555 0199';
+    return this.t('patientPanel.contact.errors.phoneInvalid');
   }
 
   private getDraftEmailError(): string | null {
     const v = this.draftEmail.trim();
     if (!v) {
-      return 'El correo electrónico es obligatorio.';
+      return this.t('patientPanel.contact.errors.emailRequired');
     }
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (re.test(v)) {
       return null;
     }
-    return 'Correo electrónico inválido.';
+    return this.t('patientPanel.contact.errors.emailInvalid');
   }
 
   private getDraftAddressError(): string | null {
@@ -568,7 +568,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       return null;
     }
     if (!v.includes(',') || (v.match(/,/g)?.length ?? 0) < 2) {
-      return 'Dirección con formato inválido. Usa “Calle, número, ciudad”.';
+      return this.t('patientPanel.contact.errors.addressInvalid');
     }
     return null;
   }
@@ -769,7 +769,9 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
 
   /** Etiqueta del CTA ámbar: primera visita vs cita adicional. */
   agendarVisitaCtaLabel(): string {
-    return this.visitHistory().length === 0 ? 'Agendar Primera Visita' : 'Agendar visita';
+    return this.visitHistory().length === 0
+      ? this.t('patientPanel.visitHistory.actions.scheduleFirstVisit')
+      : this.t('patientPanel.visitHistory.actions.scheduleVisit');
   }
 
   /** El CTA se muestra en cuanto sabemos el estado del historial (no durante la carga inicial). */
@@ -781,7 +783,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     const fn = p.firstName?.trim() ?? '';
     const ln = p.lastName?.trim() ?? '';
     const joined = [fn, ln].filter(Boolean).join(' ');
-    return joined || 'Paciente';
+    return joined || this.t('patientPanel.defaults.patient');
   }
 
   onBackToDoctorPanel(): void {
@@ -846,21 +848,17 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         }
         const http = err as HttpErrorResponse;
         if (http?.status === 401) {
-          this.visitHistoryError.set('Sesión caducada o no válida. Vuelve a iniciar sesión.');
+          this.visitHistoryError.set(this.t('patientPanel.visitHistory.errors.sessionExpired'));
         } else if (http?.status === 403) {
-          this.visitHistoryError.set(
-            'No tienes permiso para ver estas citas (comprueba rol o asignación como doctor).'
-          );
+          this.visitHistoryError.set(this.t('patientPanel.visitHistory.errors.forbidden'));
         } else if (http?.status === 400) {
-          this.visitHistoryError.set(
-            'La petición de citas no es válida. Revisa la configuración del API (filtro patientId).'
-          );
+          this.visitHistoryError.set(this.t('patientPanel.visitHistory.errors.badRequest'));
         } else if (http?.status === 0) {
-          this.visitHistoryError.set('No se pudo conectar con el servidor para cargar las visitas.');
+          this.visitHistoryError.set(this.t('patientPanel.visitHistory.errors.serverConnection'));
         } else if (http?.status != null && http.status >= 500) {
-          this.visitHistoryError.set('El servidor devolvió un error al cargar el historial de citas.');
+          this.visitHistoryError.set(this.t('patientPanel.visitHistory.errors.serverError'));
         } else {
-          this.visitHistoryError.set('No se pudo cargar el historial de visitas.');
+          this.visitHistoryError.set(this.t('patientPanel.visitHistory.errors.generic'));
         }
         this.scheduleVisitHistoryErrorAutoHide();
         this.visitHistory.set([]);
@@ -913,19 +911,17 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         }
         const http = err as HttpErrorResponse;
         if (http?.status === 401) {
-          this.patientDocumentsError.set('Sesión caducada o no válida. Vuelve a iniciar sesión.');
+          this.patientDocumentsError.set(this.t('patientPanel.documents.errors.sessionExpired'));
         } else if (http?.status === 403) {
-          this.patientDocumentsError.set('No tienes permiso para ver los documentos de este paciente.');
+          this.patientDocumentsError.set(this.t('patientPanel.documents.errors.forbidden'));
         } else if (http?.status === 400) {
-          this.patientDocumentsError.set(
-            'La petición de documentos no es válida. Revisa el filtro `patientId` en el API.'
-          );
+          this.patientDocumentsError.set(this.t('patientPanel.documents.errors.badRequest'));
         } else if (http?.status === 0) {
-          this.patientDocumentsError.set('No se pudo conectar con el servidor para cargar los documentos.');
+          this.patientDocumentsError.set(this.t('patientPanel.documents.errors.serverConnection'));
         } else if (http?.status != null && http.status >= 500) {
-          this.patientDocumentsError.set('El servidor devolvió un error al cargar los documentos.');
+          this.patientDocumentsError.set(this.t('patientPanel.documents.errors.serverError'));
         } else {
-          this.patientDocumentsError.set('No se pudieron cargar los documentos del paciente.');
+          this.patientDocumentsError.set(this.t('patientPanel.documents.errors.generic'));
         }
         this.schedulePatientDocumentsErrorAutoHide();
         this.patientDocuments.set([]);
@@ -982,7 +978,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     if (pid == null) {
       this.showPatientFileFeedback(
         'error',
-        'No hay un expediente de paciente válido o no coincide con la URL. Recarga la página.'
+        this.t('patientPanel.documents.errors.invalidPatientContext')
       );
       return;
     }
@@ -990,7 +986,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     if (nonEmpty.length === 0) {
       this.showPatientFileFeedback(
         'error',
-        files.length > 0 ? 'No se pueden subir archivos vacíos (0 bytes).' : 'No hay archivos.'
+        files.length > 0 ? this.t('patientPanel.documents.errors.emptyFiles') : this.t('patientPanel.documents.errors.noFiles')
       );
       return;
     }
@@ -998,7 +994,9 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     if (tooLarge.length > 0) {
       this.showPatientFileFeedback(
         'error',
-        `Uno o más archivos superan ${PATIENT_DOCUMENT_MAX_BYTES / (1024 * 1024)} MB.`
+        this.t('patientPanel.documents.errors.fileTooLarge', {
+          maxMb: PATIENT_DOCUMENT_MAX_BYTES / (1024 * 1024),
+        })
       );
       return;
     }
@@ -1030,7 +1028,9 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
           const n = nonEmpty.length;
           this.showPatientFileFeedback(
             'success',
-            n === 1 ? 'Documento guardado correctamente.' : `${n} documentos guardados correctamente.`
+            n === 1
+              ? this.t('patientPanel.documents.messages.savedOne')
+              : this.t('patientPanel.documents.messages.savedMany', { count: n })
           );
         },
         error: (err: unknown) => {
@@ -1038,15 +1038,15 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
             return;
           }
           const http = err as HttpErrorResponse;
-          let msg = 'No se pudo subir el documento.';
+          let msg = this.t('patientPanel.documents.errors.uploadGeneric');
           if (http?.status === 400) {
-            msg = 'El servidor no acepta este archivo o faltan datos (revisa tipo y paciente).';
+            msg = this.t('patientPanel.documents.errors.uploadBadRequest');
           } else if (http?.status === 413) {
-            msg = 'El archivo es demasiado grande para el servidor.';
+            msg = this.t('patientPanel.documents.errors.uploadTooLargeServer');
           } else if (http?.status === 401 || http?.status === 403) {
-            msg = 'No tienes permiso para subir documentos.';
+            msg = this.t('patientPanel.documents.errors.uploadForbidden');
           } else if (http?.status === 0) {
-            msg = 'No se pudo conectar con el servidor.';
+            msg = this.t('patientPanel.errors.serverConnection');
           }
           this.showPatientFileFeedback('error', msg);
         },
@@ -1058,7 +1058,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     if (patientId == null) {
       this.showPatientFileFeedback(
         'error',
-        'No hay un expediente de paciente válido o no coincide con la URL. Recarga la página.'
+        this.t('patientPanel.documents.errors.invalidPatientContext')
       );
       return;
     }
@@ -1078,17 +1078,17 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         },
         error: (err: unknown) => {
           const http = err as HttpErrorResponse;
-          let msg = 'No se pudo descargar el documento.';
+          let msg = this.t('patientPanel.documents.errors.downloadGeneric');
           if (http?.status === 400) {
-            msg = 'Falta o es inválido el contexto del paciente para esta descarga.';
+            msg = this.t('patientPanel.documents.errors.downloadBadRequest');
           } else if (http?.status === 401 || http?.status === 403) {
-            msg = 'No tienes permiso para descargar este documento.';
+            msg = this.t('patientPanel.documents.errors.downloadForbidden');
           } else if (http?.status === 404) {
-            msg = 'El documento ya no está disponible en el servidor.';
+            msg = this.t('patientPanel.documents.errors.downloadNotFound');
           } else if (http?.status === 0) {
-            msg = 'No se pudo conectar con el servidor.';
+            msg = this.t('patientPanel.errors.serverConnection');
           } else if (http?.status != null && http.status >= 500) {
-            msg = 'El servidor devolvió un error al descargar el documento.';
+            msg = this.t('patientPanel.documents.errors.downloadServerError');
           }
           this.showPatientFileFeedback('error', msg);
         },
@@ -1097,7 +1097,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
 
   /** Evita caracteres inválidos en el atributo `download` del navegador. */
   private sanitizeDownloadFileName(name: string): string {
-    const base = name.trim() || 'documento';
+    const base = name.trim() || this.t('patientPanel.documents.defaults.fileName');
     return base.replace(/[/\\?*:"<>|]/g, '_').slice(0, 180);
   }
 
@@ -1207,17 +1207,21 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     const http = err as HttpErrorResponse;
     const status = http?.status;
     if (status === 404) {
-      return `No existe un paciente con el ID ${patientId} en la base de datos, o la ruta del API no lo encuentra.`;
+      return this.t('patientPanel.errors.patientNotFoundById', { id: patientId });
     }
     if (status === 401 || status === 403) {
-      return 'No tienes sesión o permiso para ver este paciente. Vuelve a iniciar sesión.';
+      return this.t('patientPanel.errors.noSessionOrPermission');
     }
     if (status === 0) {
-      return 'No se pudo conectar con el servidor (¿Symfony en marcha en http://127.0.0.1:8000?).';
+      return this.t('patientPanel.errors.serverConnectionWithHint');
     }
     if (status != null && status >= 500) {
-      return 'El servidor devolvió un error al cargar el paciente (revisa los logs de Symfony).';
+      return this.t('patientPanel.errors.serverLoadPatient');
     }
-    return 'No se pudo cargar el paciente. Verifica que exista o vuelve al panel del doctor.';
+    return this.t('patientPanel.errors.loadPatientGeneric');
+  }
+
+  private t(key: string, params?: Record<string, unknown>): string {
+    return this.translate.instant(key, params);
   }
 }

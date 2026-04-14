@@ -2,7 +2,7 @@
   <div
     class="flex-1 flex min-h-0 items-center justify-center bg-background-light dark:bg-background-dark font-sans text-text-main dark:text-white px-4"
   >
-    <p class="text-text-muted text-sm font-medium">Cargando expediente del paciente...</p>
+    <p class="text-text-muted text-sm font-medium">{{ 'patientPanel.loadingRecord' | translate }}</p>
   </div>
 } @else if (loadError()) {
   <div
@@ -14,7 +14,7 @@
       (click)="onBackToDoctorPanel()"
       class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-colors"
     >
-      Volver al panel del doctor
+      {{ 'patientPanel.actions.backToDoctorPanel' | translate }}
     </button>
   </div>
 } @else if (patient(); as p) {
@@ -55,7 +55,7 @@
                   class="mt-1.5 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
                   for="patient-profile-upload"
                 >
-                  Cambiar foto
+                  {{ 'patientPanel.profile.changePhoto' | translate }}
                 </label>
                 <button
                   type="button"
@@ -63,7 +63,7 @@
                   [disabled]="!patientProfilePhotoRemovable()"
                   (click)="onRemovePatientProfilePhoto()"
                 >
-                  Eliminar foto
+                  {{ 'patientPanel.profile.removePhoto' | translate }}
                 </button>
                 <input
                   id="patient-profile-upload"
@@ -109,7 +109,7 @@
               <span
                 class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold rounded-full"
               >
-                Tratamiento Activo
+                {{ 'patientPanel.profile.activeTreatment' | translate }}
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@
               <span
                 class="material-symbols-outlined text-[24px] text-primary transition-colors group-hover:text-primary"
               >person</span>
-              <span class="text-sm font-bold">Expediente Integral</span>
+              <span class="text-sm font-bold">{{ 'patientPanel.nav.fullRecord' | translate }}</span>
             </a>
             <a
               class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
@@ -130,14 +130,14 @@
               <span
                 class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary"
               >clinical_notes</span>
-              <span class="text-sm font-semibold">Odontogramas</span>
+              <span class="text-sm font-semibold">{{ 'patientPanel.nav.odontograms' | translate }}</span>
             </a>
           </nav>
         </div>
         <div class="mt-auto p-6 border-t border-[#e5e7eb] dark:border-[#1f3636]">
           <button (click)="onBackToDoctorPanel()" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-primary hover:bg-primary-dark transition-colors">
             <span class="material-symbols-outlined text-lg text-white">arrow_back</span>
-            Volver a mi panel
+            {{ 'patientPanel.actions.backToMyPanel' | translate }}
           </button>
         </div>
       </aside>
@@ -147,10 +147,10 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="panel-box-heading gap-1">
               <h1 class="text-2xl font-bold text-text-main dark:text-white tracking-tight">
-                Expediente Integral de {{ displayName(p) }}
+                {{ 'patientPanel.header.recordOf' | translate:{ name: displayName(p) } }}
               </h1>
               <p class="panel-box-subtitle max-w-2xl">
-                Información clínica centralizada y gestión documental.
+                {{ 'patientPanel.header.subtitle' | translate }}
               </p>
             </div>
           </div>
@@ -168,10 +168,10 @@
                       <span class="material-symbols-outlined text-red-600 dark:text-red-400 shrink-0" aria-hidden="true"
                         >warning_amber</span
                       >
-                      Alergias Críticas
+                      {{ 'patientPanel.allergies.title' | translate }}
                     </h3>
                     <p class="panel-box-subtitle">
-                      Reacciones que condicionan medicación y materiales clínicos.
+                      {{ 'patientPanel.allergies.subtitle' | translate }}
                     </p>
                   </div>
                   <button
@@ -179,7 +179,7 @@
                     (click)="toggleAllergyInput()"
                     [disabled]="allergySaving()"
                     class="text-red-700 dark:text-red-200 hover:bg-red-100/80 dark:hover:bg-red-900/40 p-1 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
-                    aria-label="Añadir alergia"
+                    [attr.aria-label]="'patientPanel.allergies.addAria' | translate"
                   >
                     <span class="material-symbols-outlined text-lg">add</span>
                   </button>
@@ -205,13 +205,13 @@
                   }
                   @if (allergyAdding()) {
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <label class="sr-only" for="new_allergy_input">Nueva alergia</label>
+                      <label class="sr-only" for="new_allergy_input">{{ 'patientPanel.allergies.newLabel' | translate }}</label>
                       <input
                         id="new_allergy_input"
                         name="new_allergy_input"
                         class="flex-1 min-w-0 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-950 placeholder:text-red-300 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-950/20 dark:border-red-800 dark:text-red-100"
                         type="text"
-                        placeholder="Nombre de la alergia"
+                        [placeholder]="'patientPanel.allergies.newPlaceholder' | translate"
                         [(ngModel)]="newAllergyText"
                         (keydown.enter)="submitNewAllergy()"
                         [disabled]="allergySaving()"
@@ -223,7 +223,7 @@
                           [disabled]="allergySaving()"
                           class="px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-50"
                         >
-                          Guardar
+                          {{ 'common.save' | translate }}
                         </button>
                         <button
                           type="button"
@@ -231,7 +231,7 @@
                           [disabled]="allergySaving()"
                           class="px-4 py-2.5 rounded-xl border border-red-300 text-red-800 text-sm font-semibold hover:bg-red-200/60 dark:hover:bg-red-900/40 disabled:opacity-50"
                         >
-                          Cerrar
+                          {{ 'patientPanel.actions.close' | translate }}
                         </button>
                       </div>
                     </div>
@@ -243,7 +243,7 @@
                       aria-live="polite"
                     >
                       <p class="text-sm text-text-muted max-w-[20rem]">
-                        No hay alergias críticas registradas. Pulsa + para añadir.
+                        {{ 'patientPanel.allergies.empty' | translate }}
                       </p>
                     </div>
                   }
@@ -265,7 +265,7 @@
                         (click)="removeAllergy(idx)"
                         [disabled]="allergySaving()"
                         class="text-red-400 hover:text-red-600 transition-colors shrink-0 disabled:opacity-50"
-                        [attr.aria-label]="'Quitar alergia ' + allergy"
+                        [attr.aria-label]="('patientPanel.allergies.removeAria' | translate) + ' ' + allergy"
                       >
                         <span class="material-symbols-outlined text-lg">close</span>
                       </button>
@@ -278,8 +278,8 @@
             <div class="md:col-span-12 lg:col-span-8">
               <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 h-full">
                 <div class="panel-box-heading mb-4">
-                  <h3 class="panel-box-title">Enfermedades y Condiciones</h3>
-                  <p class="panel-box-subtitle">Estado de salud y hábitos de vida registrados en el expediente.</p>
+                  <h3 class="panel-box-title">{{ 'patientPanel.conditions.title' | translate }}</h3>
+                  <p class="panel-box-subtitle">{{ 'patientPanel.conditions.subtitle' | translate }}</p>
                 </div>
                 @if (conditionsFeedbackError()) {
                   <p
@@ -299,14 +299,14 @@
                 }
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="apple-label" for="condition_health_status">Estado de salud</label>
+                    <label class="apple-label" for="condition_health_status">{{ 'patientPanel.conditions.healthStatusLabel' | translate }}</label>
                     <div class="relative flex items-start">
                       <span class="material-symbols-outlined absolute left-4 top-3 text-primary text-xl pointer-events-none">health_and_safety</span>
                       <textarea
                         id="condition_health_status"
                         name="condition_health_status"
-                        aria-label="Estado de salud del paciente"
-                        placeholder="Sin información registrada"
+                        [attr.aria-label]="'patientPanel.conditions.healthStatusAria' | translate"
+                        [placeholder]="'patientPanel.conditions.placeholder' | translate"
                         class="apple-input apple-input--with-icon resize-none italic"
                         rows="3"
                         [disabled]="conditionsSaving()"
@@ -317,14 +317,14 @@
                     </div>
                   </div>
                   <div>
-                    <label class="apple-label" for="condition_lifestyle_habits">Hábitos de vida</label>
+                    <label class="apple-label" for="condition_lifestyle_habits">{{ 'patientPanel.conditions.lifestyleLabel' | translate }}</label>
                     <div class="relative flex items-start">
                       <span class="material-symbols-outlined absolute left-4 top-3 text-primary text-xl pointer-events-none">self_improvement</span>
                       <textarea
                         id="condition_lifestyle_habits"
                         name="condition_lifestyle_habits"
-                        aria-label="Hábitos de vida del paciente"
-                        placeholder="Sin información registrada"
+                        [attr.aria-label]="'patientPanel.conditions.lifestyleAria' | translate"
+                        [placeholder]="'patientPanel.conditions.placeholder' | translate"
                         class="apple-input apple-input--with-icon resize-none italic"
                         rows="3"
                         [disabled]="conditionsSaving()"
@@ -336,7 +336,7 @@
                   </div>
                 </div>
                 @if (conditionsSaving()) {
-                  <p class="mt-2 text-xs text-text-muted italic">Guardando cambios automáticamente…</p>
+                  <p class="mt-2 text-xs text-text-muted italic">{{ 'patientPanel.conditions.savingAuto' | translate }}</p>
                 }
               </div>
             </div>
@@ -345,8 +345,8 @@
               <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 h-full">
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start gap-3">
                   <div class="panel-box-heading min-w-0 flex-1">
-                    <h3 class="panel-box-title">Datos de Contacto</h3>
-                    <p class="panel-box-subtitle">Teléfono, correo y dirección para comunicación con el paciente.</p>
+                    <h3 class="panel-box-title">{{ 'patientPanel.contact.title' | translate }}</h3>
+                    <p class="panel-box-subtitle">{{ 'patientPanel.contact.subtitle' | translate }}</p>
                   </div>
                   <button
                     type="button"
@@ -354,7 +354,7 @@
                     class="text-primary hover:text-primary-dark transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-tight"
                   >
                     <span class="material-symbols-outlined text-base">{{ contactEditMode() ? 'close' : 'edit' }}</span>
-                    {{ contactEditMode() ? 'Cancelar' : 'Editar' }}
+                    {{ contactEditMode() ? ('common.cancel' | translate) : ('patientPanel.actions.edit' | translate) }}
                   </button>
                 </div>
                 <div class="p-6 space-y-6">
@@ -375,13 +375,13 @@
                     </p>
                   }
                   <div>
-                    <label class="apple-label" for="contact_phone">Teléfono Móvil</label>
+                    <label class="apple-label" for="contact_phone">{{ 'patientPanel.contact.phoneLabel' | translate }}</label>
                     <div class="relative flex items-center">
                       <span class="material-symbols-outlined absolute left-4 text-primary text-xl pointer-events-none">call</span>
                       <input
                         id="contact_phone"
                         name="contact_phone"
-                        aria-label="Teléfono móvil"
+                        [attr.aria-label]="'patientPanel.contact.phoneAria' | translate"
                         class="apple-input apple-input--with-icon"
                         [class.opacity-70]="!contactEditMode()"
                         type="tel"
@@ -391,13 +391,13 @@
                     </div>
                   </div>
                   <div>
-                    <label class="apple-label" for="contact_email">Correo Electrónico</label>
+                    <label class="apple-label" for="contact_email">{{ 'patientPanel.contact.emailLabel' | translate }}</label>
                     <div class="relative flex items-center">
                       <span class="material-symbols-outlined absolute left-4 text-primary text-xl pointer-events-none">mail</span>
                       <input
                         id="contact_email"
                         name="contact_email"
-                        aria-label="Correo electrónico"
+                        [attr.aria-label]="'patientPanel.contact.emailAria' | translate"
                         class="apple-input apple-input--with-icon"
                         [class.opacity-70]="!contactEditMode()"
                         type="email"
@@ -407,13 +407,13 @@
                     </div>
                   </div>
                   <div>
-                    <label class="apple-label" for="contact_address">Dirección</label>
+                    <label class="apple-label" for="contact_address">{{ 'patientPanel.contact.addressLabel' | translate }}</label>
                     <div class="relative flex items-start">
                       <span class="material-symbols-outlined absolute left-4 top-3 text-primary text-xl pointer-events-none">location_on</span>
                       <textarea
                         id="contact_address"
                         name="contact_address"
-                        aria-label="Dirección"
+                        [attr.aria-label]="'patientPanel.contact.addressAria' | translate"
                         class="apple-input apple-input--with-icon resize-none"
                         [class.opacity-70]="!contactEditMode()"
                         rows="2"
@@ -429,7 +429,7 @@
                     class="w-full bg-primary/10 hover:bg-primary text-primary-dark hover:text-white dark:text-primary font-bold py-3 rounded-lg text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-primary/20 hover:border-primary shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                   >
                     <span class="material-symbols-outlined text-lg">check_circle</span>
-                    {{ contactSaving() ? 'Guardando...' : 'Confirmar Datos' }}
+                    {{ contactSaving() ? ('patientPanel.actions.saving' | translate) : ('patientPanel.contact.confirmData' | translate) }}
                   </button>
                 </div>
               </div>
@@ -442,8 +442,8 @@
               >
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div class="panel-box-heading min-w-0 flex-1">
-                    <h3 class="panel-box-title">Historial de Visitas</h3>
-                    <p class="panel-box-subtitle">Cada visita incluye su propio odontograma</p>
+                    <h3 class="panel-box-title">{{ 'patientPanel.visitHistory.title' | translate }}</h3>
+                    <p class="panel-box-subtitle">{{ 'patientPanel.visitHistory.subtitle' | translate }}</p>
                   </div>
                   <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
                     @if (showAgendarVisitaCta()) {
@@ -467,19 +467,19 @@
                       class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                       (click)="onVisitHistoryRefresh()"
                       [disabled]="visitHistoryLoading()"
-                      title="Actualizar historial desde el servidor y ver el bloque"
+                      [title]="'patientPanel.visitHistory.refreshTitle' | translate"
                     >
                       <span class="material-symbols-outlined text-sm" aria-hidden="true">history</span>
-                      Ver Todo el Historial
+                      {{ 'patientPanel.visitHistory.actions.viewAll' | translate }}
                     </button>
                   </div>
                 </div>
                 @if (visitHistoryLoading()) {
-                  <p class="text-sm text-text-muted py-2">Cargando historial de visitas…</p>
+                  <p class="text-sm text-text-muted py-2">{{ 'patientPanel.visitHistory.loading' | translate }}</p>
                 } @else if (visitHistoryError()) {
                   <p class="text-sm text-red-600 dark:text-red-400 py-2" role="alert">{{ visitHistoryError() }}</p>
                 } @else if (visitHistory().length === 0) {
-                  <p class="text-sm text-text-muted py-2">Sin visitas registradas todavía.</p>
+                  <p class="text-sm text-text-muted py-2">{{ 'patientPanel.visitHistory.empty' | translate }}</p>
                 } @else {
                   <div id="patient-visit-history-timeline" class="visit-history-timeline">
                     @for (visit of visitHistory(); track visit.id; let last = $last) {
@@ -506,7 +506,7 @@
                             } @else if (visit.detail) {
                               {{ visit.detail }}
                             } @else {
-                              Sin notas clínicas registradas.
+                              {{ 'patientPanel.visitHistory.noClinicalNotes' | translate }}
                             }
                           </p>
                         </div>
@@ -523,28 +523,33 @@
             class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6"
             aria-labelledby="patient-documents-heading"
           >
+            <label class="sr-only" for="patient-documents-upload-input">{{
+              'patientPanel.documents.selectFilesAria' | translate
+            }}</label>
             <input
               #patientDocsUpload
+              id="patient-documents-upload-input"
               type="file"
               class="sr-only"
               multiple
               [attr.accept]="'*/*'"
               [disabled]="patientDocumentsZoneLocked()"
-              aria-label="Seleccionar archivos clínicos para subir al expediente de este paciente"
+              [attr.aria-label]="'patientPanel.documents.selectFilesAria' | translate"
+              title="Select files"
               (change)="onPatientDocumentsFileSelected($event)"
             />
             <div class="flex flex-wrap gap-4 justify-between items-start mb-4">
               <div class="flex flex-wrap items-start gap-x-3 gap-y-1 min-w-0 flex-1">
                 <div class="panel-box-heading min-w-0">
                   <h3 id="patient-documents-heading" class="panel-box-title">
-                    Gestión de Archivos y Radiografías
+                    {{ 'patientPanel.documents.title' | translate }}
                   </h3>
                   <p class="panel-box-subtitle">
-                    Radiografías, consentimientos y documentación clínica asociada a este expediente.
+                    {{ 'patientPanel.documents.subtitle' | translate }}
                   </p>
                 </div>
                 @if (patientDocumentsLoading() && patientDocuments().length > 0) {
-                  <span class="text-xs font-medium text-primary self-center shrink-0" aria-live="polite">Actualizando…</span>
+                  <span class="text-xs font-medium text-primary self-center shrink-0" aria-live="polite">{{ 'patientPanel.documents.updating' | translate }}</span>
                 }
               </div>
               <button
@@ -554,7 +559,7 @@
                 (click)="openPatientDocumentsFilePicker(patientDocsUpload)"
               >
                 <span class="material-symbols-outlined text-lg">upload_file</span>
-                Subir Nuevo Archivo
+                {{ 'patientPanel.documents.uploadNew' | translate }}
               </button>
             </div>
             @if (patientFileFeedback(); as pf) {
@@ -582,11 +587,11 @@
             }
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               @if (patientDocumentsLoading() && patientDocuments().length === 0) {
-                <p class="text-sm text-text-muted col-span-full py-4">Cargando documentos…</p>
+                <p class="text-sm text-text-muted col-span-full py-4">{{ 'patientPanel.documents.loading' | translate }}</p>
               }
               @if (!patientDocumentsLoading() && patientDocuments().length === 0 && !patientDocumentsError()) {
                 <p class="text-sm text-text-muted col-span-full py-2">
-                  Sin archivos todavía. Sube radiografías, consentimientos u otros documentos del paciente.
+                  {{ 'patientPanel.documents.empty' | translate }}
                 </p>
               }
               @for (doc of patientDocuments(); track doc.id) {
@@ -594,7 +599,7 @@
                   type="button"
                   class="group relative text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-primary/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   (click)="onPatientDocumentDownload(doc)"
-                  [attr.aria-label]="'Descargar ' + doc.displayName"
+                  [attr.aria-label]="('patientPanel.documents.downloadAria' | translate) + ' ' + doc.displayName"
                 >
                   <div class="aspect-video bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
                     @switch (doc.iconKind) {
@@ -611,7 +616,7 @@
                   </div>
                   <div class="p-4">
                     <p class="font-bold text-sm text-text-main dark:text-white break-words">{{ doc.displayName }}</p>
-                    <p class="text-[10px] text-text-muted mt-1">Pulsa para descargar</p>
+                    <p class="text-[10px] text-text-muted mt-1">{{ 'patientPanel.documents.tapToDownload' | translate }}</p>
                   </div>
                 </button>
               }
@@ -629,10 +634,10 @@
                 (drop)="onPatientDocumentsDrop($event)"
               >
                 <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">add_circle</span>
-                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">Arrastrar nuevos archivos</p>
-                <p class="text-[10px] text-slate-400 text-center mt-1">Cualquier formato (máx. 15 MB por archivo)</p>
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ 'patientPanel.documents.dragFiles' | translate }}</p>
+                <p class="text-[10px] text-slate-400 text-center mt-1">{{ 'patientPanel.documents.anyFormatMax' | translate }}</p>
                 @if (patientDocumentsUploading()) {
-                  <p class="text-xs text-primary font-bold mt-2">Subiendo…</p>
+                  <p class="text-xs text-primary font-bold mt-2">{{ 'patientPanel.documents.uploading' | translate }}</p>
                 }
               </div>
             </div>
