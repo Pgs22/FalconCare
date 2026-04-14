@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Bandera de Catalunya">
+  <rect width="640" height="480" fill="#FCDD09" />
+  <rect y="40" width="640" height="40" fill="#DA121A" />
+  <rect y="120" width="640" height="40" fill="#DA121A" />
+  <rect y="200" width="640" height="40" fill="#DA121A" />
+  <rect y="280" width="640" height="40" fill="#DA121A" />
+  <rect y="360" width="640" height="40" fill="#DA121A" />
+  <rect y="440" width="640" height="40" fill="#DA121A" />
+</svg>
