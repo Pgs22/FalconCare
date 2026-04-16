@@ -12,6 +12,15 @@ import { FormsModule } from '@angular/forms';
 })
 
 export class AppointmentComponent implements OnInit {
+  private errorDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private selectedTreatment: {
+    treatmentId: number;
+    pathologyId: number | null;
+    durationMinutes: number;
+    treatmentName: string;
+  } | null = null;
+
   today = new Date();
   appointments = signal<Appointment[]>([]);
   patientsList = signal<any[]>([]);
@@ -46,6 +55,13 @@ export class AppointmentComponent implements OnInit {
 
   ngOnDestroy(): void {
     this.clearErrorDismissTimer();
+  }
+
+  private clearErrorDismissTimer(): void {
+    if (this.errorDismissTimer != null) {
+      clearTimeout(this.errorDismissTimer);
+      this.errorDismissTimer = null;
+    }
   }
 
   ngOnInit(): void {
@@ -87,33 +103,55 @@ export class AppointmentComponent implements OnInit {
     this.treatmentsList.set([]);
     this.newAppointmentData.treatmentId = '';
     this.newAppointmentData.pathologyId = '';
+    this.selectedTreatment = null;
 
     if (!patientId) return;
 
     this.appointmentService.getPatientTreatments(patientId).subscribe({
       next: (data) => {
         console.log('Tratamientos recibidos de la API:', data);
-        this.treatmentsList.set(data);
+        const list = this.extractList(data);
+        this.treatmentsList.set(list);
       },
       error: (err) => console.error('Error al cargar tratamientos', err)
     });
   }
 
   onTreatmentSelect(tId: any): void {
-    if (!tId || tId === "") {
+    const treatmentId = this.toNumberOrNull(tId);
+    if (treatmentId == null) {
       this.newAppointmentData.durationMinutes = 30;
       this.newAppointmentData.pathologyId = '';
+      this.selectedTreatment = null;
       return;
     }
 
-    const selected = this.treatmentsList().find(t => t.treatmentId == tId);
+    const selected = this.treatmentsList().find((t) =>
+      this.toNumberOrNull(t.treatmentId ?? t.id) === treatmentId
+    );
     
     if (selected) {
-      this.newAppointmentData.pathologyId = selected.pathologyId;
-      
-      this.newAppointmentData.durationMinutes = selected.duration; 
-      
-      this.newAppointmentData.consultationReason = `Seguiment: ${selected.treatmentName}`;
+      const selectedPathologyId = this.toNumberOrNull(
+        selected.pathologyId ?? selected.pathology_id ?? selected.pathologyTypeId
+      );
+      const selectedDuration = this.toPositiveNumberOrDefault(
+        selected.duration ?? selected.durationMinutes ?? selected.duration_minutes,
+        30
+      );
+      const selectedName = String(
+        selected.treatmentName ?? selected.treatment_name ?? selected.name ?? 'Tractament'
+      );
+
+      this.selectedTreatment = {
+        treatmentId,
+        pathologyId: selectedPathologyId,
+        durationMinutes: selectedDuration,
+        treatmentName: selectedName,
+      };
+
+      this.newAppointmentData.pathologyId = selectedPathologyId != null ? String(selectedPathologyId) : '';
+      this.newAppointmentData.durationMinutes = selectedDuration;
+      this.newAppointmentData.consultationReason = `Seguiment: ${selectedName}`;
     }
   }
 
@@ -235,6 +273,10 @@ export class AppointmentComponent implements OnInit {
   }
 
   private executeSave(): void {
+    const treatmentId = this.toNumberOrNull(this.newAppointmentData.treatmentId);
+    const pathologyIdFromForm = this.toNumberOrNull(this.newAppointmentData.pathologyId);
+    const pathologyId = pathologyIdFromForm ?? this.selectedTreatment?.pathologyId ?? null;
+
     const dataToSend = {
       patient: Number(this.newAppointmentData.patient),
       doctor: Number(this.newAppointmentData.doctor),
@@ -247,7 +289,10 @@ export class AppointmentComponent implements OnInit {
       
       consultationReason: this.newAppointmentData.consultationReason || '',
       
-      treatment: this.newAppointmentData.treatmentId ? Number(this.newAppointmentData.treatmentId) : null,
+      treatment: treatmentId,
+      treatmentId,
+      pathology: pathologyId,
+      pathologyId,
       
       isFirstVisit: !!this.newAppointmentData.isFirstVisit,
       isUrgency: !!this.newAppointmentData.isUrgency
@@ -265,6 +310,44 @@ export class AppointmentComponent implements OnInit {
         alert('Error: ' + (err.error?.errors || 'Dades invàlides'));
       }
     });
+  }
+
+  private extractList(value: unknown): any[] {
+    if (Array.isArray(value)) {
+      return value;
+    }
+    if (value && typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      const member = obj['hydra:member'];
+      if (Array.isArray(member)) {
+        return member;
+      }
+      if (Array.isArray(obj['member'])) {
+        return obj['member'] as any[];
+      }
+    }
+    return [];
+  }
+
+  private toNumberOrNull(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  private toPositiveNumberOrDefault(value: unknown, fallback: number): number {
+    const n = this.toNumberOrNull(value);
+    if (n != null && n > 0) {
+      return n;
+    }
+    return fallback;
   }
 
   openOdontogram(appointmentId: number): void {

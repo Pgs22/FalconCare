@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { extractApiCollection } from '../models/appointment-api.util';
 
 export interface Appointment {
   id: number;
@@ -28,11 +29,7 @@ export class AppointmentService {
   private patientsUrl = 'http://localhost:8000/api/patients';
   private treatmentsUrl = 'http://localhost:8000/api/treatments';
 
-    const byLegacySingular = this.http
-      .get<unknown>(this.appointmentLegacyUrl, {
-        params: new HttpParams().set('patientId', idStr),
-      })
-      .pipe(map(extractApiCollection));
+  constructor(private http: HttpClient) {}
 
   getAppointments(date?: string): Observable<Appointment[]> {
     const url = date ? `${this.apiUrl}/index?date=${date}` : `${this.apiUrl}/index`;
@@ -65,5 +62,37 @@ export class AppointmentService {
 
   getPatientTreatments(patientId: number): Observable<any> {
     return this.http.get(`${this.treatmentsUrl}/patient/${patientId}`);
+  }
+
+  /**
+   * Historial de citas por paciente con fallback de rutas/filtros para APIs heterogeneas.
+   */
+  listByPatientId(patientId: number): Observable<unknown[]> {
+    const idStr = String(patientId);
+
+    const fromPatientSubresource = this.http
+      .get<unknown>(`${this.patientsUrl}/${patientId}/appointments`)
+      .pipe(map(extractApiCollection));
+
+    const fromAppointmentIndex = this.http
+      .get<unknown>(`${this.apiUrl}/index`, {
+        params: new HttpParams().set('patientId', idStr),
+      })
+      .pipe(map(extractApiCollection));
+
+    const fromAppointmentsPlural = this.http
+      .get<unknown>('http://localhost:8000/api/appointments', {
+        params: new HttpParams().set('patientId', idStr),
+      })
+      .pipe(map(extractApiCollection));
+
+    return fromPatientSubresource.pipe(
+      catchError(() =>
+        fromAppointmentIndex.pipe(
+          catchError(() => fromAppointmentsPlural),
+          catchError((err: unknown) => throwError(() => err))
+        )
+      )
+    );
   }
 }

@@ -165,7 +165,7 @@
           <label class="text-primary text-xs mb-1 d-block font-weight-bold">CONTINUAR TRACTAMENT ACTIU:</label>
           <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm">
             <option value="">-- No vincular (Cita lliure) --</option>
-            <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId">📌 {{ t.pathologyTypeName }} ({{ t.treatmentName }})</option>
+            <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId ?? t.id">📌 {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})</option>
           </select>
         </div>
 
@@ -193,5 +193,4 @@
       </div>
     </form>
   </div>
-</div>
 </div>

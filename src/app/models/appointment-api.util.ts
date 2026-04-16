@@ -432,6 +432,7 @@ export function rawToAgendaAppointment(raw: unknown): Appointment {
   const occurredAt = parseOccurredAt(r);
   const time = formatAppointmentTimeHm(occurredAt, r);
   const duration = Number(r['duration'] ?? r['durationMinutes'] ?? r['duration_minutes'] ?? 30) || 30;
+  const cleaningTime = Number(r['cleaningTime'] ?? r['cleaning_time'] ?? 0) || 0;
   const status = String(r['status'] ?? 'pending');
   const patientName = String(
     r['patientName'] ?? r['patient_name'] ?? r['patient'] ?? '—'
@@ -439,15 +440,23 @@ export function rawToAgendaAppointment(raw: unknown): Appointment {
   const doctorName = String(r['doctorName'] ?? r['doctor_name'] ?? r['doctor'] ?? '—');
   const box = String(r['box'] ?? r['boxLabel'] ?? r['box_label'] ?? 'BOX 1');
   const reason = String(r['reason'] ?? r['motive'] ?? '');
+  const color = String(r['color'] ?? '#2b7fff');
+  const isUrgency = Boolean(r['isUrgency'] ?? r['is_urgency'] ?? false);
+  const isFirstVisit = Boolean(r['isFirstVisit'] ?? r['is_first_visit'] ?? false);
   return {
     id,
     time,
     duration,
+    cleaningTime,
+    totalBlockTime: duration + cleaningTime,
     status,
     patientName,
     doctorName,
     box,
     reason,
+    color,
+    isUrgency,
+    isFirstVisit,
   };
 }
 
