@@ -13,6 +13,17 @@ import { RouterLink } from '@angular/router';
       <a routerLink="/doctor-panel">Volver al panel</a>
     </main>
   `,
+  styles: [
+    `
+      :host {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+      }
+    `,
+  ],
 })
 export class NotFoundPageComponent {}
 

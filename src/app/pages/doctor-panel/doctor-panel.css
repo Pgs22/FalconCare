@@ -1,19 +1,50 @@
-.doctor-panel-shell {
-  font-family: "Outfit", sans-serif;
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
 }
 
-.doctor-panel-shell .allergy-card-red {
-  background-color: #fff4f4;
+/**
+ * Fila sidebar + main: misma idea que patient-panel (flex-1 + overflow-hidden + stretch).
+ * El aside debe tomar todo el alto de la fila para que el fondo blanco llegue al pie de la ventana de contenido.
+ */
+.doctor-panel-shell > div.flex.flex-1.min-h-0 {
+  flex: 1 1 0%;
+  align-items: stretch;
+  min-height: 0;
+  min-width: 0;
 }
 
-.doctor-panel-shell .allergy-card-amber {
-  background-color: #fff9e6;
+.doctor-panel-shell aside.doctor-sidebar {
+  min-height: 0;
+  align-self: stretch;
 }
 
-.dark .doctor-panel-shell .allergy-card-red {
-  background-color: rgba(255, 244, 244, 0.05);
+/* Normalize allergy icon geometry for current and future symbols. */
+.allergy-alert-icon-box {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  align-self: center;
+  display: block;
+  position: relative;
+  overflow: hidden;
 }
 
-.dark .doctor-panel-shell .allergy-card-amber {
-  background-color: rgba(255, 249, 230, 0.05);
+.allergy-alert-icon-glyph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  padding: 0;
+  font-size: 1.125rem;
+  line-height: 1.125rem;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }

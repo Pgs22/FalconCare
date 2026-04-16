@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
+
+import { AppointmentService } from '../../services/appointment.service';
 import { DoctorPanelComponent } from './doctor-panel';
 
 describe('DoctorPanelComponent', () => {
@@ -9,8 +13,15 @@ describe('DoctorPanelComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DoctorPanelComponent],
-      providers: [provideHttpClient(), provideRouter([])],
+      imports: [DoctorPanelComponent, TranslateModule.forRoot()],
+      providers: [
+        provideHttpClient(),
+        provideRouter([]),
+        {
+          provide: AppointmentService,
+          useValue: { getAppointments: () => of([]) },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DoctorPanelComponent);

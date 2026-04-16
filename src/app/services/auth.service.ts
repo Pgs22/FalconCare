@@ -10,6 +10,12 @@ type LoginRequest = {
   password: string;
 };
 
+type RegisterDoctorRequest = {
+  fullName: string;
+  email: string;
+  password: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   static readonly tokenStorageKey = 'falconcare_access_token';
@@ -22,14 +28,26 @@ export class AuthService {
     const body: LoginRequest = { email, password };
     return this.http.post<LoginResponse>(url, body).pipe(
       tap((res) => {
-        if (res?.accessToken) {
-          localStorage.setItem(AuthService.tokenStorageKey, res.accessToken);
+        const token = res.accessToken ?? res.access_token;
+        if (token) {
+          localStorage.setItem(AuthService.tokenStorageKey, token);
         }
         if (res?.user) {
           localStorage.setItem(AuthService.userStorageKey, JSON.stringify(res.user));
         }
       })
     );
+  }
+
+  registerDoctor(fullName: string, email: string, password: string): Observable<LoginResponse['user']> {
+    const url = `${environment.apiBaseUrl}/api/auth/register-doctor`;
+    const body: RegisterDoctorRequest = { fullName, email, password };
+    return this.http.post<LoginResponse['user']>(url, body);
+  }
+
+  deleteMyAccount(): Observable<void> {
+    const url = `${environment.apiBaseUrl}/api/auth/me`;
+    return this.http.delete<void>(url);
   }
 
   logout(): void {
@@ -53,6 +71,10 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  setCurrentUser(user: LoginResponse['user']): void {
+    localStorage.setItem(AuthService.userStorageKey, JSON.stringify(user));
   }
 }
 

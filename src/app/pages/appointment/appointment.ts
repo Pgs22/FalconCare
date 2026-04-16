@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './appointment.html',
   styleUrl: './appointment.css',
 })
+
 export class AppointmentComponent implements OnInit {
   today = new Date();
   appointments = signal<Appointment[]>([]);
@@ -42,6 +43,10 @@ export class AppointmentComponent implements OnInit {
   };
 
   constructor(private readonly appointmentService: AppointmentService) {}
+
+  ngOnDestroy(): void {
+    this.clearErrorDismissTimer();
+  }
 
   ngOnInit(): void {
     this.fetchAppointments();
@@ -113,6 +118,7 @@ export class AppointmentComponent implements OnInit {
   }
 
   fetchAppointments(): void {
+    this.clearErrorDismissTimer();
     this.error.set(null);
     this.loading.set(true);
 
@@ -134,7 +140,7 @@ export class AppointmentComponent implements OnInit {
         console.error('El servidor sigue fallando:', err);
         this.error.set('El servidor no acepta el formato de fecha.');
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -291,5 +297,4 @@ export class AppointmentComponent implements OnInit {
       error: (err) => console.error("Error al refrescar agenda", err)
     });
   }
-
 }

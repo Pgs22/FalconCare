@@ -23,11 +23,16 @@ export interface Appointment {
   providedIn: 'root',
 })
 export class AppointmentService {
+  
   private apiUrl = 'http://localhost:8000/api/appointment';
   private patientsUrl = 'http://localhost:8000/api/patients';
   private treatmentsUrl = 'http://localhost:8000/api/treatments';
 
-  constructor(private http: HttpClient) { }
+    const byLegacySingular = this.http
+      .get<unknown>(this.appointmentLegacyUrl, {
+        params: new HttpParams().set('patientId', idStr),
+      })
+      .pipe(map(extractApiCollection));
 
   getAppointments(date?: string): Observable<Appointment[]> {
     const url = date ? `${this.apiUrl}/index?date=${date}` : `${this.apiUrl}/index`;

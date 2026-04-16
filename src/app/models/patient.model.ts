@@ -14,6 +14,7 @@ export interface Patient {
   healthStatus?: string;
   lifestyleHabits?: string;
   medicationAllergies?: string;
+  profileImage?: string | null;
   registrationDate?: string | Date;
 }
 

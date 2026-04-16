@@ -3,6 +3,9 @@ export interface Document {
   type?: string;
   description?: string | null;
   captureDate?: string;
-  patient?: { id: number };
+  /** Alias que puede enviar el backend junto a `patient`. */
+  patientId?: number;
+  patient?: { id?: number; '@id'?: string };
+  '@id'?: string;
 }
 

@@ -1,323 +1,593 @@
-<div class="doctor-panel-shell bg-background-light dark:bg-background-dark text-[#101818] dark:text-white font-sans overflow-hidden">
-  <div class="flex h-screen w-full">
-    <aside class="w-64 flex-shrink-0 border-r border-[#e5e7eb] bg-white dark:bg-[#162a2a] flex flex-col h-full z-20">
-      <div class="px-6 py-5 flex items-center justify-center">
+<div
+  class="doctor-panel-shell bg-background-light dark:bg-background-dark text-text-main dark:text-white font-sans overflow-hidden flex-1 flex flex-col min-h-0 min-w-0"
+>
+  <div class="flex flex-1 min-h-0 min-w-0 w-full overflow-hidden items-stretch">
+    <aside
+      class="doctor-sidebar w-64 shrink-0 border-r border-[#e5e7eb] bg-white dark:bg-[#162a2a] flex flex-col min-h-0 self-stretch z-20"
+    >
+      <div class="px-6 py-5 flex items-center justify-center shrink-0">
         <img
           alt="Clínica Dental FalconCare"
           class="block h-auto w-full max-h-16 object-contain"
           src="/assets/branding/logo-fullname.png"
         />
       </div>
-      <nav class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2">
+      <nav class="min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-2" [attr.aria-label]="'doctorPanel.nav.main' | translate">
         <a
-          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary"
-          [ngClass]="activeNavItem === 'dashboard' ? 'bg-primary/10 text-primary' : 'text-[#6b7280] dark:text-gray-400'"
-          href="#"
-          (click)="$event.preventDefault(); setActiveNavItem('dashboard')"
+          routerLink="/doctor-panel"
+          routerLinkActive="bg-primary/10 text-primary font-bold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
         >
-          <span
-            class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary"
-            [ngClass]="activeNavItem === 'dashboard' ? 'text-primary' : ''"
-          >dashboard</span>
-          <span class="text-sm" [ngClass]="activeNavItem === 'dashboard' ? 'font-bold' : 'font-semibold'">Panel de Control</span>
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">dashboard</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.dashboard' | translate }}</span>
         </a>
         <a
-          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary"
-          [ngClass]="activeNavItem === 'agenda' ? 'bg-primary/10 text-primary' : 'text-[#6b7280] dark:text-gray-400'"
-          href="#"
-          (click)="$event.preventDefault(); setActiveNavItem('agenda')"
+          routerLink="/appointments"
+          routerLinkActive="bg-primary/10 text-primary font-bold"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
         >
-          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary" [ngClass]="activeNavItem === 'agenda' ? 'text-primary' : ''">calendar_today</span>
-          <span class="text-sm" [ngClass]="activeNavItem === 'agenda' ? 'font-bold' : 'font-semibold'">Agenda</span>
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">calendar_today</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.agenda' | translate }}</span>
         </a>
         <a
-          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary"
-          [ngClass]="activeNavItem === 'pacientes' ? 'bg-primary/10 text-primary' : 'text-[#6b7280] dark:text-gray-400'"
-          href="#"
-          (click)="$event.preventDefault(); setActiveNavItem('pacientes')"
+          routerLink="/patients"
+          routerLinkActive="bg-primary/10 text-primary font-bold"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
         >
-          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary" [ngClass]="activeNavItem === 'pacientes' ? 'text-primary' : ''">group</span>
-          <span class="text-sm" [ngClass]="activeNavItem === 'pacientes' ? 'font-bold' : 'font-semibold'">Pacientes</span>
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">group</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.patients' | translate }}</span>
         </a>
         <a
-          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary"
-          [ngClass]="activeNavItem === 'inventario' ? 'bg-primary/10 text-primary' : 'text-[#6b7280] dark:text-gray-400'"
-          href="#"
-          (click)="$event.preventDefault(); setActiveNavItem('inventario')"
+          routerLink="/settings"
+          routerLinkActive="bg-primary/10 text-primary font-bold"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
         >
-          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary" [ngClass]="activeNavItem === 'inventario' ? 'text-primary' : ''">inventory_2</span>
-          <span class="text-sm" [ngClass]="activeNavItem === 'inventario' ? 'font-bold' : 'font-semibold'">Inventario</span>
-        </a>
-        <a
-          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary"
-          [ngClass]="activeNavItem === 'configuracion' ? 'bg-primary/10 text-primary' : 'text-[#6b7280] dark:text-gray-400'"
-          href="/settings"
-          (click)="goToSettings($event)"
-        >
-          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary" [ngClass]="activeNavItem === 'configuracion' ? 'text-primary' : ''">settings</span>
-          <span class="text-sm" [ngClass]="activeNavItem === 'configuracion' ? 'font-bold' : 'font-semibold'">Configuración</span>
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">settings</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.settings' | translate }}</span>
         </a>
       </nav>
-      <div class="p-4 border-t border-[#e5e7eb] dark:border-[#1f3636]">
+      <div class="mt-auto shrink-0 border-t border-[#e5e7eb] dark:border-[#1f3636] p-4">
         <div class="flex items-center gap-3 px-2 py-2">
           <img
             alt="Foto de perfil del usuario"
-            class="rounded-full size-10 object-cover border border-primary/30"
+            class="rounded-full size-10 object-cover border border-primary/30 dark:border-primary/30 shrink-0"
             [src]="profileImageUrl"
           />
-          <div class="flex flex-col">
-            <p class="text-sm font-bold text-[#101818] dark:text-white">{{ doctorDisplayName }}</p>
-            <p class="text-xs text-[#5e8b8d] font-medium">{{ doctorSpecialty }}</p>
+          <div class="flex flex-col min-w-0 flex-1">
+            <p class="text-sm font-bold text-text-main dark:text-white truncate">{{ doctorDisplayName }}</p>
+            <p class="text-xs text-text-muted font-medium truncate">{{ doctorSpecialty }}</p>
             <label
               class="mt-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
               for="doctor-profile-upload"
             >
-              Cambiar foto
+              {{ 'doctorPanel.profile.changePhoto' | translate }}
             </label>
+            <button
+              type="button"
+              class="mt-1 text-[11px] font-semibold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:underline cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:no-underline text-left w-full"
+              [disabled]="!doctorProfilePhotoRemovable"
+              (click)="onRemoveDoctorProfilePhoto()"
+            >
+              {{ 'doctorPanel.profile.removePhoto' | translate }}
+            </button>
+            <button
+              type="button"
+              class="mt-2 text-[11px] font-semibold text-text-muted hover:text-primary dark:text-slate-400 dark:hover:text-primary hover:underline cursor-pointer text-left w-full"
+              (click)="onLogout()"
+            >
+              {{ 'common.logout' | translate }}
+            </button>
             <input
               id="doctor-profile-upload"
               class="hidden"
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+              [attr.aria-label]="'doctorPanel.profile.uploadNewPhoto' | translate"
               (change)="onProfileFileSelected($event)"
             />
           </div>
         </div>
+        @if (profileImageToast(); as t) {
+          <div class="px-2 pb-1 pt-2 w-full">
+            @switch (t.kind) {
+              @case ('success') {
+                <p
+                  class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-[14px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+                  role="status"
+                >
+                  {{ t.text }}
+                </p>
+              }
+              @case ('pending') {
+                <p
+                  class="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-center text-[14px] font-medium text-primary dark:border-primary/40 dark:bg-primary/15 dark:text-primary"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {{ t.text }}
+                </p>
+              }
+              @default {
+                <p
+                  class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-[14px] font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                  role="alert"
+                >
+                  {{ t.text }}
+                </p>
+              }
+            }
+          </div>
+        }
       </div>
     </aside>
-    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+    <main class="flex-1 flex flex-col min-h-0 min-w-0 relative overflow-hidden">
       <header class="flex items-center justify-between px-8 py-5 bg-white/80 dark:bg-[#162a2a]/80 backdrop-blur-md sticky top-0 z-10 border-b border-[#e5e7eb] dark:border-[#1f3636]">
-        <div class="flex items-center gap-4">
-          <h2 class="text-xl font-bold text-[#101818] dark:text-white tracking-tight">Resumen General</h2>
+        <div class="panel-box-heading min-w-0">
+          <h2 class="panel-box-title">{{ 'doctorPanel.header.summaryTitle' | translate }}</h2>
+          <p class="panel-box-subtitle">{{ 'doctorPanel.header.summarySubtitle' | translate }}</p>
         </div>
         <div class="flex items-center gap-6">
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#5e8b8d]">
+          <div class="relative group z-20">
+            <label class="sr-only" for="doctorPatientSearchInput">{{ 'doctorPanel.search.label' | translate }}</label>
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted">
               <span class="material-symbols-outlined text-[20px]">search</span>
             </div>
-            <input class="block w-64 md:w-80 p-2.5 pl-10 text-sm font-medium text-[#101818] dark:text-white bg-[#f0f5f5] dark:bg-[#0f2323] border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#162a2a] transition-all placeholder-[#5e8b8d]" placeholder="Buscar pacientes, registros, citas..." type="text" />
+            <input
+              id="doctorPatientSearchInput"
+              class="block w-[32.4ch] max-w-full p-2.5 pl-10 pr-4 text-sm font-medium text-text-main dark:text-white bg-[#f0f5f5] dark:bg-[#0f2323] border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#162a2a] transition-all placeholder:text-text-muted"
+              [placeholder]="'doctorPanel.search.placeholder' | translate"
+              type="search"
+              name="doctorPatientSearch"
+              autocomplete="off"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onPatientSearchChange($event)"
+              (focus)="onPatientSearchFocus()"
+              (blur)="onPatientSearchBlur()"
+              (keydown.enter)="onPatientSearchEnter($event)"
+              aria-autocomplete="list"
+              aria-controls="doctor-patient-search-results"
+              [attr.aria-expanded]="searchDropdownOpen && searchQuery.trim().length > 0"
+            />
+            @if (
+              searchDropdownOpen &&
+              searchQuery.trim().length > 0
+            ) {
+              <ul
+                id="doctor-patient-search-results"
+                class="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg py-1 z-30"
+                role="listbox"
+                [attr.aria-label]="'doctorPanel.search.resultsAria' | translate"
+                [title]="'doctorPanel.search.resultsAria' | translate"
+              >
+                @if (searchPatientsLoading) {
+                  <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.searching' | translate }}</li>
+                } @else if (patientSearchResults.length === 0) {
+                  <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.noResults' | translate }}</li>
+                } @else {
+                  @for (p of patientSearchResults; track p.id) {
+                    <li
+                      role="option"
+                      tabindex="-1"
+                      class="px-4 py-2.5 text-sm text-text-main dark:text-white hover:bg-[#f0f5f5] dark:hover:bg-[#0f2323] cursor-pointer flex flex-col gap-0.5"
+                      (mousedown)="$event.preventDefault(); openPatientFromSearch(p)"
+                    >
+                      <span class="font-semibold">{{ patientDisplayName(p) }}</span>
+                      <span class="text-xs text-text-muted">{{ 'doctorPanel.search.idLabel' | translate }}: #{{ p.id }}</span>
+                    </li>
+                  }
+                }
+              </ul>
+            }
           </div>
-          <button class="flex items-center justify-center bg-primary text-white rounded-lg h-10 px-4 gap-2 text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all">
+          <button
+            class="flex items-center justify-center bg-primary text-white rounded-lg h-10 px-4 gap-2 text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all"
+            type="button"
+            routerLink="/patient-register"
+          >
             <span class="material-symbols-outlined text-[20px]">add</span>
-            <span>Nuevo Paciente</span>
+            <span>{{ 'doctorPanel.actions.newPatient' | translate }}</span>
           </button>
         </div>
       </header>
       <div class="flex-1 overflow-y-auto px-8 pb-8 pt-6 scroll-smooth">
         <div class="max-w-7xl mx-auto flex flex-col gap-6">
+          @if (dashboardLoadFailed && !dashboardStatsLoading) {
+            <div
+              class="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/60 dark:bg-amber-950/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              role="alert"
+            >
+              <p class="text-sm font-medium text-amber-900 dark:text-amber-200">
+                {{ 'doctorPanel.dashboard.loadFailed' | translate }}
+              </p>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
+                (click)="retryDashboardStats()"
+              >
+                {{ 'common.retry' | translate }}
+              </button>
+            </div>
+          }
           <section class="flex flex-col gap-4">
-            <div class="flex flex-col gap-1">
-              <h1 class="text-3xl font-black text-[#101818] dark:text-white tracking-tight">
-                {{ timeGreeting }}, {{ doctorDisplayName }}
+            <div class="panel-box-heading gap-1">
+              <h1 class="text-2xl sm:text-3xl font-bold text-text-main dark:text-white tracking-tight">
+                {{ timeGreetingKey | translate }}, {{ doctorDisplayName }}
               </h1>
-              <p class="text-[#5e8b8d] font-medium flex items-center gap-2">
-                <span class="material-symbols-outlined text-[18px] shrink-0">{{ timeGreetingIcon }}</span>
-                Aquí está el resumen de su práctica diaria.
+              <p class="panel-box-subtitle flex items-center gap-2 flex-wrap">
+                <span class="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">{{
+                  timeGreetingIcon
+                }}</span>
+                {{ 'doctorPanel.dashboard.greetingSubtitle' | translate }}
               </p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="flex flex-col gap-2 rounded-2xl p-6 bg-white dark:bg-[#162a2a] shadow-sm hover:shadow-md transition-shadow border border-[#e5e7eb] dark:border-[#1f3636]">
-                <div class="flex justify-between items-start">
-                  <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  >
-                    <span class="material-symbols-outlined leading-none text-[24px]">group</span>
+                <div class="panel-box-heading gap-0.5">
+                  <div class="flex w-full items-start justify-between gap-3">
+                    <h3 class="panel-box-title panel-box-title--row flex-1">
+                      <span class="material-symbols-outlined text-primary shrink-0" aria-hidden="true">group</span>
+                      <span class="inline-flex items-center gap-2 flex-wrap">
+                        <span>{{ 'doctorPanel.kpis.patientsTodayTitle' | translate }}</span>
+                        <span class="text-xs sm:text-sm font-semibold text-text-muted dark:text-slate-300">
+                          {{ patientsTodayDateLabel }}
+                        </span>
+                      </span>
+                    </h3>
+                    @if (!dashboardStatsLoading && !dashboardLoadFailed && patientsTodayDeltaLabel) {
+                      <span
+                        class="text-xs font-bold px-2 py-1 rounded-full shrink-0 ml-auto"
+                        [class.text-green-700]="(patientsTodayDeltaPct ?? 0) >= 0"
+                        [class.bg-green-50]="(patientsTodayDeltaPct ?? 0) >= 0"
+                        [class.dark:text-green-300]="(patientsTodayDeltaPct ?? 0) >= 0"
+                        [class.dark:bg-green-900/30]="(patientsTodayDeltaPct ?? 0) >= 0"
+                        [class.text-red-700]="(patientsTodayDeltaPct ?? 0) < 0"
+                        [class.bg-red-50]="(patientsTodayDeltaPct ?? 0) < 0"
+                        [class.dark:text-red-300]="(patientsTodayDeltaPct ?? 0) < 0"
+                        [class.dark:bg-red-900/30]="(patientsTodayDeltaPct ?? 0) < 0"
+                      >
+                        {{ patientsTodayDeltaLabel }} {{ 'doctorPanel.kpis.vsYesterday' | translate }}
+                      </span>
+                    }
                   </div>
-                  <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+4%</span>
+                  <p class="panel-box-subtitle">{{ 'doctorPanel.kpis.patientsTodaySubtitle' | translate }}</p>
                 </div>
-                <div class="mt-2">
-                  <p class="text-[#5e8b8d] text-sm font-medium">Pacientes Hoy</p>
-                  <p class="text-[#101818] dark:text-white text-3xl font-bold mt-1 tracking-tight">12</p>
+                <div class="flex-1 flex items-center justify-center py-2">
+                  <p class="text-text-main dark:text-white text-6xl font-bold tracking-tight tabular-nums leading-none">
+                    @if (dashboardStatsLoading) {
+                      <span class="text-2xl font-semibold text-text-muted">…</span>
+                    } @else if (dashboardLoadFailed) {
+                      <span class="text-2xl font-semibold text-amber-700 dark:text-amber-300" [title]="'doctorPanel.kpis.loadErrorTitle' | translate">—</span>
+                    } @else {
+                      {{ patientsTodayCount }}
+                    }
+                  </p>
                 </div>
               </div>
               <div class="flex flex-col gap-2 rounded-2xl p-6 bg-white dark:bg-[#162a2a] shadow-sm hover:shadow-md transition-shadow border border-[#e5e7eb] dark:border-[#1f3636]">
-                <div class="flex justify-between items-start">
-                  <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                  >
-                    <span class="material-symbols-outlined leading-none text-[24px]">biotech</span>
+                <div class="mt-2 panel-box-heading gap-0.5">
+                  <h3 class="panel-box-title panel-box-title--row">
+                    <span class="material-symbols-outlined text-primary shrink-0" aria-hidden="true">show_chart</span>
+                    {{ 'doctorPanel.weeklyPatients.title' | translate }}
+                  </h3>
+                  <p class="panel-box-subtitle">{{ 'doctorPanel.weeklyPatients.subtitle' | translate }}</p>
+                </div>
+                @if (dashboardStatsLoading) {
+                  <div class="mt-2 flex items-center justify-center min-h-[11rem]">
+                    <span class="text-sm font-semibold text-text-muted">…</span>
                   </div>
-                  <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Acción Requerida</span>
-                </div>
-                <div class="mt-2">
-                  <p class="text-[#5e8b8d] text-sm font-medium">Resultados Pendientes</p>
-                  <p class="text-[#101818] dark:text-white text-3xl font-bold mt-1 tracking-tight">3</p>
-                </div>
-              </div>
-              <div class="flex flex-col gap-2 rounded-2xl p-6 bg-white dark:bg-[#162a2a] shadow-sm hover:shadow-md transition-shadow border border-[#e5e7eb] dark:border-[#1f3636]">
-                <div class="flex justify-between items-start">
-                  <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400"
-                  >
-                    <span class="material-symbols-outlined leading-none text-[24px]">inventory</span>
+                } @else if (dashboardLoadFailed) {
+                  <div class="mt-2 flex items-center justify-center min-h-[11rem]">
+                    <span class="text-sm font-semibold text-amber-700 dark:text-amber-300" [title]="'doctorPanel.kpis.loadErrorTitle' | translate">—</span>
                   </div>
-                </div>
-                <div class="mt-2">
-                  <p class="text-[#5e8b8d] text-sm font-medium">Alertas de Stock Bajo</p>
-                  <p class="text-[#101818] dark:text-white text-3xl font-bold mt-1 tracking-tight">1</p>
-                </div>
+                } @else {
+                  <div class="mt-2">
+                    <div class="relative h-44 rounded-xl bg-[#f8fbfb] dark:bg-[#0f2323] border border-[#e5e7eb] dark:border-[#1f3636] px-3 py-2">
+                      <svg
+                        viewBox="0 0 100 36"
+                        class="absolute inset-0 h-full w-full px-3 py-2 text-text-main dark:text-white"
+                        preserveAspectRatio="xMidYMid meet"
+                        aria-hidden="true"
+                      >
+                        <line x1="2.5" y1="32" x2="97.5" y2="32" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.6"></line>
+                        <line x1="2.5" y1="4" x2="2.5" y2="32" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.6"></line>
+                        <polyline
+                          [attr.points]="weeklyPatientsPolyline"
+                          fill="none"
+                          class="stroke-primary"
+                          stroke-width="2.4"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        ></polyline>
+                        @for (point of weeklyPatientsPoints; track point.dayIndex) {
+                          <circle
+                            [attr.cx]="point.xPct"
+                            [attr.cy]="point.yPct"
+                            r="1.6"
+                            class="fill-primary cursor-pointer"
+                            stroke="currentColor"
+                            stroke-width="0.5"
+                            [attr.aria-label]="'doctorPanel.weeklyPatients.pointAria' | translate: { day: ('doctorPanel.weeklyPatients.days.' + point.dayKey | translate), count: point.count }"
+                            [attr.title]="'doctorPanel.weeklyPatients.pointAria' | translate: { day: ('doctorPanel.weeklyPatients.days.' + point.dayKey | translate), count: point.count }"
+                            (mouseenter)="onWeeklyPointHover(point.dayIndex)"
+                            (mouseleave)="onWeeklyPointHover(null)"
+                          ></circle>
+                        }
+                      </svg>
+                      @if (weeklyTooltipPoint; as tip) {
+                        <div
+                          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-text-main dark:bg-white text-white dark:text-[#162a2a] text-[11px] font-bold px-2 py-1 shadow whitespace-nowrap leading-none"
+                          [style.left.%]="tip.xPct"
+                          [style.top.%]="tip.yPct"
+                        >
+                          {{ ('doctorPanel.weeklyPatients.days.' + tip.dayKey) | translate }}: {{ tip.count }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
             </div>
           </section>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 flex flex-col gap-4 min-w-0">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-[#101818] dark:text-white flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary">calendar_month</span>
-                  Agenda de Hoy
-                </h3>
-                <a class="text-sm font-medium text-primary hover:text-[#00b3b9]" href="#">Ver calendario completo</a>
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div class="panel-box-heading min-w-0 flex-1">
+                  <h3 class="panel-box-title panel-box-title--row">
+                    <span class="material-symbols-outlined text-primary shrink-0" aria-hidden="true">calendar_month</span>
+                    {{ 'doctorPanel.agenda.title' | translate }}
+                  </h3>
+                  <p class="panel-box-subtitle">{{ 'doctorPanel.agenda.subtitle' | translate }}</p>
+                </div>
+                <a
+                  routerLink="/appointments"
+                  class="text-sm font-medium text-primary hover:text-primary-dark shrink-0 sm:pt-0.5 w-full text-center sm:w-auto sm:text-left"
+                  >{{ 'doctorPanel.agenda.viewFullCalendar' | translate }}</a>
               </div>
               <div class="bg-white dark:bg-[#162a2a] rounded-2xl shadow-sm border border-[#e5e7eb] dark:border-[#1f3636] p-2 flex flex-col gap-2">
-                <div class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f8fafc] dark:hover:bg-[#1f3636] transition-colors group cursor-pointer border-l-4 border-primary">
-                  <div class="flex flex-col items-center min-w-[70px]">
-                    <span class="text-xs font-bold text-[#5e8b8d] uppercase tracking-wide">09:00</span>
-                    <span class="text-[10px] font-medium text-[#9ca3af]">45 min</span>
+                @if (dashboardStatsLoading) {
+                  <div class="flex items-center justify-center px-2 py-10" role="status">
+                    <p class="text-sm text-text-muted text-center">{{ 'doctorPanel.agenda.loading' | translate }}</p>
                   </div>
-                  <div class="h-10 w-[1px] bg-[#e5e7eb] dark:bg-[#2d4a4a]"></div>
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-base font-bold text-[#101818] dark:text-white group-hover:text-primary transition-colors">Sarah Miller</h4>
-                      <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold border border-primary/20">BOX 1</span>
+                } @else if (dashboardLoadFailed) {
+                  <div
+                    class="flex flex-col items-center justify-center px-4 py-10 text-center gap-2"
+                    role="alert"
+                  >
+                    <p class="text-sm text-amber-800 dark:text-amber-200 max-w-md">
+                      {{ 'doctorPanel.agenda.loadFailed' | translate }}
+                    </p>
+                    <button
+                      type="button"
+                      class="text-xs font-bold text-primary hover:underline"
+                      (click)="retryDashboardStats()"
+                    >
+                      {{ 'common.retry' | translate }}
+                    </button>
+                  </div>
+                } @else if (agendaRows.length === 0) {
+                  <div
+                    class="flex flex-col items-center justify-center px-4 py-10 text-center gap-2"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <p class="text-sm text-text-muted max-w-md">
+                      {{ 'doctorPanel.agenda.empty' | translate }}
+                    </p>
+                    <a routerLink="/appointments" class="text-xs font-bold text-primary hover:underline">{{ 'doctorPanel.agenda.goToCalendar' | translate }}</a>
+                  </div>
+                } @else {
+                  @for (row of agendaRows; track row.appointmentId) {
+                    <div
+                      class="flex items-center gap-4 p-4 rounded-xl transition-colors group border-l-4 hover:bg-[#f8fafc] dark:hover:bg-[#1f3636]"
+                      [class.cursor-pointer]="row.patientId != null"
+                      [class.opacity-90]="row.patientId == null"
+                      [attr.tabindex]="row.patientId != null ? 0 : null"
+                      [attr.role]="row.patientId != null ? 'button' : null"
+                      [attr.title]="
+                        row.patientId != null
+                          ? ('doctorPanel.agenda.openPatientRecord' | translate)
+                          : ('doctorPanel.agenda.patientUnavailableHint' | translate)
+                      "
+                      (click)="openPatientFromAgendaRow(row)"
+                      (keydown.enter)="openPatientFromAgendaRow(row)"
+                      [ngClass]="
+                        row.highlightLeftBorder
+                          ? 'border-primary'
+                          : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                      "
+                    >
+                      <div class="flex flex-col items-center min-w-[70px]">
+                        <span class="text-xs font-bold text-text-muted uppercase tracking-wide">{{
+                          row.startTimeLabel
+                        }}</span>
+                        <span class="text-[10px] font-medium text-slate-400 dark:text-slate-500">{{
+                          row.durationLabel
+                        }}</span>
+                      </div>
+                      <div class="h-10 w-[1px] bg-[#e5e7eb] dark:bg-[#2d4a4a]"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <h4
+                            class="text-base font-bold text-text-main dark:text-white group-hover:text-primary transition-colors truncate"
+                          >
+                            {{ row.patientName }}
+                          </h4>
+                          <span [class]="row.boxBadgeClass">{{ row.boxLabel }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1 min-w-0">
+                          <span class="text-xs font-medium text-text-muted truncate">{{ row.metaLine }}</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center shrink-0 gap-2">
+                        <span [class]="agendaStatusPillClasses[row.statusPillVariant]">{{ row.statusLabel }}</span>
+                        <details class="relative" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+                          <summary
+                            class="list-none flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:text-text-main hover:bg-slate-100 dark:hover:bg-[#1f3636] transition-colors cursor-pointer"
+                            [attr.aria-label]="'doctorPanel.agenda.actionsMenu' | translate"
+                            (click)="$event.stopPropagation()"
+                          >
+                            <span class="material-symbols-outlined text-[18px]">more_horiz</span>
+                          </summary>
+                          <div
+                            class="absolute right-0 top-[calc(100%+0.35rem)] z-20 min-w-[10rem] rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg p-1.5"
+                            role="menu"
+                            [attr.aria-label]="'doctorPanel.agenda.actionsMenu' | translate"
+                          >
+                            <button
+                              type="button"
+                              class="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/25 transition-colors"
+                              role="menuitem"
+                              (click)="$event.stopPropagation()"
+                            >
+                              {{ 'doctorPanel.agenda.confirmVisit' | translate }}
+                            </button>
+                            <button
+                              type="button"
+                              class="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/25 transition-colors"
+                              role="menuitem"
+                              (click)="$event.stopPropagation()"
+                            >
+                              {{ 'doctorPanel.agenda.cancelVisit' | translate }}
+                            </button>
+                          </div>
+                        </details>
+                      </div>
                     </div>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span class="text-xs font-medium text-[#5e8b8d]">{{ doctorDisplayName }} • Endodoncia</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center">
-                    <span class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold">En Curso</span>
-                  </div>
-                  <button class="p-2 text-[#9ca3af] hover:text-[#101818] dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#2d4a4a]">
-                    <span class="material-symbols-outlined">more_vert</span>
-                  </button>
-                </div>
-                <div class="flex items-center gap-4 p-4 rounded-xl bg-[#f9fafb] dark:bg-[#1a2e2e] transition-colors border-l-4 border-gray-300 dark:border-gray-700 opacity-80">
-                  <div class="flex flex-col items-center min-w-[70px]">
-                    <span class="text-xs font-bold text-[#9ca3af] uppercase tracking-wide">09:30</span>
-                    <span class="text-[10px] font-medium text-[#9ca3af]">- 10:15</span>
-                  </div>
-                  <div class="h-10 w-[1px] bg-[#e5e7eb] dark:bg-[#2d4a4a]"></div>
-                  <div class="flex-1 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-base font-medium text-[#9ca3af] italic">Vacío</h4>
-                      <span class="px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 text-[10px] font-bold">BOX 2</span>
-                    </div>
-                    <button class="text-xs font-bold text-primary hover:underline">Asignar Turno</button>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f8fafc] dark:hover:bg-[#1f3636] transition-colors group cursor-pointer border-l-4 border-transparent hover:border-l-4 hover:border-gray-300">
-                  <div class="flex flex-col items-center min-w-[70px]">
-                    <span class="text-xs font-bold text-[#5e8b8d] uppercase tracking-wide">10:00</span>
-                    <span class="text-[10px] font-medium text-[#9ca3af]">30 min</span>
-                  </div>
-                  <div class="h-10 w-[1px] bg-[#e5e7eb] dark:bg-[#2d4a4a]"></div>
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-base font-bold text-[#101818] dark:text-white group-hover:text-primary transition-colors">Robert Wilson</h4>
-                      <span class="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800">BOX 3</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span class="text-xs font-medium text-[#5e8b8d]">Dr. Perez • Extracción</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center">
-                    <span class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold">Confirmado</span>
-                  </div>
-                  <button class="p-2 text-[#9ca3af] hover:text-[#101818] dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#2d4a4a]">
-                    <span class="material-symbols-outlined">more_vert</span>
-                  </button>
-                </div>
-                <div class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#f8fafc] dark:hover:bg-[#1f3636] transition-colors group cursor-pointer border-l-4 border-transparent hover:border-l-4 hover:border-gray-300">
-                  <div class="flex flex-col items-center min-w-[70px]">
-                    <span class="text-xs font-bold text-[#5e8b8d] uppercase tracking-wide">10:30</span>
-                    <span class="text-[10px] font-medium text-[#9ca3af]">60 min</span>
-                  </div>
-                  <div class="h-10 w-[1px] bg-[#e5e7eb] dark:bg-[#2d4a4a]"></div>
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-base font-bold text-[#101818] dark:text-white group-hover:text-primary transition-colors">Emma Davis</h4>
-                      <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold border border-primary/20">BOX 1</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span class="text-xs font-medium text-[#5e8b8d]">{{ doctorDisplayName }} • Implante</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center">
-                    <span class="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-bold">Llegada</span>
-                  </div>
-                  <button class="p-2 text-[#9ca3af] hover:text-[#101818] dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#2d4a4a]">
-                    <span class="material-symbols-outlined">more_vert</span>
-                  </button>
-                </div>
-                <div class="flex items-center gap-4 p-4 rounded-xl bg-[#f9fafb] dark:bg-[#1a2e2e] transition-colors border-l-4 border-gray-300 dark:border-gray-700 opacity-80">
-                  <div class="flex flex-col items-center min-w-[70px]">
-                    <span class="text-xs font-bold text-[#9ca3af] uppercase tracking-wide">11:00</span>
-                    <span class="text-[10px] font-medium text-[#9ca3af]">- 11:30</span>
-                  </div>
-                  <div class="h-10 w-[1px] bg-[#e5e7eb] dark:bg-[#2d4a4a]"></div>
-                  <div class="flex-1 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-base font-medium text-[#9ca3af] italic">Vacío</h4>
-                      <span class="px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 text-[10px] font-bold">BOX 2</span>
-                    </div>
-                    <button class="text-xs font-bold text-primary hover:underline">Asignar Turno</button>
-                  </div>
-                </div>
+                  }
+                }
               </div>
             </div>
             <div class="flex flex-col gap-8 min-w-0 w-full">
               <div
-                class="bg-red-50 dark:bg-red-900/10 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/30 p-6 flex flex-col gap-4 relative overflow-hidden w-full"
+                class="flex flex-col bg-red-100 dark:bg-red-950/40 rounded-xl shadow-md border-2 border-red-500 dark:border-red-600 overflow-hidden w-full min-h-[14rem]"
               >
-                <div class="absolute top-0 right-0 w-24 h-24 bg-red-100/30 dark:bg-red-900/20 rounded-bl-full -mr-4 -mt-4 z-0"></div>
-                <div class="flex items-center justify-between relative z-10">
-                  <h3 class="text-base font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
-                    <span class="material-symbols-outlined">warning</span>
-                    Alertas de Alergias
-                  </h3>
-                  <span class="bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 text-xs font-bold px-2 py-1 rounded-full">Hoy</span>
+                <div
+                  class="shrink-0 px-6 py-4 border-b border-red-300/80 dark:border-red-800/60 bg-red-200/90 dark:bg-red-950/55 flex items-start justify-between gap-3"
+                >
+                  <div class="panel-box-heading min-w-0 flex-1">
+                    <h3 class="panel-box-title panel-box-title--row">
+                      <span class="material-symbols-outlined text-red-600 dark:text-red-400 shrink-0" aria-hidden="true"
+                        >warning_amber</span
+                      >
+                      {{ 'doctorPanel.allergies.title' | translate }}
+                    </h3>
+                    <p class="panel-box-subtitle">
+                      {{ 'doctorPanel.allergies.subtitle' | translate }}
+                    </p>
+                  </div>
+                  <span
+                    class="text-xs font-bold px-2 py-1 rounded-full shrink-0 self-start bg-red-300/50 dark:bg-red-900/50 text-red-900 dark:text-red-200"
+                    >{{ 'doctorPanel.allergies.todayBadge' | translate }}</span
+                  >
                 </div>
-                <div class="flex flex-col gap-3 relative z-10">
-                  <div class="flex items-start gap-3 p-3 bg-allergy-red dark:bg-red-950/30 rounded-xl border border-red-200/50 dark:border-red-900/30 shadow-sm allergy-card-red">
-                    <div class="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 p-1.5 rounded-lg flex-shrink-0 mt-0.5">
-                      <span class="material-symbols-outlined text-[18px]">medical_services</span>
+                <div class="flex flex-col flex-1 min-h-0 p-6 space-y-3 bg-red-100/95 dark:bg-red-950/25">
+                  @if (dashboardStatsLoading) {
+                    <div
+                      class="flex flex-1 items-center justify-center px-2 py-4 text-center min-h-[6rem]"
+                      role="status"
+                    >
+                      <p class="text-sm text-text-muted max-w-[20rem]">{{ 'doctorPanel.allergies.loading' | translate }}</p>
                     </div>
-                    <div class="flex flex-col flex-1">
-                      <div class="flex justify-between items-center w-full">
-                        <span class="text-sm font-bold text-[#101818] dark:text-white">Sarah Miller</span>
-                        <span class="text-[10px] font-mono text-red-700 dark:text-red-400 font-black">09:00</span>
-                      </div>
-                      <p class="text-[13px] text-red-800 dark:text-red-300 font-bold mt-0.5">Alergia a Penicilina</p>
+                  } @else if (dashboardLoadFailed) {
+                    <div
+                      class="flex flex-1 flex-col items-center justify-center px-2 py-4 text-center gap-2 min-h-[6rem]"
+                      role="alert"
+                    >
+                      <p class="text-sm text-amber-800 dark:text-amber-200 max-w-[20rem]">
+                        {{ 'doctorPanel.allergies.loadFailed' | translate }}
+                      </p>
+                      <button
+                        type="button"
+                        class="text-xs font-bold text-red-800 dark:text-red-200 hover:underline"
+                        (click)="retryDashboardStats()"
+                      >
+                        {{ 'common.retry' | translate }}
+                      </button>
                     </div>
-                  </div>
-                  <div class="flex items-start gap-3 p-3 bg-allergy-amber dark:bg-amber-950/30 rounded-xl border border-amber-200/50 dark:border-amber-900/30 shadow-sm allergy-card-amber">
-                    <div class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 p-1.5 rounded-lg flex-shrink-0 mt-0.5">
-                      <span class="material-symbols-outlined text-[18px]">medical_information</span>
+                  } @else if (allergyAlerts.length === 0) {
+                    <div
+                      class="flex flex-1 items-center justify-center px-2 py-4 text-center min-h-[10rem]"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <p class="text-sm text-text-muted max-w-[20rem]">
+                        {{ 'doctorPanel.allergies.empty' | translate }}
+                      </p>
                     </div>
-                    <div class="flex flex-col flex-1">
-                      <div class="flex justify-between items-center w-full">
-                        <span class="text-sm font-bold text-[#101818] dark:text-white">Emma Davis</span>
-                        <span class="text-[10px] font-mono text-amber-700 dark:text-amber-400 font-black">13:00</span>
-                      </div>
-                      <p class="text-[13px] text-amber-900 dark:text-amber-300 font-bold mt-0.5">Sensibilidad al Látex</p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3 p-3 bg-allergy-red dark:bg-red-950/30 rounded-xl border border-red-200/50 dark:border-red-900/30 shadow-sm allergy-card-red">
-                    <div class="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 p-1.5 rounded-lg flex-shrink-0 mt-0.5">
-                      <span class="material-symbols-outlined text-[18px]">vaccines</span>
-                    </div>
-                    <div class="flex flex-col flex-1">
-                      <div class="flex justify-between items-center w-full">
-                        <span class="text-sm font-bold text-[#101818] dark:text-white">Lucas Silva</span>
-                        <span class="text-[10px] font-mono text-red-700 dark:text-red-400 font-black">15:30</span>
-                      </div>
-                      <p class="text-[13px] text-red-800 dark:text-red-300 font-bold mt-0.5">Reacción Anestesia Local</p>
-                    </div>
-                  </div>
+                  } @else {
+                    @for (a of allergyAlerts; track a.appointmentId) {
+                      @if (a.variant === 'amber') {
+                        <div
+                          class="flex items-center gap-3 p-3 rounded-lg bg-amber-200/75 dark:bg-amber-900/35 border border-amber-300 dark:border-amber-700"
+                          [class.cursor-pointer]="a.patientId != null"
+                          [attr.tabindex]="a.patientId != null ? 0 : null"
+                          [attr.role]="a.patientId != null ? 'button' : null"
+                          [attr.title]="
+                            a.patientId != null ? ('doctorPanel.allergies.openPatientRecord' | translate) : ('doctorPanel.allergies.missingPatientId' | translate)
+                          "
+                          (click)="openPatientFromAllergyAlert(a)"
+                          (keydown.enter)="openPatientFromAllergyAlert(a)"
+                        >
+                          <div
+                            class="allergy-alert-icon-box bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400"
+                          >
+                            <span class="material-symbols-outlined allergy-alert-icon-glyph">{{ a.icon }}</span>
+                          </div>
+                          <div class="flex flex-col flex-1 min-w-0">
+                            <div class="flex justify-between items-center w-full gap-2">
+                              <span class="text-sm font-bold text-amber-950 dark:text-amber-100 truncate">{{
+                                a.patientName
+                              }}</span>
+                              <span
+                                class="text-[10px] font-mono text-amber-800 dark:text-amber-300 font-black shrink-0"
+                                >{{ a.timeLabel }}</span
+                              >
+                            </div>
+                            <p
+                              class="text-sm text-amber-900 dark:text-amber-200 font-bold uppercase tracking-wide mt-0.5 break-words"
+                            >
+                              {{ a.allergySummary }}
+                            </p>
+                          </div>
+                        </div>
+                      } @else {
+                        <div
+                          class="flex items-center gap-3 p-3 rounded-lg bg-red-200/75 dark:bg-red-900/35 border border-red-300 dark:border-red-700"
+                          [class.cursor-pointer]="a.patientId != null"
+                          [attr.tabindex]="a.patientId != null ? 0 : null"
+                          [attr.role]="a.patientId != null ? 'button' : null"
+                          [attr.title]="
+                            a.patientId != null ? ('doctorPanel.allergies.openPatientRecord' | translate) : ('doctorPanel.allergies.missingPatientId' | translate)
+                          "
+                          (click)="openPatientFromAllergyAlert(a)"
+                          (keydown.enter)="openPatientFromAllergyAlert(a)"
+                        >
+                          <div
+                            class="allergy-alert-icon-box bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400"
+                          >
+                            <span class="material-symbols-outlined allergy-alert-icon-glyph">{{ a.icon }}</span>
+                          </div>
+                          <div class="flex flex-col flex-1 min-w-0">
+                            <div class="flex justify-between items-center w-full gap-2">
+                              <span class="text-sm font-bold text-red-950 dark:text-red-100 truncate">{{
+                                a.patientName
+                              }}</span>
+                              <span class="text-[10px] font-mono text-red-800 dark:text-red-300 font-black shrink-0">{{
+                                a.timeLabel
+                              }}</span>
+                            </div>
+                            <p
+                              class="text-sm text-red-900 dark:text-red-200 font-bold uppercase tracking-wide mt-0.5 break-words"
+                            >
+                              {{ a.allergySummary }}
+                            </p>
+                          </div>
+                        </div>
+                      }
+                    }
+                  }
                 </div>
-                <button class="w-full py-2 text-xs font-bold text-red-700 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-900/30 rounded-lg transition-colors relative z-10 border border-red-200/30 dark:border-red-900/20">
-                  Ver más alertas del día
-                </button>
               </div>
             </div>
           </div>
