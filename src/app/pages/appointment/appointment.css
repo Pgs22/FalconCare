@@ -1,12 +1,24 @@
-:host {
+/* --- Agenda Grid Styles --- */
+.agenda-wrapper { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+.header-main {
   display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
 }
 
-.agenda-grid {
+.btn-new-appointment {
+  background: #00bcd4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.appointment-grid {
   display: flex;
   gap: 20px;
   background: #f8f9fa;
@@ -24,20 +36,168 @@
 .box-header {
   text-align: center;
   padding: 15px;
-  border-bottom: 2px solid #00bcd4; /* El azul DentalEase */
+  border-bottom: 2px solid #00bcd4;
 }
 
-.card-appointment {
+.appointment-block {
   margin: 10px;
-  padding: 15px;
-  border-radius: 12px;
-  border-left: 5px solid #00bcd4;
-  background: #e0f7fa; /* Azul clarito */
   display: flex;
   flex-direction: column;
 }
 
-.card-appointment.pending {
-  border-left-color: #ffb74d; /* Naranja para pendientes */
-  background: #fff3e0;
+.card-appointment {
+  padding: 15px;
+  border-radius: 12px 12px 0 0;
+  border-left: 5px solid #00bcd4;
+  background: #e0f7fa;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.card-appointment.Finalizada {
+  border-left-color: #9e9e9e;
+  background: #f5f5f5;
+  opacity: 0.8;
+}
+
+.cleaning-block {
+  background: repeating-linear-gradient(
+    45deg,
+    #f9f9f9,
+    #f9f9f9 10px,
+    #f1f1f1 10px,
+    #f1f1f1 20px
+  );
+  border: 1px dashed #ccc;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 5px;
+  text-align: center;
+  color: #888;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.side-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: -450px;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  z-index: 101;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+  transition: right 0.3s ease-in-out;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel.open {
+  right: 0;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #999;
+}
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 0.75rem; color: #777; margin-bottom: 5px; font-weight: bold;}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.panel-footer {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-cancel { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; }
+.btn-save { flex: 2; padding: 12px; background: #00bcd4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+.btn-text-link {
+    background: none;
+    border: none;
+    color: #00bcd4;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+}
+.label-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* add frame left */
+.appointment-layout {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  width: 250px;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.appointment-main {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+.custom-datepicker {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #2fb9c3;
+  cursor: pointer;
 }
