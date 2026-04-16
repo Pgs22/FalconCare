@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard, guestOnlyGuard } from './guards/auth.guard';
+import { environment } from '../environments/environment';
 import { LoginComponent } from './pages/login/login';
 import { PatientRegisterComponent } from './pages/patient-register/patient-register';
 import { DoctorRegisterComponent } from './pages/doctor-register/doctor-register';
@@ -27,7 +28,11 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },
   { path: 'patients', component: PatientsPageComponent, canActivate: [authGuard] },
 
-  { path: 'appointments', component: AppointmentPageComponent, canActivate: [authGuard] },
+  {
+    path: 'appointments',
+    component: AppointmentPageComponent,
+    canActivate: environment.production ? [authGuard] : [],
+  },
   
   { path: 'documents', component: DocumentsPageComponent, canActivate: [authGuard] },
 
