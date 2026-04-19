@@ -13,6 +13,7 @@ import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.
 import { catchError, forkJoin, of } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
+const BOX_CLEANING_BUFFER_MINUTES = 5;
 
 interface DayAllergySummaryItem {
   label: string;
@@ -74,6 +75,7 @@ export class AppointmentComponent implements OnInit {
   statusUpdatingIds = signal<number[]>([]);
   readonly appointmentStatusOptions: string[] = ['Confirmada', 'En curs', 'Cancel·lada'];
   quickActionsAppointmentId = signal<number | null>(null);
+  cleaningSelectorAppointmentId = signal<number | null>(null);
   pathologiesList = signal<any[]>([]);
   treatmentsList = signal<any[]>([]);
   loading = signal(false);
@@ -410,26 +412,27 @@ export class AppointmentComponent implements OnInit {
     this.error.set(null);
     this.loading.set(true);
 
-    // --- CAMBIO AQUÍ ---
-    // Nos aseguramos de que la fecha sea un string limpio
-    const rawDate = this.newAppointmentData.visitDate; 
-    const dateStr = rawDate ? new Date(rawDate).toISOString().split('T')[0] : '';
-    // -------------------
+    const rawDate = String(this.newAppointmentData.visitDate ?? '').trim();
+    const dateStr = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
+      ? rawDate
+      : this.formatDateYmd(this.parseYmdToDate(rawDate));
 
     console.log('Enviando fecha limpia al servidor:', dateStr);
 
     this.appointmentService.getAppointments(dateStr).subscribe({
       next: (data) => {
-        console.log('¡Éxito! Citas recibidas:', data);
-        console.log(`  → ${data.length} citas cargadas`);
+        const normalizedAppointments = this.extractList(data).map((row) => this.normalizeIncomingAppointment(row));
+
+        console.log('¡Éxito! Citas recibidas:', normalizedAppointments);
+        console.log(`  → ${normalizedAppointments.length} citas cargadas`);
         
         // Debug: Mostrar información de cada cita
-        data.forEach((cita, idx) => {
+        normalizedAppointments.forEach((cita, idx) => {
           const boxInfo = this.getAppointmentBoxId(cita) || this.getAppointmentBoxLabelNormalized(cita);
           console.log(`    [${idx}] Cita: ${cita.patientName || '?'} → Box: ${boxInfo}`);
         });
         
-        this.appointments.set(data);
+        this.appointments.set(normalizedAppointments);
         
         // Debug: Mostrar boxes disponibles
         const displayBoxes = this.getDisplayBoxes();
@@ -443,7 +446,7 @@ export class AppointmentComponent implements OnInit {
         console.log(`Visible boxes (after filter): ${visibleBoxes.length}`);
         
         this.syncSelectedBoxesWithAvailable(displayBoxes);
-        this.dayAllergySummary.set(this.buildDayAllergySummary(data));
+        this.dayAllergySummary.set(this.buildDayAllergySummary(normalizedAppointments));
         this.loading.set(false);
       },
       error: (err) => {
@@ -759,14 +762,11 @@ export class AppointmentComponent implements OnInit {
   }
 
   private executeSave(): void {
-    if (!this.isFiveMinuteTime(this.newAppointmentData.visitTime)) {
-      alert('La hora de la cita ha d\'estar en blocs exactes de 5 minuts.');
-      return;
-    }
-
     const treatmentId = this.toNumberOrNull(this.newAppointmentData.treatmentId);
     const pathologyIdFromForm = this.toNumberOrNull(this.newAppointmentData.pathologyId);
     const pathologyId = pathologyIdFromForm ?? this.selectedTreatment?.pathologyId ?? null;
+    const baseDuration = Number(this.newAppointmentData.durationMinutes);
+    const cleaningBuffer = BOX_CLEANING_BUFFER_MINUTES;
 
     const dataToSend = {
       patient: Number(this.newAppointmentData.patient),
@@ -775,8 +775,13 @@ export class AppointmentComponent implements OnInit {
       visitDate: this.newAppointmentData.visitDate,
       visitTime: this.newAppointmentData.visitTime,
       
-      duration: Number(this.newAppointmentData.durationMinutes), // REVISAR 
-      durationMinutes: Number(this.newAppointmentData.durationMinutes),
+      // Visible appointment span remains `duration`; cleaning is persisted separately.
+      duration: baseDuration,
+      durationMinutes: baseDuration,
+      cleaningTime: cleaningBuffer,
+      cleaning_time: cleaningBuffer,
+      cleaningMinutes: cleaningBuffer,
+      totalBlockTime: baseDuration + cleaningBuffer,
       
       consultationReason: this.newAppointmentData.consultationReason || '',
       
@@ -836,25 +841,6 @@ export class AppointmentComponent implements OnInit {
         alert(this.resolveCreateErrorMessage(httpError));
       }
     });
-  }
-
-  private isFiveMinuteTime(value: string): boolean {
-    const match = String(value ?? '').match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-    if (!match) {
-      return false;
-    }
-
-    const hours = Number(match[1]);
-    const minutes = Number(match[2]);
-    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
-      return false;
-    }
-
-    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-      return false;
-    }
-
-    return minutes % 5 === 0;
   }
 
   getVisitHour(): string {
@@ -1151,6 +1137,41 @@ export class AppointmentComponent implements OnInit {
     return fallback;
   }
 
+  private normalizeIncomingAppointment(raw: unknown): Appointment {
+    const row = this.asRecord(raw) ?? {};
+    const fallback = raw as Partial<Appointment>;
+
+    const id = this.toNumberOrNull(row['id'] ?? fallback.id) ?? 0;
+    const time =
+      this.pickString(row, ['time', 'visitTime', 'visit_time', 'slotTime', 'slot_time']) ??
+      String(fallback.time ?? '08:00');
+    const duration = this.toPositiveNumberOrDefault(
+      row['duration'] ?? row['durationMinutes'] ?? row['duration_minutes'] ?? fallback.duration,
+      30
+    );
+    const cleaningTime = this.toPositiveNumberOrDefault(
+      row['cleaningTime'] ?? row['cleaning_time'] ?? row['cleaningMinutes'] ?? fallback.cleaningTime,
+      5
+    );
+
+    return {
+      id,
+      time,
+      duration,
+      cleaningTime,
+      totalBlockTime: duration + cleaningTime,
+      status: String(row['status'] ?? fallback.status ?? 'Programada'),
+      patientName: String(row['patientName'] ?? row['patient_name'] ?? fallback.patientName ?? '—'),
+      doctorName: String(row['doctorName'] ?? row['doctor_name'] ?? fallback.doctorName ?? '—'),
+      boxId: this.toNumberOrNull(row['boxId'] ?? row['box_id'] ?? fallback.boxId),
+      box: String(row['box'] ?? row['boxName'] ?? row['box_name'] ?? fallback.box ?? ''),
+      reason: String(row['reason'] ?? row['motive'] ?? fallback.reason ?? ''),
+      color: String(row['color'] ?? fallback.color ?? '#2b7fff'),
+      isUrgency: Boolean(row['isUrgency'] ?? row['is_urgency'] ?? fallback.isUrgency),
+      isFirstVisit: Boolean(row['isFirstVisit'] ?? row['is_first_visit'] ?? fallback.isFirstVisit),
+    };
+  }
+
   private fetchWeekAppointments(): void {
     const days = this.weekDays().length > 0 ? this.weekDays() : this.buildWeekDays(this.newAppointmentData.visitDate);
     if (this.weekDays().length === 0) {
@@ -1166,7 +1187,8 @@ export class AppointmentComponent implements OnInit {
       next: (result) => {
         const entries: Record<string, Appointment[]> = {};
         days.forEach((day, idx) => {
-          entries[day.date] = result[idx] ?? [];
+          const rawRows = result[idx] ?? [];
+          entries[day.date] = rawRows.map((row) => this.normalizeIncomingAppointment(row));
         });
         this.weeklyAppointments.set(entries);
         this.loading.set(false);
@@ -1649,6 +1671,24 @@ export class AppointmentComponent implements OnInit {
     return this.quickActionsAppointmentId() === appointmentId;
   }
 
+  isCleaningSelectorOpen(appointmentId: number): boolean {
+    return this.cleaningSelectorAppointmentId() === appointmentId;
+  }
+
+  toggleCleaningSelector(appointmentId: number): void {
+    this.cleaningSelectorAppointmentId.set(
+      this.cleaningSelectorAppointmentId() === appointmentId ? null : appointmentId
+    );
+  }
+
+  onCleaningOptionSelected(appointment: Appointment, selectedValue: string): void {
+    const minutes = Number(selectedValue);
+    if (!Number.isFinite(minutes)) {
+      return;
+    }
+    this.setAppointmentCleaningBuffer(appointment, minutes);
+  }
+
   toggleQuickActions(appointmentId: number): void {
     this.quickActionsAppointmentId.set(
       this.quickActionsAppointmentId() === appointmentId ? null : appointmentId
@@ -1691,6 +1731,53 @@ export class AppointmentComponent implements OnInit {
       return;
     }
 
+  }
+
+  setAppointmentCleaningBuffer(appointment: Appointment, minutes: number): void {
+    const allowedValues = [5, 10, 15];
+    if (!allowedValues.includes(minutes)) {
+      alert('La neteja del box nomes pot ser de 5, 10 o 15 minuts.');
+      return;
+    }
+
+    const currentCleaning = this.toPositiveNumberOrDefault(appointment.cleaningTime, 5);
+    if (currentCleaning === minutes) {
+      this.cleaningSelectorAppointmentId.set(null);
+      return;
+    }
+
+    const duration = this.toPositiveNumberOrDefault(appointment.duration, 30);
+    const payload = {
+      duration,
+      durationMinutes: duration,
+      cleaningMinutes: minutes,
+      cleaningTime: minutes,
+      cleaning_time: minutes,
+      totalBlockTime: duration + minutes,
+    };
+
+    this.appointmentService.updateAppointment(appointment.id, payload).subscribe({
+      next: () => {
+        this.quickActionsAppointmentId.set(null);
+        this.cleaningSelectorAppointmentId.set(null);
+        this.fetchAppointments();
+        if (this.isWeekView()) {
+          this.fetchWeekAppointments();
+        }
+      },
+      error: (err: unknown) => {
+        const httpErr = err as HttpErrorResponse;
+        if (httpErr?.status === 400) {
+          alert('Valor de neteja invalid. Nomes es permet 5, 10 o 15 minuts.');
+          return;
+        }
+        if (httpErr?.status === 401 || httpErr?.status === 403) {
+          alert('Sessio caducada o sense permisos per actualitzar la neteja.');
+          return;
+        }
+        alert('No s\'ha pogut actualitzar el temps de neteja del box.');
+      },
+    });
   }
 
   private markStatusUpdating(appointmentId: number, isUpdating: boolean): void {

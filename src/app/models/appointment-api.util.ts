@@ -432,7 +432,7 @@ export function rawToAgendaAppointment(raw: unknown): Appointment {
   const occurredAt = parseOccurredAt(r);
   const time = formatAppointmentTimeHm(occurredAt, r);
   const duration = Number(r['duration'] ?? r['durationMinutes'] ?? r['duration_minutes'] ?? 30) || 30;
-  const cleaningTime = Number(r['cleaningTime'] ?? r['cleaning_time'] ?? 0) || 0;
+  const cleaningTime = Number(r['cleaningTime'] ?? r['cleaning_time'] ?? r['cleaningMinutes'] ?? 5) || 5;
   const status = String(r['status'] ?? 'pending');
   const patientName = String(
     r['patientName'] ?? r['patient_name'] ?? r['patient'] ?? '—'
