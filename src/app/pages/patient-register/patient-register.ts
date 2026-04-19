@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FEEDBACK_MESSAGE_AUTO_HIDE_MS } from '../../constants/feedback-message-timing';
 import { PatientService, RegisterPatientPayload } from '../../services/patient.service';
+import { AllergyFlag, buildAllergiesBitmask } from '../../models/patient.model';
 
 @Component({
   selector: 'app-patient-register',
@@ -14,7 +15,7 @@ import { PatientService, RegisterPatientPayload } from '../../services/patient.s
   templateUrl: './patient-register.html',
   styleUrl: './patient-register.css',
 })
-export class PatientRegisterComponent implements OnDestroy {
+export class PatientRegisterComponent implements OnDestroy, OnInit {
   idNumber = '';
   fullName = '';
   phone = '';
@@ -24,13 +25,27 @@ export class PatientRegisterComponent implements OnDestroy {
   serverError: string | null = null;
   successMessage: string | null = null;
   loading = signal(false);
+  private returnUrl = '/appointments';
   private messageDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  readonly allergyOptions = [
+    { flag: AllergyFlag.PENICILLIN, label: 'Penicil·lina' },
+    { flag: AllergyFlag.LATEX, label: 'Làtex' },
+    { flag: AllergyFlag.ANESTHESIA, label: 'Anestèsia' },
+    { flag: AllergyFlag.NSAIDS, label: 'AINEs' },
+  ] as const;
+  selectedAllergies: number[] = [];
 
   constructor(
     private readonly patientService: PatientService,
     private readonly router: Router,
-    private readonly translate: TranslateService
+    private readonly translate: TranslateService,
+    private readonly route: ActivatedRoute
   ) {}
+
+  ngOnInit(): void {
+    const requestedReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '';
+    this.returnUrl = requestedReturnUrl.startsWith('/') ? requestedReturnUrl : '/appointments';
+  }
 
   ngOnDestroy(): void {
     this.clearMessageDismissTimer();
@@ -38,7 +53,7 @@ export class PatientRegisterComponent implements OnDestroy {
 
   goToDoctorPanel(): void {
     if (this.loading()) return;
-    this.router.navigate(['/doctor-panel']);
+    this.router.navigateByUrl(this.returnUrl || '/appointments');
   }
 
   /** Acepta respuesta JSON en camelCase o snake_case del API. */
@@ -112,6 +127,28 @@ export class PatientRegisterComponent implements OnDestroy {
     return null;
   }
 
+  isAllergySelected(flag: number): boolean {
+    return this.selectedAllergies.includes(flag);
+  }
+
+  toggleAllergy(flag: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedAllergies.includes(flag)) {
+        this.selectedAllergies = [...this.selectedAllergies, flag].sort((a, b) => a - b);
+      }
+      return;
+    }
+
+    this.selectedAllergies = this.selectedAllergies.filter((item) => item !== flag);
+  }
+
+  getSelectedAllergyText(): string {
+    return this.allergyOptions
+      .filter((option) => this.selectedAllergies.includes(option.flag))
+      .map((option) => option.label.toLocaleUpperCase('es-ES'))
+      .join(', ');
+  }
+
   private hasAnyFormatError(): boolean {
     return (
       !!this.getIdNumberError() ||
@@ -146,7 +183,9 @@ export class PatientRegisterComponent implements OnDestroy {
       familyHistory: this.t('patientRegister.defaults.noInitialInfo'),
       healthStatus: this.t('patientRegister.defaults.noInitialInfo'),
       lifestyleHabits: this.t('patientRegister.defaults.noInitialInfo'),
-      medicationAllergies: this.t('patientRegister.defaults.noInitialInfo'),
+      medicationAllergies: this.getSelectedAllergyText(),
+      selectedAllergies: [...this.selectedAllergies],
+      allergiesBitmask: buildAllergiesBitmask(this.selectedAllergies),
       registrationDate: new Date().toISOString(),
     };
 
@@ -166,6 +205,7 @@ export class PatientRegisterComponent implements OnDestroy {
           this.t('patientRegister.messages.registerOkOpeningRecord');
         this.scheduleMessagesAutoHide();
         this.loading.set(false);
+        this.selectedAllergies = [];
         setTimeout(() => this.router.navigate(['/patient-panel', newId]), 700);
       },
       error: (err: unknown) => {
