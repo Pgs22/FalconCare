@@ -52,11 +52,14 @@ export class AppointmentService {
     return this.http.post(`${this.apiUrl}/${id}/close`, {}, { withCredentials: true });
   }
 
-  updateAppointmentStatus(id: number, nextStatus: string): Observable<any> {
+  updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
     const payload = { status: nextStatus };
 
     // Backend route: /api/appointment/{id}/status (app_appointment_update_status)
-    return this.http.patch(`${this.apiUrl}/${id}/status`, payload, { withCredentials: true });
+    return this.http.patch(`${this.apiUrl}/${id}/status`, payload, {
+      withCredentials: true,
+      responseType: 'text',
+    });
   }
 
   openAppointment(id: number): Observable<any> {

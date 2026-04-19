@@ -158,16 +158,17 @@
                           {{ cita.patientName }}
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
-                        <button
-                          type="button"
+                        <select
                           title="Canviar estat"
                           class="status-pill status-pill-btn"
-                          *ngIf="cita.status"
                           [disabled]="isStatusUpdating(cita.id)"
-                          (click)="changeAppointmentStatus(cita)"
+                          [value]="getStatusSelectValue(cita.status)"
+                          (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                         >
-                          {{ cita.status }}
-                        </button>
+                          <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
+                            {{ statusOption }}
+                          </option>
+                        </select>
                       </div>
 
                       <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
@@ -185,7 +186,7 @@
 
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
                       <button title="Abrir odontograma" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
-                      <button title="Finalizar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
+                      <button title="Finalitzar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
                       <div class="quick-actions-wrap">
                         <button
                           title="Més accions"
@@ -201,7 +202,6 @@
                         >
                           <button type="button" (click)="onQuickActionSelected(cita, 'editar')">Editar</button>
                           <button type="button" (click)="onQuickActionSelected(cita, 'eliminar')">Eliminar</button>
-                          <button type="button" (click)="onQuickActionSelected(cita, 'cancelar')">Cancelar</button>
                         </div>
                       </div>
                     </div>
@@ -263,16 +263,17 @@
                       <div class="info">
                         <div class="patient-row">
                           <span class="patient">{{ cita.patientName }}</span>
-                          <button
-                            type="button"
+                          <select
                             title="Canviar estat"
                             class="status-pill status-pill-btn"
-                            *ngIf="cita.status"
                             [disabled]="isStatusUpdating(cita.id)"
-                            (click)="changeAppointmentStatus(cita)"
+                            [value]="getStatusSelectValue(cita.status)"
+                            (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                           >
-                            {{ cita.status }}
-                          </button>
+                            <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
+                              {{ statusOption }}
+                            </option>
+                          </select>
                         </div>
 
                         <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
@@ -450,7 +451,7 @@
 
       <div class="panel-footer mt-4">
         <button type="button" (click)="closePanel()" class="btn-cancel">Cancelar</button>
-        <button type="submit" class="btn-save" [disabled]="loading()">Guardar Cita</button>
+        <button type="submit" class="btn-save" [disabled]="loading()">{{ isEditMode ? 'Actualizar Cita' : 'Guardar Cita' }}</button>
       </div>
     </form>
   </aside>

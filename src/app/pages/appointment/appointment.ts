@@ -72,6 +72,7 @@ export class AppointmentComponent implements OnInit {
   boxesList = signal<any[]>([]);
   selectedBoxKeys = signal<string[]>([]);
   statusUpdatingIds = signal<number[]>([]);
+  readonly appointmentStatusOptions: string[] = ['Confirmada', 'En curs', 'Cancel·lada'];
   quickActionsAppointmentId = signal<number | null>(null);
   pathologiesList = signal<any[]>([]);
   treatmentsList = signal<any[]>([]);
@@ -79,6 +80,7 @@ export class AppointmentComponent implements OnInit {
   error = signal<string | null>(null);
   showForm = signal(false);
   isEditMode = false;
+  private editingAppointmentId: number | null = null;
 
   isNewPatientMode = false;
   selectedPatientAllergyText = '';
@@ -650,8 +652,50 @@ export class AppointmentComponent implements OnInit {
 
   openNewAppointmentPanel(): void {
     this.showForm.set(true);
+    this.isEditMode = false;
+    this.editingAppointmentId = null;
+    this.isNewPatientMode = false;
     this.loadPatients();
     this.loadSetupData(this.newAppointmentData.visitDate);
+  }
+
+  private openEditAppointmentPanel(appointment: Appointment): void {
+    const patientId = this.getAppointmentPatientId(appointment);
+    const doctorId = this.getAppointmentDoctorId(appointment);
+    const boxId = this.getAppointmentBoxId(appointment);
+    const visitDate = this.getAppointmentVisitDate(appointment);
+    const visitTime = this.normalizeAppointmentTime(appointment.time);
+
+    this.showForm.set(true);
+    this.isEditMode = true;
+    this.editingAppointmentId = appointment.id;
+    this.isNewPatientMode = false;
+
+    this.newAppointmentData = {
+      ...this.newAppointmentData,
+      patient: patientId != null ? String(patientId) : '',
+      doctor: doctorId != null ? String(doctorId) : '',
+      box: boxId != null ? String(boxId) : '',
+      visitDate,
+      visitTime,
+      consultationReason: appointment.reason ?? '',
+      durationMinutes: this.toPositiveNumberOrDefault(appointment.duration, 30),
+      isFirstVisit: !!appointment.isFirstVisit,
+      isUrgency: !!appointment.isUrgency,
+      treatmentId: '',
+      pathologyId: '',
+      newPatientName: '',
+      newPatientDni: '',
+    };
+
+    this.loadPatients();
+    this.loadSetupData(visitDate);
+
+    if (patientId != null) {
+      this.onPatientChange(patientId);
+    } else {
+      this.selectedPatientAllergyText = '';
+    }
   }
 
   openNewPatientRegister(): void {
@@ -664,6 +708,8 @@ export class AppointmentComponent implements OnInit {
   closePanel(): void {
     this.showForm.set(false);
     this.isNewPatientMode = false;
+    this.isEditMode = false;
+    this.editingAppointmentId = null;
     this.newAppointmentData = {
       patient: '',
       newPatientName: '',
@@ -682,6 +728,11 @@ export class AppointmentComponent implements OnInit {
   }
 
   saveAppointment(): void {
+    if (this.isEditMode) {
+      this.executeSave();
+      return;
+    }
+
     if (this.isNewPatientMode && this.newAppointmentData.newPatientName) {
       const newPatient = {
         firstName: this.newAppointmentData.newPatientName,
@@ -731,6 +782,25 @@ export class AppointmentComponent implements OnInit {
       isFirstVisit: !!this.newAppointmentData.isFirstVisit,
       isUrgency: !!this.newAppointmentData.isUrgency
     };
+
+    if (this.isEditMode && this.editingAppointmentId != null) {
+      this.appointmentService.updateAppointment(this.editingAppointmentId, dataToSend).subscribe({
+        next: () => {
+          this.closePanel();
+          this.fetchAppointments();
+          if (this.isWeekView()) {
+            this.fetchWeekAppointments();
+          }
+          alert('Cita actualitzada correctament.');
+        },
+        error: (err: unknown) => {
+          const httpError = err as HttpErrorResponse;
+          console.error('Respuesta cruda del servidor:', httpError?.error);
+          alert('No s\'ha pogut actualitzar la cita.');
+        }
+      });
+      return;
+    }
 
     this.appointmentService.createAppointment(dataToSend).subscribe({
       next: (res: unknown) => {
@@ -1515,15 +1585,40 @@ export class AppointmentComponent implements OnInit {
     return this.statusUpdatingIds().includes(appointmentId);
   }
 
-  changeAppointmentStatus(appointment: Appointment): void {
+  getStatusSelectValue(currentStatus: string): string {
+    const normalized = this.normalizeStatusToken(currentStatus);
+    if (normalized === 'confirmada') {
+      return 'Confirmada';
+    }
+    if (normalized === 'encurs' || normalized === 'encurso') {
+      return 'En curs';
+    }
+    if (normalized === 'cancelada' || normalized === 'cancel.lada' || normalized === 'cancel·lada') {
+      return 'Cancel·lada';
+    }
+    return 'Confirmada';
+  }
+
+  onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
+    const targetStatus = this.getStatusSelectValue(selectedStatus);
+    const currentStatus = this.getStatusSelectValue(appointment.status);
+
+    if (this.isStatusUpdating(appointment.id) || !targetStatus || targetStatus === currentStatus) {
+      return;
+    }
+
+    this.changeAppointmentStatus(appointment, targetStatus);
+  }
+
+  changeAppointmentStatus(appointment: Appointment, nextStatus: string): void {
     if (this.isStatusUpdating(appointment.id)) {
       return;
     }
 
-    const nextStatus = this.getNextAppointmentStatus(appointment.status);
+    const normalizedNextStatus = this.getStatusSelectValue(nextStatus);
     this.markStatusUpdating(appointment.id, true);
 
-    this.appointmentService.updateAppointmentStatus(appointment.id, nextStatus).subscribe({
+    this.appointmentService.updateAppointmentStatus(appointment.id, normalizedNextStatus).subscribe({
       next: () => {
         this.fetchAppointments();
         if (this.isWeekView()) {
@@ -1560,26 +1655,8 @@ export class AppointmentComponent implements OnInit {
     }
 
     if (action === 'editar') {
-      const updatedReason = window.prompt('Actualitza el motiu de consulta', appointment.reason ?? '');
-      if (updatedReason == null) {
-        return;
-      }
-
-      const payload: Record<string, unknown> = {
-        consultationReason: updatedReason,
-        reason: updatedReason,
-      };
-
-      this.appointmentService.updateAppointment(appointment.id, payload).subscribe({
-        next: () => {
-          this.quickActionsAppointmentId.set(null);
-          this.fetchAppointments();
-          if (this.isWeekView()) {
-            this.fetchWeekAppointments();
-          }
-        },
-        error: () => alert('No s\'ha pogut actualitzar la cita.'),
-      });
+      this.quickActionsAppointmentId.set(null);
+      this.openEditAppointmentPanel(appointment);
       return;
     }
 
@@ -1601,18 +1678,6 @@ export class AppointmentComponent implements OnInit {
       return;
     }
 
-    if (action === 'cancelar') {
-      this.appointmentService.updateAppointmentStatus(appointment.id, 'Cancelada').subscribe({
-        next: () => {
-          this.quickActionsAppointmentId.set(null);
-          this.fetchAppointments();
-          if (this.isWeekView()) {
-            this.fetchWeekAppointments();
-          }
-        },
-        error: () => alert('No s\'ha pogut cancel·lar la cita.'),
-      });
-    }
   }
 
   private markStatusUpdating(appointmentId: number, isUpdating: boolean): void {
@@ -1625,23 +1690,6 @@ export class AppointmentComponent implements OnInit {
     this.statusUpdatingIds.set(Array.from(current));
   }
 
-  private getNextAppointmentStatus(currentStatus: string): string {
-    const normalized = this.normalizeStatusToken(currentStatus);
-    if (normalized === 'programada') {
-      return 'Confirmada';
-    }
-    if (normalized === 'confirmada') {
-      return 'En curs';
-    }
-    if (normalized === 'encurs' || normalized === 'encurso') {
-      return 'Finalitzada';
-    }
-    if (normalized === 'finalitzada' || normalized === 'finalizada') {
-      return 'Programada';
-    }
-    return 'Confirmada';
-  }
-
   private normalizeStatusToken(status: string): string {
     return String(status ?? '')
       .trim()
@@ -1649,6 +1697,45 @@ export class AppointmentComponent implements OnInit {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '');
+  }
+
+  private getAppointmentPatientId(appointment: Appointment): number | null {
+    const row = appointment as unknown as ApiRecord;
+    const direct = this.toNumberOrNull(row['patientId'] ?? row['patient_id']);
+    if (direct != null) {
+      return direct;
+    }
+
+    const patientNode = this.asRecord(row['patient']);
+    return this.toNumberOrNull(patientNode?.['id']);
+  }
+
+  private getAppointmentDoctorId(appointment: Appointment): number | null {
+    const row = appointment as unknown as ApiRecord;
+    const direct = this.toNumberOrNull(row['doctorId'] ?? row['doctor_id']);
+    if (direct != null) {
+      return direct;
+    }
+
+    const doctorNode = this.asRecord(row['doctor']);
+    return this.toNumberOrNull(doctorNode?.['id']);
+  }
+
+  private getAppointmentVisitDate(appointment: Appointment): string {
+    const row = appointment as unknown as ApiRecord;
+    const rawDate = row['visitDate'] ?? row['visit_date'] ?? this.newAppointmentData.visitDate;
+    if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      return rawDate;
+    }
+    return this.newAppointmentData.visitDate;
+  }
+
+  private normalizeAppointmentTime(rawTime: unknown): string {
+    const match = String(rawTime ?? '').match(/^(\d{1,2}:\d{2})/);
+    if (!match) {
+      return '';
+    }
+    return match[1];
   }
 
   private minuteToTopPx(totalMinutes: number): number {
