@@ -145,10 +145,11 @@
                 <div
                   class="appointment-block"
                   *ngIf="belongsToBox(cita, b)"
+                  [class.menu-open]="isQuickActionsOpen(cita.id)"
                   [style.top.px]="getAppointmentTopPx(cita)"
                   [style.height.px]="getAppointmentHeightPx(cita)"
                 >
-                  <div class="card-appointment" [ngClass]="cita.status" [style.border-left-color]="cita.color">
+                  <div class="card-appointment" [ngClass]="cita.status" [style.--appointment-color]="cita.color || '#00bcd4'">
                     <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">Urgencia</div>
 
                     <div class="info">
@@ -157,18 +158,19 @@
                           {{ cita.patientName }}
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
-                        <span
-                          class="status-pill"
+                        <button
+                          type="button"
+                          title="Canviar estat"
+                          class="status-pill status-pill-btn"
                           *ngIf="cita.status"
-                          [style.color]="cita.color || '#00bcd4'"
-                          [style.border-color]="cita.color || '#00bcd4'"
-                          [style.background-color]="(cita.color || '#00bcd4') + '22'"
+                          [disabled]="isStatusUpdating(cita.id)"
+                          (click)="changeAppointmentStatus(cita)"
                         >
                           {{ cita.status }}
-                        </span>
+                        </button>
                       </div>
 
-                      <span class="doctor-tag" [style.color]="cita.color">Dr. {{ cita.doctorName }}</span>
+                      <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
 
                       <div class="meta-row">
                         <span class="meta-icon clock" aria-hidden="true"></span>
@@ -184,6 +186,24 @@
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
                       <button title="Abrir odontograma" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
                       <button title="Finalizar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
+                      <div class="quick-actions-wrap">
+                        <button
+                          title="Més accions"
+                          class="btn-action quick-plus"
+                          type="button"
+                          (click)="toggleQuickActions(cita.id)"
+                        >
+                          +
+                        </button>
+                        <div
+                          *ngIf="isQuickActionsOpen(cita.id)"
+                          class="quick-actions-menu"
+                        >
+                          <button type="button" (click)="onQuickActionSelected(cita, 'editar')">Editar</button>
+                          <button type="button" (click)="onQuickActionSelected(cita, 'eliminar')">Eliminar</button>
+                          <button type="button" (click)="onQuickActionSelected(cita, 'cancelar')">Cancelar</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -233,27 +253,29 @@
                 <ng-container *ngFor="let cita of getVisibleAppointmentsForWeekDay(day.date)">
                   <div
                     class="appointment-block week-appointment-block"
+                    [class.menu-open]="isQuickActionsOpen(cita.id)"
                     [style.top.px]="getAppointmentTopPx(cita)"
                     [style.height.px]="getAppointmentHeightPx(cita)"
                   >
-                    <div class="card-appointment" [style.border-left-color]="cita.color">
+                    <div class="card-appointment" [style.--appointment-color]="cita.color || '#00bcd4'">
                       <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">Urgencia</div>
 
                       <div class="info">
                         <div class="patient-row">
                           <span class="patient">{{ cita.patientName }}</span>
-                          <span
-                            class="status-pill"
+                          <button
+                            type="button"
+                            title="Canviar estat"
+                            class="status-pill status-pill-btn"
                             *ngIf="cita.status"
-                            [style.color]="cita.color || '#00bcd4'"
-                            [style.border-color]="cita.color || '#00bcd4'"
-                            [style.background-color]="(cita.color || '#00bcd4') + '22'"
+                            [disabled]="isStatusUpdating(cita.id)"
+                            (click)="changeAppointmentStatus(cita)"
                           >
                             {{ cita.status }}
-                          </span>
+                          </button>
                         </div>
 
-                        <span class="doctor-tag" [style.color]="cita.color">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
+                        <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
 
                         <div class="meta-row">
                           <span class="meta-icon clock" aria-hidden="true"></span>
@@ -352,7 +374,27 @@
       <div class="form-row">
         <div class="form-group col">
           <label>Hora inicio</label>
-          <input type="time" [(ngModel)]="newAppointmentData.visitTime" name="visitTime" class="form-control" required>
+          <div class="time-select-group">
+            <select
+              [ngModel]="getVisitHour()"
+              (ngModelChange)="onVisitHourChange($event)"
+              name="visitHour"
+              class="form-control"
+              required
+            >
+              <option *ngFor="let h of appointmentHourOptions" [ngValue]="h">{{ h }}</option>
+            </select>
+            <span class="time-select-separator">:</span>
+            <select
+              [ngModel]="getVisitMinute()"
+              (ngModelChange)="onVisitMinuteChange($event)"
+              name="visitMinute"
+              class="form-control"
+              required
+            >
+              <option *ngFor="let m of appointmentMinuteOptions" [ngValue]="m">{{ m }}</option>
+            </select>
+          </div>
         </div>
         <div class="form-group col">
           <label>Duracion</label>

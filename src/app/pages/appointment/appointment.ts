@@ -52,6 +52,14 @@ export class AppointmentComponent implements OnInit {
     { length: this.dayEndHour - this.dayStartHour + 1 },
     (_, idx) => `${String(this.dayStartHour + idx).padStart(2, '0')}:00`
   );
+  readonly appointmentHourOptions = Array.from(
+    { length: this.dayEndHour - this.dayStartHour + 1 },
+    (_, idx) => String(this.dayStartHour + idx).padStart(2, '0')
+  );
+  readonly appointmentMinuteOptions = Array.from(
+    { length: 12 },
+    (_, idx) => String(idx * 5).padStart(2, '0')
+  );
   readonly dayGridHeightPx = (this.dayHours.length - 1) * this.hourSlotHeightPx;
 
   appointments = signal<Appointment[]>([]);
@@ -63,6 +71,8 @@ export class AppointmentComponent implements OnInit {
   doctorsList = signal<any[]>([]);
   boxesList = signal<any[]>([]);
   selectedBoxKeys = signal<string[]>([]);
+  statusUpdatingIds = signal<number[]>([]);
+  quickActionsAppointmentId = signal<number | null>(null);
   pathologiesList = signal<any[]>([]);
   treatmentsList = signal<any[]>([]);
   loading = signal(false);
@@ -73,6 +83,7 @@ export class AppointmentComponent implements OnInit {
   isNewPatientMode = false;
   selectedPatientAllergyText = '';
   private boxesSelectionInitialized = false;
+  private hasUserAdjustedBoxSelection = false;
 
   private readonly allergyLabelByFlag: Record<number, string> = {
     [AllergyFlag.PENICILLIN]: 'Penicil·lina',
@@ -251,6 +262,7 @@ export class AppointmentComponent implements OnInit {
 
     if (!patientId) return;
 
+    this.applyFirstVisitDefaultFromPatient(patientId);
     this.setSelectedPatientAllergies(patientId);
 
     this.appointmentService.getPatientTreatments(patientId).subscribe({
@@ -261,6 +273,38 @@ export class AppointmentComponent implements OnInit {
       },
       error: (err) => console.error('Error al cargar tratamientos', err)
     });
+  }
+
+  private applyFirstVisitDefaultFromPatient(patientId: any): void {
+    const selectedPatientId = this.toNumberOrNull(patientId);
+    if (selectedPatientId == null) {
+      return;
+    }
+
+    const selectedPatient = this.patientsList().find(
+      (patient) => this.toNumberOrNull(patient?.id) === selectedPatientId
+    );
+
+    if (!selectedPatient || typeof selectedPatient !== 'object') {
+      return;
+    }
+
+    const patientRecord = selectedPatient as ApiRecord;
+    const lastOdontogramValue = patientRecord['lastOdontogramId'] ?? patientRecord['last_odontogram_id'];
+    const hasOdontogram = this.toNumberOrNull(lastOdontogramValue) != null;
+
+    this.newAppointmentData.isFirstVisit = !hasOdontogram;
+    if (this.newAppointmentData.isFirstVisit) {
+      this.onFirstVisitChange();
+      return;
+    }
+
+    if (!this.newAppointmentData.isUrgency) {
+      this.newAppointmentData.durationMinutes = 30;
+      if (this.newAppointmentData.consultationReason === 'Primera visita / Revisió') {
+        this.newAppointmentData.consultationReason = '';
+      }
+    }
   }
 
   getDayAllergySummary(): DayAllergySummaryItem[] {
@@ -658,6 +702,11 @@ export class AppointmentComponent implements OnInit {
   }
 
   private executeSave(): void {
+    if (!this.isFiveMinuteTime(this.newAppointmentData.visitTime)) {
+      alert('La hora de la cita ha d\'estar en blocs exactes de 5 minuts.');
+      return;
+    }
+
     const treatmentId = this.toNumberOrNull(this.newAppointmentData.treatmentId);
     const pathologyIdFromForm = this.toNumberOrNull(this.newAppointmentData.pathologyId);
     const pathologyId = pathologyIdFromForm ?? this.selectedTreatment?.pathologyId ?? null;
@@ -711,6 +760,64 @@ export class AppointmentComponent implements OnInit {
         alert(this.resolveCreateErrorMessage(httpError));
       }
     });
+  }
+
+  private isFiveMinuteTime(value: string): boolean {
+    const match = String(value ?? '').match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (!match) {
+      return false;
+    }
+
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+      return false;
+    }
+
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return false;
+    }
+
+    return minutes % 5 === 0;
+  }
+
+  getVisitHour(): string {
+    const parsed = this.parseVisitTimeParts(this.newAppointmentData.visitTime);
+    return parsed.hour;
+  }
+
+  getVisitMinute(): string {
+    const parsed = this.parseVisitTimeParts(this.newAppointmentData.visitTime);
+    return parsed.minute;
+  }
+
+  onVisitHourChange(hour: string): void {
+    const normalizedHour = String(hour ?? '').padStart(2, '0');
+    const minute = this.getVisitMinute();
+    this.newAppointmentData.visitTime = `${normalizedHour}:${minute}`;
+  }
+
+  onVisitMinuteChange(minute: string): void {
+    const normalizedMinute = String(minute ?? '').padStart(2, '0');
+    const hour = this.getVisitHour();
+    this.newAppointmentData.visitTime = `${hour}:${normalizedMinute}`;
+  }
+
+  private parseVisitTimeParts(value: string): { hour: string; minute: string } {
+    const match = String(value ?? '').match(/^(\d{1,2}):(\d{2})/);
+    const fallbackHour = String(this.dayStartHour).padStart(2, '0');
+
+    if (!match) {
+      return { hour: fallbackHour, minute: '00' };
+    }
+
+    const hour = String(Math.min(Math.max(Number(match[1]), this.dayStartHour), this.dayEndHour)).padStart(2, '0');
+    const minuteNum = Number(match[2]);
+    const normalizedMinute = Number.isFinite(minuteNum)
+      ? String(Math.min(Math.max(minuteNum - (minuteNum % 5), 0), 55)).padStart(2, '0')
+      : '00';
+
+    return { hour, minute: normalizedMinute };
   }
 
   private resolveCreateSuccessMessage(payload: ApiRecord | null): string {
@@ -1074,7 +1181,7 @@ export class AppointmentComponent implements OnInit {
       .map((box) => this.getBoxKey(box))
       .filter((key) => !!key);
 
-    if (!this.boxesSelectionInitialized) {
+    if (!this.boxesSelectionInitialized || !this.hasUserAdjustedBoxSelection) {
       this.selectedBoxKeys.set(availableKeys);
       this.boxesSelectionInitialized = true;
       return;
@@ -1155,6 +1262,7 @@ export class AppointmentComponent implements OnInit {
       return;
     }
 
+    this.hasUserAdjustedBoxSelection = true;
     const selected = new Set(this.selectedBoxKeys());
     if (checked) {
       selected.add(key);
@@ -1174,6 +1282,7 @@ export class AppointmentComponent implements OnInit {
 
   toggleAllBoxes(checked: boolean): void {
     const boxes = this.getDisplayBoxes();
+    this.hasUserAdjustedBoxSelection = true;
     if (checked) {
       this.selectedBoxKeys.set(
         boxes
@@ -1352,7 +1461,8 @@ export class AppointmentComponent implements OnInit {
   getAppointmentHeightPx(appointment: Appointment): number {
     const durationMinutes = this.toPositiveNumberOrDefault(appointment.duration, 30);
     const computed = (durationMinutes / 60) * this.hourSlotHeightPx;
-    return Math.max(computed - 2, 8);
+    // Keep enough vertical space so card content is readable even on short appointments.
+    return Math.max(computed - 2, 96);
   }
 
   getAppointmentEndTopPx(appointment: Appointment): number {
@@ -1399,6 +1509,146 @@ export class AppointmentComponent implements OnInit {
 
   getAppointmentBoxLabel(appointment: Appointment): string {
     return this.normalizeBoxLabel(appointment.box);
+  }
+
+  isStatusUpdating(appointmentId: number): boolean {
+    return this.statusUpdatingIds().includes(appointmentId);
+  }
+
+  changeAppointmentStatus(appointment: Appointment): void {
+    if (this.isStatusUpdating(appointment.id)) {
+      return;
+    }
+
+    const nextStatus = this.getNextAppointmentStatus(appointment.status);
+    this.markStatusUpdating(appointment.id, true);
+
+    this.appointmentService.updateAppointmentStatus(appointment.id, nextStatus).subscribe({
+      next: () => {
+        this.fetchAppointments();
+        if (this.isWeekView()) {
+          this.fetchWeekAppointments();
+        }
+      },
+      error: (err: unknown) => {
+        const httpErr = err as HttpErrorResponse;
+        if (httpErr?.status === 401) {
+          alert('Sessio caducada o sense permisos per canviar l\'estat de la cita.');
+          return;
+        }
+        alert('No s\'ha pogut canviar l\'estat de la cita.');
+      },
+      complete: () => {
+        this.markStatusUpdating(appointment.id, false);
+      },
+    });
+  }
+
+  isQuickActionsOpen(appointmentId: number): boolean {
+    return this.quickActionsAppointmentId() === appointmentId;
+  }
+
+  toggleQuickActions(appointmentId: number): void {
+    this.quickActionsAppointmentId.set(
+      this.quickActionsAppointmentId() === appointmentId ? null : appointmentId
+    );
+  }
+
+  onQuickActionSelected(appointment: Appointment, action: string): void {
+    if (!action) {
+      return;
+    }
+
+    if (action === 'editar') {
+      const updatedReason = window.prompt('Actualitza el motiu de consulta', appointment.reason ?? '');
+      if (updatedReason == null) {
+        return;
+      }
+
+      const payload: Record<string, unknown> = {
+        consultationReason: updatedReason,
+        reason: updatedReason,
+      };
+
+      this.appointmentService.updateAppointment(appointment.id, payload).subscribe({
+        next: () => {
+          this.quickActionsAppointmentId.set(null);
+          this.fetchAppointments();
+          if (this.isWeekView()) {
+            this.fetchWeekAppointments();
+          }
+        },
+        error: () => alert('No s\'ha pogut actualitzar la cita.'),
+      });
+      return;
+    }
+
+    if (action === 'eliminar') {
+      if (!confirm('Segur que vols eliminar aquesta cita?')) {
+        return;
+      }
+
+      this.appointmentService.deleteAppointment(appointment.id).subscribe({
+        next: () => {
+          this.quickActionsAppointmentId.set(null);
+          this.fetchAppointments();
+          if (this.isWeekView()) {
+            this.fetchWeekAppointments();
+          }
+        },
+        error: () => alert('No s\'ha pogut eliminar la cita.'),
+      });
+      return;
+    }
+
+    if (action === 'cancelar') {
+      this.appointmentService.updateAppointmentStatus(appointment.id, 'Cancelada').subscribe({
+        next: () => {
+          this.quickActionsAppointmentId.set(null);
+          this.fetchAppointments();
+          if (this.isWeekView()) {
+            this.fetchWeekAppointments();
+          }
+        },
+        error: () => alert('No s\'ha pogut cancel·lar la cita.'),
+      });
+    }
+  }
+
+  private markStatusUpdating(appointmentId: number, isUpdating: boolean): void {
+    const current = new Set(this.statusUpdatingIds());
+    if (isUpdating) {
+      current.add(appointmentId);
+    } else {
+      current.delete(appointmentId);
+    }
+    this.statusUpdatingIds.set(Array.from(current));
+  }
+
+  private getNextAppointmentStatus(currentStatus: string): string {
+    const normalized = this.normalizeStatusToken(currentStatus);
+    if (normalized === 'programada') {
+      return 'Confirmada';
+    }
+    if (normalized === 'confirmada') {
+      return 'En curs';
+    }
+    if (normalized === 'encurs' || normalized === 'encurso') {
+      return 'Finalitzada';
+    }
+    if (normalized === 'finalitzada' || normalized === 'finalizada') {
+      return 'Programada';
+    }
+    return 'Confirmada';
+  }
+
+  private normalizeStatusToken(status: string): string {
+    return String(status ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '');
   }
 
   private minuteToTopPx(totalMinutes: number): number {
