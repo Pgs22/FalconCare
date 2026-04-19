@@ -18,12 +18,12 @@ const PATIENTS_COLLECTION_URL = `${API_PREFIX}/patients`;
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const url = req.url;
 
-  const isApiCall = url.startsWith(API_PREFIX);
+  const isApiCall = url.includes('/api/');
   const isLogin = url === LOGIN_URL;
   const isRegisterDoctor = url === REGISTER_DOCTOR_URL;
   const isDocs = url.startsWith(DOCS_PREFIX);
   const isHealth = url === HEALTH_URL;
-  const isPublicPatientRegister = req.method === 'POST' && url === PATIENTS_COLLECTION_URL;
+  const isPublicPatientRegister = req.method === 'POST' && url.includes('/api/patients');
 
   if (
     !isApiCall ||

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, map } from 'rxjs';
 import { extractApiCollection } from '../models/appointment-api.util';
 
 export interface Appointment {
@@ -53,7 +53,7 @@ export class AppointmentService {
   }
 
   updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
-    const payload = { status: nextStatus };
+    const payload = { stateName: nextStatus };
 
     // Backend route: /api/appointment/{id}/status (app_appointment_update_status)
     return this.http.patch(`${this.apiUrl}/${id}/status`, payload, {
@@ -74,9 +74,9 @@ export class AppointmentService {
   }
 
   deleteAppointment(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}/delete`, { withCredentials: true }).pipe(
-      catchError(() => this.http.delete(`${this.apiUrl}/${id}`, { withCredentials: true }))
-    );
+    const opts = { withCredentials: true };
+
+    return this.http.delete(`${this.apiUrl}/${id}`, opts);
   }
 
   getPatients(): Observable<any[]> {

@@ -573,12 +573,13 @@ export class AppointmentComponent implements OnInit {
     return found as ApiRecord;
   }
 
-  loadPatients(): void {
+  loadPatients(afterLoad?: () => void): void {
     this.appointmentService.getPatients().subscribe({
       next: (data) => {
         console.log('Pacients rebuts:', data);
         this.patientsList.set(data);
         this.dayAllergySummary.set(this.buildDayAllergySummary(this.appointments()));
+        afterLoad?.();
         },
         error: () => console.error('Error carregant pacients')
     });
@@ -688,14 +689,19 @@ export class AppointmentComponent implements OnInit {
       newPatientDni: '',
     };
 
-    this.loadPatients();
-    this.loadSetupData(visitDate);
+    this.loadPatients(() => {
+      const resolvedPatientId =
+        patientId ?? this.findPatientIdByAppointmentName(appointment.patientName);
 
-    if (patientId != null) {
-      this.onPatientChange(patientId);
-    } else {
+      if (resolvedPatientId != null) {
+        this.newAppointmentData.patient = String(resolvedPatientId);
+        this.onPatientChange(resolvedPatientId);
+        return;
+      }
+
       this.selectedPatientAllergyText = '';
-    }
+    });
+    this.loadSetupData(visitDate);
   }
 
   openNewPatientRegister(): void {
@@ -1673,7 +1679,14 @@ export class AppointmentComponent implements OnInit {
             this.fetchWeekAppointments();
           }
         },
-        error: () => alert('No s\'ha pogut eliminar la cita.'),
+        error: (err: unknown) => {
+          const httpErr = err as HttpErrorResponse;
+          if (httpErr?.status === 401 || httpErr?.status === 403) {
+            alert('Sessio caducada o sense permisos per eliminar la cita.');
+            return;
+          }
+          alert('No s\'ha pogut eliminar la cita.');
+        },
       });
       return;
     }
@@ -1706,8 +1719,52 @@ export class AppointmentComponent implements OnInit {
       return direct;
     }
 
+    const rawPatient = row['patient'];
+    const asNumber = this.toNumberOrNull(rawPatient);
+    if (asNumber != null) {
+      return asNumber;
+    }
+
+    if (typeof rawPatient === 'string') {
+      const iriMatch = rawPatient.match(/\/(\d+)\/?$/);
+      if (iriMatch) {
+        return this.toNumberOrNull(iriMatch[1]);
+      }
+    }
+
     const patientNode = this.asRecord(row['patient']);
-    return this.toNumberOrNull(patientNode?.['id']);
+    const nestedDirect = this.toNumberOrNull(
+      patientNode?.['id'] ?? patientNode?.['patientId'] ?? patientNode?.['patient_id']
+    );
+    if (nestedDirect != null) {
+      return nestedDirect;
+    }
+
+    const nestedIri = patientNode?.['@id'];
+    if (typeof nestedIri === 'string') {
+      const iriMatch = nestedIri.match(/\/(\d+)\/?$/);
+      if (iriMatch) {
+        return this.toNumberOrNull(iriMatch[1]);
+      }
+    }
+
+    return null;
+  }
+
+  private findPatientIdByAppointmentName(patientName: string): number | null {
+    const normalizedTarget = String(patientName ?? '').trim().toLowerCase();
+    if (!normalizedTarget) {
+      return null;
+    }
+
+    const match = this.patientsList().find((patient) => {
+      const first = String(patient?.firstName ?? '').trim();
+      const last = String(patient?.lastName ?? '').trim();
+      const fullName = `${first} ${last}`.trim().toLowerCase();
+      return fullName === normalizedTarget;
+    });
+
+    return this.toNumberOrNull(match?.id);
   }
 
   private getAppointmentDoctorId(appointment: Appointment): number | null {

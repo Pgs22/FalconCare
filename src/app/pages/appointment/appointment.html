@@ -185,7 +185,7 @@
                     </div>
 
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
-                      <button title="Abrir odontograma" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
+                      <button title="Obrir cita" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
                       <button title="Finalitzar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
                       <div class="quick-actions-wrap">
                         <button
@@ -309,8 +309,8 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Editar Cita' : 'Detalle de Cita' }}</h2>
-        <small>Gestion de cita y paciente</small>
+        <h2>{{ isEditMode ? 'Editar cita' : 'Detall de cita' }}</h2>
+        <small>Gestio de cita i pacient</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
     </div>
@@ -318,9 +318,9 @@
     <form (ngSubmit)="saveAppointment()" #appointmentForm="ngForm" class="appointment-form">
       <div class="form-group">
         <div class="label-header">
-          <label>Paciente</label>
+          <label>Pacient</label>
           <button type="button" class="btn-text-link" (click)="openNewPatientRegister()">
-            Nuevo paciente
+            Nou pacient
           </button>
         </div>
 
@@ -332,7 +332,7 @@
           required
           (change)="onPatientChange(newAppointmentData.patient)"
         >
-          <option value="" disabled selected>Seleccionar paciente...</option>
+          <option value="" disabled>Selecciona pacient...</option>
           <option *ngFor="let p of patientsList()" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
         </select>
 
@@ -345,19 +345,19 @@
         </div>
 
         <div *ngIf="isNewPatientMode" class="quick-patient-box">
-          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" placeholder="Nombre completo" class="form-control mb-2" [required]="isNewPatientMode">
+          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" placeholder="Nom complet" class="form-control mb-2" [required]="isNewPatientMode">
           <input type="text" [(ngModel)]="newAppointmentData.newPatientDni" name="newPatientDni" placeholder="DNI / NIE" class="form-control">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group col">
-          <label>Fecha de cita</label>
+          <label>Data de la cita</label>
           <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (change)="onDateChange()">
         </div>
 
         <div class="form-group col date-flags">
-          <label class="flags-label">Opciones</label>
+          <label class="flags-label">Opcions</label>
           <div class="date-flags-options">
             <label class="checkbox-container compact">
               <input type="checkbox" [(ngModel)]="newAppointmentData.isFirstVisit" name="isFirstVisit" (change)="onFirstVisitChange()">
@@ -374,7 +374,7 @@
 
       <div class="form-row">
         <div class="form-group col">
-          <label>Hora inicio</label>
+          <label>Hora d'inici</label>
           <div class="time-select-group">
             <select
               [ngModel]="getVisitHour()"
@@ -398,7 +398,7 @@
           </div>
         </div>
         <div class="form-group col">
-          <label>Duracion</label>
+          <label>Duracio</label>
           <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required>
         </div>
       </div>
@@ -421,37 +421,37 @@
       </div>
 
       <div class="form-group mt-3 bg-light p-3 rounded border">
-        <label class="font-weight-bold">Patologia / Tratamiento</label>
+        <label class="font-weight-bold">Patologia / Tractament</label>
 
         <div class="mb-3" *ngIf="treatmentsList().length > 0">
-          <label class="text-primary text-xs mb-1 d-block font-weight-bold">Continuar tratamiento activo</label>
+          <label class="text-primary text-xs mb-1 d-block font-weight-bold">Continua tractament actiu</label>
           <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm">
-            <option value="">Sin vincular</option>
+            <option value="">Sense vincular</option>
             <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId ?? t.id">
-              {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tratamiento' }})
+              {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})
             </option>
           </select>
         </div>
 
         <div>
           <label class="text-xs mb-1 d-block">
-            {{ treatmentsList().length > 0 ? 'O seleccionar nueva patologia' : 'Seleccionar patologia' }}
+            {{ treatmentsList().length > 0 ? 'O selecciona nova patologia' : 'Selecciona patologia' }}
           </label>
           <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
-            <option value="" disabled selected>Tipo de patologia...</option>
+            <option value="" disabled selected>Tipus de patologia...</option>
             <option *ngFor="let p of pathologiesList()" [value]="p.id">{{ p.name }} ({{ p.duration }} min)</option>
           </select>
         </div>
 
         <div class="form-group mt-2">
-          <label>Patologia / Motivo</label>
-          <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="3" placeholder="Notas clinicas"></textarea>
+          <label>Patologia / Motiu</label>
+          <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="3" placeholder="Notes cliniques"></textarea>
         </div>
       </div>
 
       <div class="panel-footer mt-4">
-        <button type="button" (click)="closePanel()" class="btn-cancel">Cancelar</button>
-        <button type="submit" class="btn-save" [disabled]="loading()">{{ isEditMode ? 'Actualizar Cita' : 'Guardar Cita' }}</button>
+        <button type="button" (click)="closePanel()" class="btn-cancel">Cancel·lar</button>
+        <button type="submit" class="btn-save" [disabled]="loading()">{{ isEditMode ? 'Actualitzar cita' : 'Desar cita' }}</button>
       </div>
     </form>
   </aside>
