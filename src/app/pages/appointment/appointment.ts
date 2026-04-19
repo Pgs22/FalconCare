@@ -1609,6 +1609,34 @@ export class AppointmentComponent implements OnInit {
     return this.normalizeBoxLabel(appointment.box);
   }
 
+  shouldShowPathologyRow(appointment: Appointment): boolean {
+    const reason = String(appointment.reason ?? '').trim();
+    if (!reason) {
+      return false;
+    }
+
+    const row = appointment as unknown as ApiRecord;
+    const directPathologyId = this.toNumberOrNull(
+      row['pathologyId'] ?? row['pathology_id'] ?? row['pathologyTypeId'] ?? row['pathology_type_id']
+    );
+    if (directPathologyId != null && directPathologyId > 0) {
+      return true;
+    }
+
+    const directPathology = this.toNumberOrNull(row['pathology']);
+    if (directPathology != null && directPathology > 0) {
+      return true;
+    }
+
+    const pathologyNode = this.asRecord(row['pathology']);
+    const nestedPathologyId = this.toNumberOrNull(pathologyNode?.['id'] ?? pathologyNode?.['pathologyId']);
+    if (nestedPathologyId != null && nestedPathologyId > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
   isStatusUpdating(appointmentId: number): boolean {
     return this.statusUpdatingIds().includes(appointmentId);
   }

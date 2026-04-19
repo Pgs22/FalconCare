@@ -178,7 +178,7 @@
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                       </div>
 
-                      <div class="meta-row" *ngIf="cita.reason">
+                      <div class="meta-row" *ngIf="shouldShowPathologyRow(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
                         <p class="reason-text">Patologia: {{ cita.reason }}</p>
                       </div>
