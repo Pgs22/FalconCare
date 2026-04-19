@@ -84,6 +84,17 @@ Las responsabilidades del frontend se limitan a:
 
 ---
 
+## 📄 Documentación técnica
+
+La documentación funcional y de contrato del backend/frontend está organizada por dominio:
+
+* [Patient](doc/documentacion-patient.md)
+* [Appointment](doc/documentacion-appointment.md)
+
+Este README queda como punto principal de entrada del proyecto y la documentación específica se mantiene dentro de la carpeta `doc/`.
+
+---
+
 ## ♿ Accesibilidad y diseño
 
 La interfaz se ha diseñado teniendo en cuenta:

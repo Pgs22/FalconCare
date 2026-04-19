@@ -715,6 +715,8 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       medicationAllergies: String(
         r['medicationAllergies'] ?? r['medication_allergies'] ?? ''
       ),
+      allergiesBitmask: this.toNullableNumber(r['allergiesBitmask'] ?? r['allergies_bitmask']),
+      selectedAllergies: this.toSelectedAllergies(r['selectedAllergies'] ?? r['selected_allergies']),
       profileImage: normalizePatientProfileImage(r),
     };
   }
@@ -730,6 +732,23 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     }
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private toNullableNumber(value: unknown): number | undefined {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  private toSelectedAllergies(value: unknown): number[] | undefined {
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+
+    const selected = value
+      .map((item) => Number(item))
+      .filter((item) => Number.isFinite(item) && item > 0);
+
+    return selected.length > 0 ? selected : [];
   }
 
   private showProfileImageFeedback(kind: ProfileImageToastKind, text: string): void {

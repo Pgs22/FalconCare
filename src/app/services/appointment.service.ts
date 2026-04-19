@@ -45,11 +45,38 @@ export class AppointmentService {
   }
 
   createAppointment(appointmentData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/new`, appointmentData);
+    return this.http.post(`${this.apiUrl}/new`, appointmentData, { withCredentials: true });
   }
 
   closeAppointment(id: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/close`, {});
+    return this.http.post(`${this.apiUrl}/${id}/close`, {}, { withCredentials: true });
+  }
+
+  updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
+    const payload = { stateName: nextStatus };
+
+    // Backend route: /api/appointment/{id}/status (app_appointment_update_status)
+    return this.http.patch(`${this.apiUrl}/${id}/status`, payload, {
+      withCredentials: true,
+      responseType: 'text',
+    });
+  }
+
+  openAppointment(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/open`, {}, { withCredentials: true });
+  }
+
+  updateAppointment(id: number, payload: Record<string, unknown>): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }).pipe(
+      catchError(() => this.http.put(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true })),
+      catchError(() => this.http.post(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }))
+    );
+  }
+
+  deleteAppointment(id: number): Observable<any> {
+    const opts = { withCredentials: true };
+
+    return this.http.delete(`${this.apiUrl}/${id}`, opts);
   }
 
   getPatients(): Observable<any[]> {

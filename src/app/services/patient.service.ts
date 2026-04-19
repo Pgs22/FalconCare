@@ -3,7 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { Patient } from '../models/patient.model';
+import {
+  buildAllergiesBitmask,
+  Patient,
+} from '../models/patient.model';
 
 export type RegisterPatientPayload = {
   identityDocument: string;
@@ -18,6 +21,8 @@ export type RegisterPatientPayload = {
   healthStatus: string;
   lifestyleHabits: string;
   medicationAllergies: string;
+  allergiesBitmask?: number;
+  selectedAllergies?: number[];
   ssNumber?: string | null;
   registrationDate?: string;
 };
@@ -66,6 +71,14 @@ export class PatientService {
    */
   private toApiPatientBody(payload: Partial<Patient> | RegisterPatientPayload): Record<string, unknown> {
     const out: Record<string, unknown> = {};
+    const selectedAllergies = this.normalizeSelectedAllergies(
+      (payload as Partial<Patient> | RegisterPatientPayload).selectedAllergies
+    );
+    const allergiesBitmask = this.normalizeAllergiesBitmask(
+      (payload as Partial<Patient> | RegisterPatientPayload).allergiesBitmask,
+      selectedAllergies
+    );
+
     for (const [key, value] of Object.entries(payload)) {
       if (value === undefined) {
         continue;
@@ -76,11 +89,44 @@ export class PatientService {
       } else if (key === 'profileImage') {
         // Backend: una sola clave canónica en el body (prioridad estricta en servidor).
         out['profile_image'] = value;
+      } else if (key === 'selectedAllergies') {
+        out['selectedAllergies'] = selectedAllergies;
+      } else if (key === 'allergiesBitmask') {
+        out['allergiesBitmask'] = allergiesBitmask;
       } else {
         out[key] = value;
       }
     }
+
+    if (selectedAllergies.length > 0 && out['selectedAllergies'] == null) {
+      out['selectedAllergies'] = selectedAllergies;
+    }
+    if (allergiesBitmask != null && out['allergiesBitmask'] == null) {
+      out['allergiesBitmask'] = allergiesBitmask;
+    }
+
     return out;
+  }
+
+  private normalizeSelectedAllergies(value: unknown): number[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .map((item) => Number(item))
+      .filter((item) => Number.isFinite(item) && item > 0);
+  }
+
+  private normalizeAllergiesBitmask(value: unknown, selectedAllergies: number[]): number | undefined {
+    const numeric = typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+    if (selectedAllergies.length > 0) {
+      return buildAllergiesBitmask(selectedAllergies);
+    }
+    if (numeric != null) {
+      return numeric;
+    }
+    return undefined;
   }
 
   delete(id: number): Observable<void> {

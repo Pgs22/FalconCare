@@ -156,6 +156,25 @@
                 {{ getAddressError() }}
               </p>
             </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-outline uppercase tracking-wider ml-1">
+                Al·lèrgies
+              </label>
+              <div class="allergy-grid">
+                <label *ngFor="let allergy of allergyOptions" class="allergy-option">
+                  <input
+                    type="checkbox"
+                    [checked]="isAllergySelected(allergy.flag)"
+                    (change)="toggleAllergy(allergy.flag, $any($event.target).checked)"
+                  />
+                  <span>{{ allergy.label }}</span>
+                </label>
+              </div>
+              <p *ngIf="getSelectedAllergyText()" class="allergy-summary">
+                {{ getSelectedAllergyText() }}
+              </p>
+            </div>
           </div>
           <button
             class="w-full bg-primary text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all duration-200 text-[16px] disabled:opacity-60 disabled:pointer-events-none"
