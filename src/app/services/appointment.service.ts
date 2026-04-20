@@ -16,6 +16,7 @@ export interface Appointment {
   box: string;
   reason: string;
   color: string;
+  visitDate?: string;
   isUrgency?: boolean;
   isFirstVisit?: boolean; 
 }
@@ -33,6 +34,11 @@ export class AppointmentService {
 
   getAppointments(date?: string): Observable<Appointment[]> {
     const url = date ? `${this.apiUrl}/index?date=${date}` : `${this.apiUrl}/index`;
+    return this.http.get<Appointment[]>(url);
+  }
+
+  getWeeklyAppointments(date?: string): Observable<Appointment[]> {
+    const url = date ? `${this.apiUrl}/weekly?date=${date}` : `${this.apiUrl}/weekly`;
     return this.http.get<Appointment[]>(url);
   }
 

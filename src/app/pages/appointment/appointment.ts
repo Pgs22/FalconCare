@@ -10,7 +10,7 @@ import {
   pickAppointmentPatientId,
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, of } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
 const BOX_CLEANING_BUFFER_MINUTES = 5;
@@ -1147,6 +1147,10 @@ export class AppointmentComponent implements OnInit {
   private normalizeIncomingAppointment(raw: unknown): Appointment {
     const row = this.asRecord(raw) ?? {};
     const fallback = raw as Partial<Appointment>;
+    const visitDate = this.normalizeAppointmentDate(
+      this.pickString(row, ['visitDate', 'visit_date', 'appointmentDate', 'appointment_date', 'scheduledDate', 'scheduled_date', 'startDate', 'start_date', 'date']) ||
+        String(fallback.visitDate ?? '')
+    );
 
     const id = this.toNumberOrNull(row['id'] ?? fallback.id) ?? 0;
     const time =
@@ -1174,6 +1178,7 @@ export class AppointmentComponent implements OnInit {
       box: String(row['box'] ?? row['boxName'] ?? row['box_name'] ?? fallback.box ?? ''),
       reason: String(row['reason'] ?? row['motive'] ?? fallback.reason ?? ''),
       color: String(row['color'] ?? fallback.color ?? '#2b7fff'),
+      visitDate: visitDate || undefined,
       isUrgency: Boolean(row['isUrgency'] ?? row['is_urgency'] ?? fallback.isUrgency),
       isFirstVisit: Boolean(row['isFirstVisit'] ?? row['is_first_visit'] ?? fallback.isFirstVisit),
     };
@@ -1186,16 +1191,15 @@ export class AppointmentComponent implements OnInit {
     }
 
     this.loading.set(true);
-    const requests = days.map((day) =>
-      this.appointmentService.getAppointments(day.date).pipe(catchError(() => of([] as Appointment[])))
-    );
-
-    forkJoin(requests).subscribe({
+    this.appointmentService.getWeeklyAppointments(this.newAppointmentData.visitDate).pipe(
+      catchError(() => of([] as Appointment[]))
+    ).subscribe({
       next: (result) => {
+        const normalizedRows = result.map((row) => this.normalizeIncomingAppointment(row));
         const entries: Record<string, Appointment[]> = {};
-        days.forEach((day, idx) => {
-          const rawRows = result[idx] ?? [];
-          entries[day.date] = rawRows.map((row) => this.normalizeIncomingAppointment(row));
+        days.forEach((day) => {
+          const weekDate = day.date;
+          entries[weekDate] = normalizedRows.filter((appointment) => this.getAppointmentVisitDate(appointment) === weekDate);
         });
         this.weeklyAppointments.set(entries);
         this.loading.set(false);
@@ -1917,11 +1921,22 @@ export class AppointmentComponent implements OnInit {
 
   private getAppointmentVisitDate(appointment: Appointment): string {
     const row = appointment as unknown as ApiRecord;
-    const rawDate = row['visitDate'] ?? row['visit_date'] ?? this.newAppointmentData.visitDate;
-    if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
-      return rawDate;
+    const rawDate = row['visitDate'] ?? row['visit_date'] ?? row['appointmentDate'] ?? row['appointment_date'] ?? row['scheduledDate'] ?? row['scheduled_date'] ?? row['date'];
+    return this.normalizeAppointmentDate(rawDate) || this.newAppointmentData.visitDate;
+  }
+
+  private normalizeAppointmentDate(value: unknown): string {
+    if (typeof value !== 'string') {
+      return '';
     }
-    return this.newAppointmentData.visitDate;
+
+    const trimmed = value.trim();
+    const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) {
+      return match[1];
+    }
+
+    return '';
   }
 
   private normalizeAppointmentTime(rawTime: unknown): string {
