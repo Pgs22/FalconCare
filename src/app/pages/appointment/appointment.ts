@@ -73,7 +73,14 @@ export class AppointmentComponent implements OnInit {
   boxesList = signal<any[]>([]);
   selectedBoxKeys = signal<string[]>([]);
   statusUpdatingIds = signal<number[]>([]);
-  readonly appointmentStatusOptions: string[] = ['Confirmada', 'En curs', 'Cancel·lada'];
+  readonly appointmentStatusOptions: string[] = [
+    'Programada',
+    'Confirmada',
+    'En curs',
+    'Cancel·lada',
+    'Finalitzada',
+    'Falta Consentiment',
+  ];
   quickActionsAppointmentId = signal<number | null>(null);
   cleaningSelectorAppointmentId = signal<number | null>(null);
   pathologiesList = signal<any[]>([]);
@@ -1643,16 +1650,31 @@ export class AppointmentComponent implements OnInit {
 
   getStatusSelectValue(currentStatus: string): string {
     const normalized = this.normalizeStatusToken(currentStatus);
-    if (normalized === 'confirmada') {
+    if (normalized === 'programada' || normalized === 'programado' || normalized === 'scheduled') {
+      return 'Programada';
+    }
+    if (normalized === 'confirmada' || normalized === 'confirmado' || normalized === 'confirmed') {
       return 'Confirmada';
     }
-    if (normalized === 'encurs' || normalized === 'encurso') {
+    if (normalized === 'encurs' || normalized === 'encurso' || normalized === 'inprogress') {
       return 'En curs';
     }
-    if (normalized === 'cancelada' || normalized === 'cancel.lada' || normalized === 'cancel·lada') {
+    if (
+      normalized === 'cancelada' ||
+      normalized === 'cancel.lada' ||
+      normalized === 'cancel·lada' ||
+      normalized === 'cancelled' ||
+      normalized === 'canceled'
+    ) {
       return 'Cancel·lada';
     }
-    return 'Confirmada';
+    if (normalized === 'finalitzada' || normalized === 'finalizada' || normalized === 'finished') {
+      return 'Finalitzada';
+    }
+    if (normalized === 'faltaconsentiment' || normalized === 'faltaconsentimiento') {
+      return 'Falta Consentiment';
+    }
+    return 'Programada';
   }
 
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
@@ -1824,7 +1846,7 @@ export class AppointmentComponent implements OnInit {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '');
+      .replace(/[\s_-]+/g, '');
   }
 
   private getAppointmentPatientId(appointment: Appointment): number | null {
