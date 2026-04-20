@@ -16,6 +16,7 @@ export interface Appointment {
   box: string;
   reason: string;
   color: string;
+  visitDate?: string;
   isUrgency?: boolean;
   isFirstVisit?: boolean; 
 }
@@ -36,6 +37,11 @@ export class AppointmentService {
     return this.http.get<Appointment[]>(url);
   }
 
+  getWeeklyAppointments(date?: string): Observable<Appointment[]> {
+    const url = date ? `${this.apiUrl}/weekly?date=${date}` : `${this.apiUrl}/weekly`;
+    return this.http.get<Appointment[]>(url);
+  }
+
   getSetupFormData(date: string): Observable<any> {
     const params = new HttpParams().set('date', date);
     return this.http.get<{doctors: any[], boxes: any[]}>(
@@ -45,7 +51,20 @@ export class AppointmentService {
   }
 
   createAppointment(appointmentData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/new`, appointmentData, { withCredentials: true });
+    const opts = { withCredentials: true };
+    const isNotFound = (err: unknown): boolean => {
+      const status = (err as { status?: number } | null)?.status;
+      return status === 404;
+    };
+
+    return this.http.post(`${this.apiUrl}/create`, appointmentData, opts).pipe(
+      catchError((err) => {
+        if (!isNotFound(err)) {
+          return throwError(() => err);
+        }
+        return this.http.post(this.apiUrl, appointmentData, opts);
+      })
+    );
   }
 
   closeAppointment(id: number): Observable<any> {

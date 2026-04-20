@@ -10,7 +10,7 @@ import {
   pickAppointmentPatientId,
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, of } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
 const BOX_CLEANING_BUFFER_MINUTES = 5;
@@ -87,6 +87,8 @@ export class AppointmentComponent implements OnInit {
   treatmentsList = signal<any[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
+  createFormError = signal<string | null>(null);
+  createFormFieldErrors = signal<Record<string, string>>({});
   showForm = signal(false);
   isEditMode = false;
   private editingAppointmentId: number | null = null;
@@ -131,6 +133,21 @@ export class AppointmentComponent implements OnInit {
     'appointment.error.box_not_found': 'No s\'ha trobat el box seleccionat.',
   };
 
+  private readonly createErrorMessagesByField: Record<string, string> = {
+    patient: 'Selecciona un pacient vàlid.',
+    doctor: 'Selecciona un doctor vàlid.',
+    box: 'Selecciona un box vàlid.',
+    visitDate: 'La data de la cita no és vàlida.',
+    visitTime: 'L\'hora de la cita no és vàlida.',
+    duration: 'La durada de la cita no és vàlida.',
+    durationMinutes: 'La durada de la cita no és vàlida.',
+    pathology: 'La patologia seleccionada no és vàlida.',
+    pathologyId: 'La patologia seleccionada no és vàlida.',
+    treatment: 'El tractament seleccionat no és vàlid.',
+    treatmentId: 'El tractament seleccionat no és vàlid.',
+    consultationReason: 'El motiu de la consulta no és vàlid.',
+  };
+
   newAppointmentData = {
     patient: '',
     newPatientName: '',
@@ -140,7 +157,7 @@ export class AppointmentComponent implements OnInit {
     pathologyId: '',
     treatmentId: '',
     visitDate: new Date().toISOString().split('T')[0],
-    visitTime: '',
+    visitTime: `${String(this.dayStartHour).padStart(2, '0')}:00`,
     consultationReason: '',
     durationMinutes: 30,
     isFirstVisit: false,
@@ -154,6 +171,43 @@ export class AppointmentComponent implements OnInit {
 
   ngOnDestroy(): void {
     this.clearErrorDismissTimer();
+  }
+
+  getCreateFieldError(field: string): string | null {
+    const aliases: Record<string, string> = {
+      visitHour: 'visitTime',
+      visitMinute: 'visitTime',
+    };
+    const key = aliases[field] ?? field;
+    return this.createFormFieldErrors()[key] ?? null;
+  }
+
+  private clearCreateFormErrors(): void {
+    this.createFormError.set(null);
+    this.createFormFieldErrors.set({});
+  }
+
+  clearCreateFieldError(field: string): void {
+    const aliases: Record<string, string> = {
+      visitHour: 'visitTime',
+      visitMinute: 'visitTime',
+    };
+    const key = aliases[field] ?? field;
+    const current = this.createFormFieldErrors();
+    if (!current[key]) {
+      return;
+    }
+
+    const next = { ...current };
+    delete next[key];
+    this.createFormFieldErrors.set(next);
+  }
+
+  private setCreateFieldError(field: string, message: string): void {
+    this.createFormFieldErrors.update((current) => ({
+      ...current,
+      [field]: message,
+    }));
   }
 
   private clearErrorDismissTimer(): void {
@@ -662,15 +716,20 @@ export class AppointmentComponent implements OnInit {
   }
 
   openNewAppointmentPanel(): void {
+    this.clearCreateFormErrors();
     this.showForm.set(true);
     this.isEditMode = false;
     this.editingAppointmentId = null;
     this.isNewPatientMode = false;
+    if (!this.newAppointmentData.visitTime) {
+      this.newAppointmentData.visitTime = `${String(this.dayStartHour).padStart(2, '0')}:00`;
+    }
     this.loadPatients();
     this.loadSetupData(this.newAppointmentData.visitDate);
   }
 
   private openEditAppointmentPanel(appointment: Appointment): void {
+    this.clearCreateFormErrors();
     const patientId = this.getAppointmentPatientId(appointment);
     const doctorId = this.getAppointmentDoctorId(appointment);
     const boxId = this.getAppointmentBoxId(appointment);
@@ -722,6 +781,7 @@ export class AppointmentComponent implements OnInit {
   }
 
   closePanel(): void {
+    this.clearCreateFormErrors();
     this.showForm.set(false);
     this.isNewPatientMode = false;
     this.isEditMode = false;
@@ -735,7 +795,7 @@ export class AppointmentComponent implements OnInit {
       pathologyId: '',
       treatmentId: '',
       visitDate: new Date().toISOString().split('T')[0],
-      visitTime: '',
+      visitTime: `${String(this.dayStartHour).padStart(2, '0')}:00`,
       consultationReason: '',
       durationMinutes: 30,
       isFirstVisit: false,
@@ -744,6 +804,7 @@ export class AppointmentComponent implements OnInit {
   }
 
   saveAppointment(): void {
+    this.clearCreateFormErrors();
     if (this.isEditMode) {
       this.executeSave();
       return;
@@ -773,30 +834,40 @@ export class AppointmentComponent implements OnInit {
     const pathologyIdFromForm = this.toNumberOrNull(this.newAppointmentData.pathologyId);
     const pathologyId = pathologyIdFromForm ?? this.selectedTreatment?.pathologyId ?? null;
     const baseDuration = Number(this.newAppointmentData.durationMinutes);
-    const cleaningBuffer = BOX_CLEANING_BUFFER_MINUTES;
+    const normalizedVisitTime = this.getNormalizedVisitTimeForPayload();
+    const normalizedVisitDate = this.getNormalizedVisitDateForPayload();
+    const patientId = this.toNumberOrNull(this.newAppointmentData.patient);
+    const doctorId = this.toNumberOrNull(this.newAppointmentData.doctor);
+    const boxId = this.toNumberOrNull(this.newAppointmentData.box);
+
+    if (patientId == null) {
+      this.setCreateFieldError('patient', 'Selecciona un pacient vàlid.');
+    }
+    if (doctorId == null) {
+      this.setCreateFieldError('doctor', 'Selecciona un doctor vàlid.');
+    }
+    if (boxId == null) {
+      this.setCreateFieldError('box', 'Selecciona un box vàlid.');
+    }
+
+    if (patientId == null || doctorId == null || boxId == null) {
+      this.createFormError.set('Revisa els camps marcats del formulari.');
+      return;
+    }
+
+    this.newAppointmentData.visitDate = normalizedVisitDate;
+    this.newAppointmentData.visitTime = normalizedVisitTime;
 
     const dataToSend = {
-      patient: Number(this.newAppointmentData.patient),
-      doctor: Number(this.newAppointmentData.doctor),
-      box: Number(this.newAppointmentData.box),
-      visitDate: this.newAppointmentData.visitDate,
-      visitTime: this.newAppointmentData.visitTime,
-      
-      // Visible appointment span remains `duration`; cleaning is persisted separately.
+      patient: patientId,
+      doctor: doctorId,
+      box: boxId,
+      visitDate: normalizedVisitDate,
+      visitTime: `${normalizedVisitTime}:00`,
       duration: baseDuration,
-      durationMinutes: baseDuration,
-      cleaningTime: cleaningBuffer,
-      cleaning_time: cleaningBuffer,
-      cleaningMinutes: cleaningBuffer,
-      totalBlockTime: baseDuration + cleaningBuffer,
-      
       consultationReason: this.newAppointmentData.consultationReason || '',
-      
       treatment: treatmentId,
-      treatmentId,
       pathology: pathologyId,
-      pathologyId,
-      
       isFirstVisit: !!this.newAppointmentData.isFirstVisit,
       isUrgency: !!this.newAppointmentData.isUrgency
     };
@@ -845,7 +916,16 @@ export class AppointmentComponent implements OnInit {
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
         console.error('Respuesta cruda del servidor:', httpError?.error);
-        alert(this.resolveCreateErrorMessage(httpError));
+        const fieldError = this.resolveCreateFieldError(httpError);
+        if (fieldError) {
+          this.setCreateFieldError(fieldError.field, fieldError.message);
+          this.createFormError.set(fieldError.message);
+          return;
+        }
+
+        const message = this.resolveCreateErrorMessage(httpError);
+        this.createFormError.set(message);
+        alert(message);
       }
     });
   }
@@ -864,12 +944,14 @@ export class AppointmentComponent implements OnInit {
     const normalizedHour = String(hour ?? '').padStart(2, '0');
     const minute = this.getVisitMinute();
     this.newAppointmentData.visitTime = `${normalizedHour}:${minute}`;
+    this.clearCreateFieldError('visitTime');
   }
 
   onVisitMinuteChange(minute: string): void {
     const normalizedMinute = String(minute ?? '').padStart(2, '0');
     const hour = this.getVisitHour();
     this.newAppointmentData.visitTime = `${hour}:${normalizedMinute}`;
+    this.clearCreateFieldError('visitTime');
   }
 
   private parseVisitTimeParts(value: string): { hour: string; minute: string } {
@@ -887,6 +969,23 @@ export class AppointmentComponent implements OnInit {
       : '00';
 
     return { hour, minute: normalizedMinute };
+  }
+
+  private getNormalizedVisitTimeForPayload(): string {
+    const parsed = this.parseVisitTimeParts(this.newAppointmentData.visitTime);
+    return `${parsed.hour}:${parsed.minute}`;
+  }
+
+  private getNormalizedVisitDateForPayload(): string {
+    const rawDate = String(this.newAppointmentData.visitDate ?? '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      return rawDate;
+    }
+    return this.formatDateYmd(this.parseYmdToDate(rawDate));
+  }
+
+  private buildVisitDateTimeForPayload(visitDate: string, visitTime: string): string {
+    return `${visitDate}T${visitTime}:00`;
   }
 
   private resolveCreateSuccessMessage(payload: ApiRecord | null): string {
@@ -937,6 +1036,17 @@ export class AppointmentComponent implements OnInit {
       }
     }
 
+    const byValidationField = this.resolveCreateFieldValidationMessage(payload, errorNode);
+    if (byValidationField) {
+      return byValidationField;
+    }
+
+    const backendDetailMessage = this.pickString(errorNode, ['message', 'detail', 'description'])
+      || this.pickString(payload, ['detail', 'description', 'message']);
+    if (backendDetailMessage) {
+      return backendDetailMessage;
+    }
+
     const code = this.pickString(payload, ['code'])?.toUpperCase();
     if (code) {
       const byCode = this.createErrorMessagesByCode[code];
@@ -956,6 +1066,101 @@ export class AppointmentComponent implements OnInit {
     }
 
     return 'No s\'ha pogut crear la cita en aquest moment.';
+  }
+
+  private resolveCreateFieldError(err: HttpErrorResponse): { field: string; message: string } | null {
+    const payload = this.asRecord(err.error);
+    const errorNode = this.asRecord(payload?.['error']);
+    const field = this.extractCreateErrorField(payload, errorNode);
+    if (!field) {
+      return null;
+    }
+
+    const byField = this.createErrorMessagesByField[field] ?? `El camp ${field} no és vàlid.`;
+    return { field, message: byField };
+  }
+
+  private resolveCreateFieldValidationMessage(payload: ApiRecord | null, errorNode: ApiRecord | null): string | null {
+    const field = this.extractCreateErrorField(payload, errorNode);
+
+    if (!field) {
+      return null;
+    }
+
+    const byField = this.createErrorMessagesByField[field];
+    if (byField) {
+      return byField;
+    }
+
+    return `El camp ${field} no és vàlid.`;
+  }
+
+  private extractCreateErrorField(payload: ApiRecord | null, errorNode: ApiRecord | null): string {
+    const fromErrorField = this.pickString(errorNode, ['field', 'propertyPath', 'property_path', 'path']);
+    const fromViolationField = this.extractViolationField(payload);
+    const fromDetailField = this.extractFieldFromDetail(payload);
+    return this.normalizeErrorFieldName(fromErrorField || fromViolationField || fromDetailField);
+  }
+
+  private extractViolationField(payload: ApiRecord | null): string | null {
+    if (!payload) {
+      return null;
+    }
+
+    const violations = payload['violations'];
+    if (!Array.isArray(violations) || violations.length === 0) {
+      return null;
+    }
+
+    for (const entry of violations) {
+      const record = this.asRecord(entry);
+      const propertyPath = this.pickString(record, ['propertyPath', 'property_path', 'field', 'path']);
+      if (propertyPath) {
+        return propertyPath;
+      }
+    }
+
+    return null;
+  }
+
+  private extractFieldFromDetail(payload: ApiRecord | null): string | null {
+    const detail = this.pickString(payload, ['detail', 'description', 'message']);
+    if (!detail) {
+      return null;
+    }
+
+    const quoted = detail.match(/property path\s+"([^"]+)"/i);
+    if (quoted?.[1]) {
+      return quoted[1];
+    }
+
+    return null;
+  }
+
+  private normalizeErrorFieldName(rawField: string | null): string {
+    const raw = String(rawField ?? '').trim();
+    if (!raw) {
+      return '';
+    }
+
+    const simple = raw.includes('.') ? raw.split('.').pop() ?? raw : raw;
+    const normalized = simple.replace(/\[\d+\]/g, '').trim();
+
+    const aliases: Record<string, string> = {
+      visit_date: 'visitDate',
+      date: 'visitDate',
+      visit_time: 'visitTime',
+      time: 'visitTime',
+      doctor_id: 'doctor',
+      patient_id: 'patient',
+      box_id: 'box',
+      pathology_id: 'pathologyId',
+      treatment_id: 'treatmentId',
+      consultation_reason: 'consultationReason',
+      duration_minutes: 'durationMinutes',
+    };
+
+    return aliases[normalized] ?? normalized;
   }
 
   private resolveAllergyAlertHeader(payload: ApiRecord | null): string {
@@ -1147,6 +1352,10 @@ export class AppointmentComponent implements OnInit {
   private normalizeIncomingAppointment(raw: unknown): Appointment {
     const row = this.asRecord(raw) ?? {};
     const fallback = raw as Partial<Appointment>;
+    const visitDate = this.normalizeAppointmentDate(
+      this.pickString(row, ['visitDate', 'visit_date', 'appointmentDate', 'appointment_date', 'scheduledDate', 'scheduled_date', 'startDate', 'start_date', 'date']) ||
+        String(fallback.visitDate ?? '')
+    );
 
     const id = this.toNumberOrNull(row['id'] ?? fallback.id) ?? 0;
     const time =
@@ -1174,6 +1383,7 @@ export class AppointmentComponent implements OnInit {
       box: String(row['box'] ?? row['boxName'] ?? row['box_name'] ?? fallback.box ?? ''),
       reason: String(row['reason'] ?? row['motive'] ?? fallback.reason ?? ''),
       color: String(row['color'] ?? fallback.color ?? '#2b7fff'),
+      visitDate: visitDate || undefined,
       isUrgency: Boolean(row['isUrgency'] ?? row['is_urgency'] ?? fallback.isUrgency),
       isFirstVisit: Boolean(row['isFirstVisit'] ?? row['is_first_visit'] ?? fallback.isFirstVisit),
     };
@@ -1186,16 +1396,15 @@ export class AppointmentComponent implements OnInit {
     }
 
     this.loading.set(true);
-    const requests = days.map((day) =>
-      this.appointmentService.getAppointments(day.date).pipe(catchError(() => of([] as Appointment[])))
-    );
-
-    forkJoin(requests).subscribe({
+    this.appointmentService.getWeeklyAppointments(this.newAppointmentData.visitDate).pipe(
+      catchError(() => of([] as Appointment[]))
+    ).subscribe({
       next: (result) => {
+        const normalizedRows = result.map((row) => this.normalizeIncomingAppointment(row));
         const entries: Record<string, Appointment[]> = {};
-        days.forEach((day, idx) => {
-          const rawRows = result[idx] ?? [];
-          entries[day.date] = rawRows.map((row) => this.normalizeIncomingAppointment(row));
+        days.forEach((day) => {
+          const weekDate = day.date;
+          entries[weekDate] = normalizedRows.filter((appointment) => this.getAppointmentVisitDate(appointment) === weekDate);
         });
         this.weeklyAppointments.set(entries);
         this.loading.set(false);
@@ -1566,8 +1775,7 @@ export class AppointmentComponent implements OnInit {
   getAppointmentHeightPx(appointment: Appointment): number {
     const durationMinutes = this.toPositiveNumberOrDefault(appointment.duration, 30);
     const computed = (durationMinutes / 60) * this.hourSlotHeightPx;
-    // Keep enough vertical space so card content is readable even on short appointments.
-    return Math.max(computed - 2, 96);
+    return Math.max(computed - 2, 14);
   }
 
   getAppointmentEndTopPx(appointment: Appointment): number {
@@ -1590,6 +1798,10 @@ export class AppointmentComponent implements OnInit {
     const startMinutes = this.parseTimeToMinutes(appointment.time);
     const endMinutes = startMinutes + Math.max(appointment.duration, 0);
     return `${this.formatMinutes(startMinutes)} - ${this.formatMinutes(endMinutes)}`;
+  }
+
+  isCompactAppointmentCard(appointment: Appointment): boolean {
+    return this.getAppointmentHeightPx(appointment) <= 86;
   }
 
   private parseTimeToMinutes(time: string): number {
@@ -1917,11 +2129,22 @@ export class AppointmentComponent implements OnInit {
 
   private getAppointmentVisitDate(appointment: Appointment): string {
     const row = appointment as unknown as ApiRecord;
-    const rawDate = row['visitDate'] ?? row['visit_date'] ?? this.newAppointmentData.visitDate;
-    if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
-      return rawDate;
+    const rawDate = row['visitDate'] ?? row['visit_date'] ?? row['appointmentDate'] ?? row['appointment_date'] ?? row['scheduledDate'] ?? row['scheduled_date'] ?? row['date'];
+    return this.normalizeAppointmentDate(rawDate) || this.newAppointmentData.visitDate;
+  }
+
+  private normalizeAppointmentDate(value: unknown): string {
+    if (typeof value !== 'string') {
+      return '';
     }
-    return this.newAppointmentData.visitDate;
+
+    const trimmed = value.trim();
+    const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) {
+      return match[1];
+    }
+
+    return '';
   }
 
   private normalizeAppointmentTime(rawTime: unknown): string {
