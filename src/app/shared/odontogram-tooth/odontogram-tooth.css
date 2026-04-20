@@ -1,0 +1,97 @@
+:host {
+  display: contents;
+}
+
+.odontogram-tooth {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.odontogram-tooth:focus,
+.odontogram-tooth:focus-visible,
+.odontogram-tooth:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.odontogram-tooth__number {
+  color: #ea6f6b;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.odontogram-tooth__svg {
+  width: 3.2rem;
+  height: 3.2rem;
+  overflow: visible;
+}
+
+.odontogram-tooth--compact .odontogram-tooth__svg {
+  width: 2.8rem;
+  height: 2.8rem;
+}
+
+.odontogram-tooth__frame,
+.odontogram-tooth__connector {
+  stroke: #dfe6ec;
+  stroke-width: 1.25;
+  fill: none;
+  pointer-events: none;
+}
+
+.odontogram-tooth__zone {
+  fill: #ffffff;
+  stroke: #dfe6ec;
+  stroke-width: 1.1;
+  transition:
+    fill 140ms ease,
+    stroke-color 140ms ease,
+    transform 140ms ease,
+    opacity 140ms ease;
+}
+
+.odontogram-tooth__zone:hover {
+  fill: #eef7fb;
+}
+
+.odontogram-tooth__zone--caries:hover {
+  fill: #ff7d72;
+}
+
+.odontogram-tooth__zone--neteja:hover {
+  fill: #62d5e2;
+}
+
+.odontogram-tooth__zone--endodoncia:hover {
+  fill: #9b8cff;
+}
+
+.odontogram-tooth__zone:focus-visible {
+  outline: none;
+}
+
+.odontogram-tooth__zone--caries {
+  fill: #ff7d72;
+  stroke: #ff6f63;
+}
+
+.odontogram-tooth__zone--neteja {
+  fill: #62d5e2;
+  stroke: #4ac4d2;
+}
+
+.odontogram-tooth__zone--endodoncia {
+  fill: #9b8cff;
+  stroke: #8777f2;
+}
