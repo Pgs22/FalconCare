@@ -53,13 +53,33 @@ export class AppointmentService {
   }
 
   updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
-    const payload = { stateName: nextStatus };
+    const normalized = String(nextStatus ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '');
 
-    // Backend route: /api/appointment/{id}/status (app_appointment_update_status)
-    return this.http.patch(`${this.apiUrl}/${id}/status`, payload, {
+    const canonicalStatus =
+      normalized === 'cancelled' ||
+      normalized === 'canceled' ||
+      normalized === 'cancelada' ||
+      normalized === 'cancellada'
+        ? 'cancelled'
+        : 'confirmed';
+
+    const legacyLabel = canonicalStatus === 'cancelled' ? 'Cancel·lada' : 'Confirmada';
+
+    const requestOptions = {
       withCredentials: true,
-      responseType: 'text',
-    });
+      responseType: 'text' as const,
+    };
+
+    // Compatibility fallback: some backend revisions expect `stateName`, others `status`.
+    return this.http.patch(`${this.apiUrl}/${id}/status`, { stateName: canonicalStatus }, requestOptions).pipe(
+      catchError(() => this.http.patch(`${this.apiUrl}/${id}/status`, { status: canonicalStatus }, requestOptions)),
+      catchError(() => this.http.patch(`${this.apiUrl}/${id}/status`, { stateName: legacyLabel }, requestOptions))
+    );
   }
 
   openAppointment(id: number): Observable<any> {

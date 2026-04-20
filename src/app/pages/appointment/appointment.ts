@@ -73,7 +73,7 @@ export class AppointmentComponent implements OnInit {
   boxesList = signal<any[]>([]);
   selectedBoxKeys = signal<string[]>([]);
   statusUpdatingIds = signal<number[]>([]);
-  readonly appointmentStatusOptions: string[] = ['Confirmada', 'En curs', 'Cancel·lada'];
+  readonly appointmentStatusOptions: string[] = ['Confirmada', 'Cancel·lada'];
   quickActionsAppointmentId = signal<number | null>(null);
   cleaningSelectorAppointmentId = signal<number | null>(null);
   pathologiesList = signal<any[]>([]);
@@ -1643,13 +1643,16 @@ export class AppointmentComponent implements OnInit {
 
   getStatusSelectValue(currentStatus: string): string {
     const normalized = this.normalizeStatusToken(currentStatus);
-    if (normalized === 'confirmada') {
+    if (normalized === 'confirmada' || normalized === 'confirmado' || normalized === 'confirmed') {
       return 'Confirmada';
     }
-    if (normalized === 'encurs' || normalized === 'encurso') {
-      return 'En curs';
-    }
-    if (normalized === 'cancelada' || normalized === 'cancel.lada' || normalized === 'cancel·lada') {
+    if (
+      normalized === 'cancelada' ||
+      normalized === 'cancel.lada' ||
+      normalized === 'cancel·lada' ||
+      normalized === 'cancelled' ||
+      normalized === 'canceled'
+    ) {
       return 'Cancel·lada';
     }
     return 'Confirmada';
@@ -1672,9 +1675,10 @@ export class AppointmentComponent implements OnInit {
     }
 
     const normalizedNextStatus = this.getStatusSelectValue(nextStatus);
+    const apiNextStatus = this.getStatusApiValue(normalizedNextStatus);
     this.markStatusUpdating(appointment.id, true);
 
-    this.appointmentService.updateAppointmentStatus(appointment.id, normalizedNextStatus).subscribe({
+    this.appointmentService.updateAppointmentStatus(appointment.id, apiNextStatus).subscribe({
       next: () => {
         this.fetchAppointments();
         if (this.isWeekView()) {
@@ -1824,7 +1828,21 @@ export class AppointmentComponent implements OnInit {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '');
+      .replace(/[\s_-]+/g, '');
+  }
+
+  private getStatusApiValue(statusLabelOrToken: string): string {
+    const normalized = this.normalizeStatusToken(statusLabelOrToken);
+    if (
+      normalized === 'cancelada' ||
+      normalized === 'cancel.lada' ||
+      normalized === 'cancel·lada' ||
+      normalized === 'cancelled' ||
+      normalized === 'canceled'
+    ) {
+      return 'cancelled';
+    }
+    return 'confirmed';
   }
 
   private getAppointmentPatientId(appointment: Appointment): number | null {
