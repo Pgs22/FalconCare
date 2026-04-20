@@ -13,6 +13,7 @@ import { PatientsPageComponent } from './pages/patients/patients.page';
 import { AppointmentPageComponent } from './pages/appointment/appointment.page';
 import { DocumentsPageComponent } from './pages/documents/documents.page';
 import { NotFoundPageComponent } from './pages/not-found/not-found.page';
+import { OdontogramPageComponent } from './pages/odontogram/odontogram.page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', component: LoginComponent, canActivate: [guestOnlyGuard] },
@@ -28,12 +29,8 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },
   { path: 'patients', component: PatientsPageComponent, canActivate: [authGuard] },
 
-  {
-    path: 'appointments',
-    component: AppointmentPageComponent,
-    canActivate: environment.production ? [authGuard] : [],
-  },
-  
+  { path: 'appointments', component: AppointmentPageComponent, canActivate: [authGuard] },
+  { path: 'odontogram', component: OdontogramPageComponent, canActivate: [authGuard] },
   { path: 'documents', component: DocumentsPageComponent, canActivate: [authGuard] },
 
   { path: '**', component: NotFoundPageComponent },

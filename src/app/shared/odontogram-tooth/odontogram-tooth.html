@@ -1,0 +1,36 @@
+<button
+  type="button"
+  class="odontogram-tooth"
+  [class.odontogram-tooth--compact]="compact"
+  [class.odontogram-tooth--selected]="selected"
+  [attr.aria-label]="'Dent ' + toothNumber"
+  (click)="onToothClick()"
+>
+  <span class="odontogram-tooth__number">{{ toothNumber }}</span>
+
+  <svg
+    class="odontogram-tooth__svg"
+    viewBox="0 0 44 44"
+    [attr.aria-label]="'Superfícies de la dent ' + toothNumber"
+    role="img"
+  >
+    <rect class="odontogram-tooth__frame" x="6" y="6" width="32" height="32" rx="3" />
+    <rect class="odontogram-tooth__frame" x="14" y="14" width="16" height="16" rx="2" />
+    <line class="odontogram-tooth__connector" x1="6" y1="6" x2="14" y2="14" />
+    <line class="odontogram-tooth__connector" x1="38" y1="6" x2="30" y2="14" />
+    <line class="odontogram-tooth__connector" x1="6" y1="38" x2="14" y2="30" />
+    <line class="odontogram-tooth__connector" x1="38" y1="38" x2="30" y2="30" />
+
+    <rect
+      *ngFor="let face of faces"
+      class="odontogram-tooth__zone"
+      [ngClass]="getFaceClass(face)"
+      [attr.x]="face === 'M' ? 6 : face === 'O' ? 13.5 : face === 'D' ? 30 : 14"
+      [attr.y]="face === 'L' ? 6 : face === 'O' ? 13.5 : face === 'V' ? 30 : 14"
+      [attr.width]="face === 'M' || face === 'D' ? 8 : 16"
+      [attr.height]="face === 'L' || face === 'V' ? 8 : 16"
+      [attr.aria-label]="face"
+      (click)="onFaceClick(face, $event)"
+    />
+  </svg>
+</button>

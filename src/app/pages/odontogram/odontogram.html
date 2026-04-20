@@ -1,0 +1,138 @@
+<main class="odontograma">
+  <header class="odontograma__topbar">
+    <div>
+      <h1>Explorador d'odontograma</h1>
+      <div class="odontograma__meta">
+        <span>Pacient fix: #{{ patientId ?? 1 }}</span>
+        <span>Visita fixa: #{{ visitId ?? 1 }}</span>
+        <span *ngIf="odontogramId">Odontograma: #{{ odontogramId }}</span>
+      </div>
+    </div>
+
+    <div class="odontograma__actions">
+      <button
+        type="button"
+        class="odontograma__button odontograma__button--primary"
+        [disabled]="isLoading || isSaving || !odontogramId"
+        (click)="onCloseOdontogram()"
+      >
+        {{ isSaving ? 'Tancant cita...' : 'Tancar cita' }}
+      </button>
+    </div>
+  </header>
+
+  <p *ngIf="loadError" class="odontograma__status odontograma__status--error" role="alert">{{ loadError }}</p>
+  <p *ngIf="saveFeedback" class="odontograma__status" [class.odontograma__status--error]="saveFeedback.startsWith('No ')" role="status">
+    {{ saveFeedback }}
+  </p>
+
+  <section class="odontograma__layout">
+    <article class="odontograma__board">
+      <header class="odontograma__board-header">
+        <div>
+          <p class="odontograma__eyebrow">Dentició completa (FDI)</p>
+          <h2>Vista general de totes les peces</h2>
+        </div>
+      </header>
+
+      <section class="odontograma__grid" aria-label="Odontograma">
+        <p *ngIf="isLoading" class="odontograma__loading">Carregant estat guardat de l'odontograma...</p>
+
+        <div class="odontograma__half odontograma__half--top">
+          <section
+            *ngFor="let quadrant of topQuadrants; trackBy: trackByQuadrant"
+            class="quadrant"
+            [class.quadrant--right]="quadrant.side === 'right'"
+          >
+            <h3>{{ quadrant.title }}</h3>
+
+            <div class="quadrant__row">
+              <app-odontogram-tooth
+                *ngFor="let tooth of quadrant.permanent; trackBy: trackByTooth"
+                [toothNumber]="tooth.label"
+                [state]="getToothState(tooth)"
+                [selected]="selectedTooth.id === tooth.id"
+                (toothClick)="selectTooth(tooth)"
+                (faceToggle)="toggleFace(tooth, $event)"
+              />
+            </div>
+
+            <div class="quadrant__row quadrant__row--temporary">
+              <app-odontogram-tooth
+                *ngFor="let tooth of quadrant.temporary; trackBy: trackByTooth"
+                [toothNumber]="tooth.label"
+                [state]="getToothState(tooth)"
+                [selected]="selectedTooth.id === tooth.id"
+                [compact]="true"
+                (toothClick)="selectTooth(tooth)"
+                (faceToggle)="toggleFace(tooth, $event)"
+              />
+            </div>
+          </section>
+        </div>
+
+        <div class="odontograma__divider" aria-hidden="true"></div>
+
+        <div class="odontograma__half odontograma__half--bottom">
+          <section
+            *ngFor="let quadrant of bottomQuadrants; trackBy: trackByQuadrant"
+            class="quadrant"
+            [class.quadrant--right]="quadrant.side === 'right'"
+          >
+            <h3>{{ quadrant.title }}</h3>
+
+            <div class="quadrant__row quadrant__row--temporary">
+              <app-odontogram-tooth
+                *ngFor="let tooth of quadrant.temporary; trackBy: trackByTooth"
+                [toothNumber]="tooth.label"
+                [state]="getToothState(tooth)"
+                [selected]="selectedTooth.id === tooth.id"
+                [compact]="true"
+                (toothClick)="selectTooth(tooth)"
+                (faceToggle)="toggleFace(tooth, $event)"
+              />
+            </div>
+
+            <div class="quadrant__row">
+              <app-odontogram-tooth
+                *ngFor="let tooth of quadrant.permanent; trackBy: trackByTooth"
+                [toothNumber]="tooth.label"
+                [state]="getToothState(tooth)"
+                [selected]="selectedTooth.id === tooth.id"
+                (toothClick)="selectTooth(tooth)"
+                (faceToggle)="toggleFace(tooth, $event)"
+              />
+            </div>
+          </section>
+        </div>
+      </section>
+    </article>
+
+    <aside class="odontograma__protocol">
+      <header class="odontograma__protocol-header">
+        <div>
+          <p class="odontograma__eyebrow">Protocol</p>
+          <h2>Protocol de patologia</h2>
+        </div>
+      </header>
+
+      <div class="odontograma__protocol-list">
+        <button
+          *ngFor="let protocol of protocols; trackBy: trackByProtocol"
+          type="button"
+          class="protocol"
+          [class.protocol--active]="selectedProtocol?.key === protocol.key"
+          [class.protocol--caries]="protocol.key === 'caries'"
+          [class.protocol--neteja]="protocol.key === 'neteja'"
+          [class.protocol--endodoncia]="protocol.key === 'endodoncia'"
+          (click)="selectProtocol(protocol)"
+        >
+          <span class="protocol__icon"></span>
+          <span class="protocol__copy">
+            <strong>{{ protocol.label }}</strong>
+          </span>
+        </button>
+      </div>
+    </aside>
+  </section>
+</main>
