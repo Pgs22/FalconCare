@@ -1570,8 +1570,7 @@ export class AppointmentComponent implements OnInit {
   getAppointmentHeightPx(appointment: Appointment): number {
     const durationMinutes = this.toPositiveNumberOrDefault(appointment.duration, 30);
     const computed = (durationMinutes / 60) * this.hourSlotHeightPx;
-    // Keep enough vertical space so card content is readable even on short appointments.
-    return Math.max(computed - 2, 96);
+    return Math.max(computed - 2, 14);
   }
 
   getAppointmentEndTopPx(appointment: Appointment): number {
@@ -1594,6 +1593,10 @@ export class AppointmentComponent implements OnInit {
     const startMinutes = this.parseTimeToMinutes(appointment.time);
     const endMinutes = startMinutes + Math.max(appointment.duration, 0);
     return `${this.formatMinutes(startMinutes)} - ${this.formatMinutes(endMinutes)}`;
+  }
+
+  isCompactAppointmentCard(appointment: Appointment): boolean {
+    return this.getAppointmentHeightPx(appointment) <= 86;
   }
 
   private parseTimeToMinutes(time: string): number {

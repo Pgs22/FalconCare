@@ -149,9 +149,12 @@
                   [style.top.px]="getAppointmentTopPx(cita)"
                   [style.height.px]="getAppointmentHeightPx(cita)"
                 >
-                  <div class="card-appointment" [ngClass]="cita.status" [style.--appointment-color]="cita.color || '#00bcd4'">
-                    <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">Urgencia</div>
-
+                  <div
+                    class="card-appointment"
+                    [ngClass]="cita.status"
+                    [class.compact-card]="isCompactAppointmentCard(cita)"
+                    [style.--appointment-color]="cita.color || '#00bcd4'"
+                  >
                     <div class="info">
                       <div class="patient-row">
                         <span class="patient">
@@ -178,7 +181,9 @@
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                       </div>
 
-                      <div class="meta-row" *ngIf="shouldShowPathologyRow(cita)">
+                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgencia</small>
+
+                      <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
                         <p class="reason-text">Patologia: {{ cita.reason }}</p>
                       </div>
@@ -270,9 +275,11 @@
                     [style.top.px]="getAppointmentTopPx(cita)"
                     [style.height.px]="getAppointmentHeightPx(cita)"
                   >
-                    <div class="card-appointment" [style.--appointment-color]="cita.color || '#00bcd4'">
-                      <div class="card-tag" *ngIf="cita.isUrgency" [style.background-color]="cita.color">Urgencia</div>
-
+                    <div
+                      class="card-appointment"
+                      [class.compact-card]="isCompactAppointmentCard(cita)"
+                      [style.--appointment-color]="cita.color || '#00bcd4'"
+                    >
                       <div class="info">
                         <div class="patient-row">
                           <span class="patient">{{ cita.patientName }}</span>
@@ -295,6 +302,8 @@
                           <span class="meta-icon clock" aria-hidden="true"></span>
                           <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                         </div>
+
+                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgencia</small>
                       </div>
                     </div>
                   </div>
