@@ -4,12 +4,12 @@
       <nav class="view-selector">
         <button>Panel</button>
         <button class="active">Agenda</button>
-        <button>Pacientes</button>
-        <button>Inventario</button>
+        <button>Pacients</button>
+        <button>Documents</button>
       </nav>
 
       <div class="header-actions">
-        <input class="search-input" type="search" placeholder="Buscar citas...">
+        <input class="search-input" type="search" placeholder="Cercar cites...">
         <button class="avatar-btn" type="button" aria-label="Perfil">👨‍⚕️</button>
       </div>
     </div>
@@ -36,7 +36,7 @@
               [checked]="areAllBoxesSelected()"
               (change)="toggleAllBoxes($any($event.target).checked)"
             >
-            <span>Todos</span>
+            <span>TOTS</span>
           </label>
         </div>
         <div *ngFor="let b of getDisplayBoxes()" class="box-filter-item">
@@ -52,17 +52,17 @@
       </div>
 
       <div class="occupancy-card">
-        <h5>Ocupacion</h5>
+        <h5>OCUAPCIÓ</h5>
         <div class="occupancy-bar">
           <span [style.width.%]="(appointments().length / (getDisplayBoxes().length || 1)) * 25"></span>
         </div>
-        <small>{{ appointments().length }} citas cargadas hoy</small>
+        <small>{{ appointments().length }} cites guardades avui</small>
       </div>
     </aside>
 
     <main class="appointment-main">
       <div class="agenda-alert">
-        Importante: Se reservan 5 minutos entre pacientes para limpieza y desinfeccion del box.
+        Important: Es reserven 5 minuts automàticament entre pacients per a neteja i desinfecció del box. Permet només ajustar a 5/10/15 minuts.
       </div>
 
       <section class="day-allergy-summary" *ngIf="getDayAllergySummary().length > 0">
@@ -107,11 +107,11 @@
           </div>
           <div class="view-selector compact">
             <button [class.active]="isDayView()" (click)="setViewMode('day')" type="button">Dia</button>
-            <button [class.active]="isWeekView()" (click)="setViewMode('week')" type="button">Semana</button>
+            <button [class.active]="isWeekView()" (click)="setViewMode('week')" type="button">Setmana</button>
           </div>
           <button (click)="openNewAppointmentPanel()" class="btn-new-appointment" type="button">
             <span class="plus-icon">+</span>
-            Nueva Cita
+            Nova Cita
           </button>
         </div>
       </div>
@@ -131,7 +131,7 @@
           <div class="box-column" *ngFor="let b of getVisibleBoxes()">
             <div class="box-header">
               <h3>{{ getBoxLabel(b) }}</h3>
-              <small>Sala de atencion</small>
+              <small>Sala d'atenció</small>
             </div>
 
             <div class="appointments-container" [style.height.px]="dayGridHeightPx">
@@ -181,7 +181,7 @@
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                       </div>
 
-                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgencia</small>
+                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
 
                       <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
@@ -222,7 +222,7 @@
                   <div class="cleaning-block">
                     <span class="cleaning-line">
                       Neteja de box ({{ cita.cleaningTime }} min)
-                      <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">Ajustar</button>
+                      <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">Ajusta</button>
                       <select
                         *ngIf="isCleaningSelectorOpen(cita.id)"
                         class="cleaning-select"
@@ -303,7 +303,7 @@
                           <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                         </div>
 
-                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgencia</small>
+                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                       </div>
                     </div>
                   </div>
@@ -317,7 +317,7 @@
                     <div class="cleaning-block">
                       <span class="cleaning-line">
                         Neteja ({{ cita.cleaningTime }} min)
-                        <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">Ajustar</button>
+                        <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">Ajusta</button>
                         <select
                           *ngIf="isCleaningSelectorOpen(cita.id)"
                           class="cleaning-select"
@@ -344,8 +344,8 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Editar cita' : 'Detall de cita' }}</h2>
-        <small>Gestio de cita i pacient</small>
+        <h2>{{ isEditMode ? 'Edita cita' : 'Detall de cita' }}</h2>
+        <small>Gestió de cita i pacient</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
     </div>
@@ -401,7 +401,7 @@
 
             <label class="checkbox-container compact">
               <input type="checkbox" [(ngModel)]="newAppointmentData.isUrgency" name="isUrgency" (change)="onUrgencyChange()">
-              <span>Urgencia</span>
+              <span>Urgència</span>
             </label>
           </div>
         </div>
