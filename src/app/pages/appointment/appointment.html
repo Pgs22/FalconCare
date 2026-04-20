@@ -466,12 +466,11 @@
       </div>
 
       <div class="form-group mt-3 bg-light p-3 rounded border">
-        <label class="font-weight-bold">Patologia / Tractament</label>
 
         <div class="mb-3" *ngIf="treatmentsList().length > 0">
           <label class="text-primary text-xs mb-1 d-block font-weight-bold">Continua tractament actiu</label>
           <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm">
-            <option value="">Sense vincular</option>
+            <option value="">Patologia programada</option>
             <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId ?? t.id">
               {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})
             </option>
@@ -481,7 +480,7 @@
 
         <div>
           <label class="text-xs mb-1 d-block">
-            {{ treatmentsList().length > 0 ? 'O selecciona nova patologia' : 'Selecciona patologia' }}
+            {{ treatmentsList().length > 0 ? 'Nova patologia' : 'Selecciona patologia' }}
           </label>
           <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
             <option value="" disabled selected>Tipus de patologia...</option>
@@ -491,7 +490,7 @@
         </div>
 
         <div class="form-group mt-2">
-          <label>Patologia / Motiu</label>
+          <label>Motiu</label>
           <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="3" placeholder="Notes cliniques"></textarea>
           <div *ngIf="getCreateFieldError('consultationReason')" class="form-field-error">{{ getCreateFieldError('consultationReason') }}</div>
         </div>
