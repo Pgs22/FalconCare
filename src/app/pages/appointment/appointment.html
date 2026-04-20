@@ -351,6 +351,8 @@
     </div>
 
     <form (ngSubmit)="saveAppointment()" #appointmentForm="ngForm" class="appointment-form">
+      <div *ngIf="createFormError()" class="form-error-banner">{{ createFormError() }}</div>
+
       <div class="form-group">
         <div class="label-header">
           <label>Pacient</label>
@@ -365,11 +367,14 @@
           name="patient"
           class="form-control"
           required
+          (ngModelChange)="clearCreateFieldError('patient')"
           (change)="onPatientChange(newAppointmentData.patient)"
         >
           <option value="" disabled>Selecciona pacient...</option>
           <option *ngFor="let p of patientsList()" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
         </select>
+
+        <div *ngIf="getCreateFieldError('patient')" class="form-field-error">{{ getCreateFieldError('patient') }}</div>
 
         <div *ngIf="getSelectedPatientAllergyText()" class="allergy-alert-text">
           Al·lèrgies: {{ getSelectedPatientAllergyText() }}
@@ -388,7 +393,8 @@
       <div class="form-row">
         <div class="form-group col">
           <label>Data de la cita</label>
-          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (change)="onDateChange()">
+          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (ngModelChange)="clearCreateFieldError('visitDate')" (change)="onDateChange()">
+          <div *ngIf="getCreateFieldError('visitDate')" class="form-field-error">{{ getCreateFieldError('visitDate') }}</div>
         </div>
 
         <div class="form-group col date-flags">
@@ -431,27 +437,31 @@
               <option *ngFor="let m of appointmentMinuteOptions" [ngValue]="m">{{ m }}</option>
             </select>
           </div>
+          <div *ngIf="getCreateFieldError('visitHour')" class="form-field-error">{{ getCreateFieldError('visitHour') }}</div>
         </div>
         <div class="form-group col">
           <label>Duracio</label>
-          <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required>
+          <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
+          <div *ngIf="getCreateFieldError('durationMinutes')" class="form-field-error">{{ getCreateFieldError('durationMinutes') }}</div>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group col">
           <label>Doctor</label>
-          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required>
+          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required (ngModelChange)="clearCreateFieldError('doctor')">
             <option value="" disabled selected>Doctor...</option>
             <option *ngFor="let d of doctorsList()" [value]="d.id">{{ d.name || d.firstName }}</option>
           </select>
+          <div *ngIf="getCreateFieldError('doctor')" class="form-field-error">{{ getCreateFieldError('doctor') }}</div>
         </div>
         <div class="form-group col">
           <label>Box</label>
-          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required>
+          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required (ngModelChange)="clearCreateFieldError('box')">
             <option value="" disabled selected>Box...</option>
             <option *ngFor="let b of boxesList()" [value]="b.id">{{ b.name }}</option>
           </select>
+          <div *ngIf="getCreateFieldError('box')" class="form-field-error">{{ getCreateFieldError('box') }}</div>
         </div>
       </div>
 
@@ -466,6 +476,7 @@
               {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})
             </option>
           </select>
+          <div *ngIf="getCreateFieldError('treatmentId')" class="form-field-error">{{ getCreateFieldError('treatmentId') }}</div>
         </div>
 
         <div>
@@ -476,11 +487,13 @@
             <option value="" disabled selected>Tipus de patologia...</option>
             <option *ngFor="let p of pathologiesList()" [value]="p.id">{{ p.name }} ({{ p.duration }} min)</option>
           </select>
+          <div *ngIf="getCreateFieldError('pathologyId')" class="form-field-error">{{ getCreateFieldError('pathologyId') }}</div>
         </div>
 
         <div class="form-group mt-2">
           <label>Patologia / Motiu</label>
           <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="3" placeholder="Notes cliniques"></textarea>
+          <div *ngIf="getCreateFieldError('consultationReason')" class="form-field-error">{{ getCreateFieldError('consultationReason') }}</div>
         </div>
       </div>
 

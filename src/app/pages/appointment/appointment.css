@@ -957,6 +957,24 @@
   height: 100%;
 }
 
+.form-error-banner {
+  margin-bottom: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: #ffe8ea;
+  border: 1px solid #ff6b7a;
+  color: #c62828;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.form-field-error {
+  margin-top: 0.35rem;
+  color: #c62828;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .form-group {
   margin-bottom: 0.7rem;
 }
