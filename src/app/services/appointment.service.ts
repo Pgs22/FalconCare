@@ -53,37 +53,23 @@ export class AppointmentService {
   }
 
   updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
-    const normalized = String(nextStatus ?? '')
-      .trim()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '');
-
-    const canonicalStatus =
-      normalized === 'cancelled' ||
-      normalized === 'canceled' ||
-      normalized === 'cancelada' ||
-      normalized === 'cancellada'
-        ? 'cancelled'
-        : 'confirmed';
-
-    const legacyLabel = canonicalStatus === 'cancelled' ? 'Cancel·lada' : 'Confirmada';
+    const canonicalStatus = this.normalizeAppointmentStatus(nextStatus);
 
     const requestOptions = {
       withCredentials: true,
       responseType: 'text' as const,
     };
 
-    // Compatibility fallback: some backend revisions expect `stateName`, others `status`.
-    return this.http.patch(`${this.apiUrl}/${id}/status`, { stateName: canonicalStatus }, requestOptions).pipe(
-      catchError(() => this.http.patch(`${this.apiUrl}/${id}/status`, { status: canonicalStatus }, requestOptions)),
-      catchError(() => this.http.patch(`${this.apiUrl}/${id}/status`, { stateName: legacyLabel }, requestOptions))
+    const url = `${this.apiUrl}/${id}/status`;
+    const stringBody = canonicalStatus;
+
+    return this.http.patch(url, stringBody, requestOptions).pipe(
+      catchError(() => this.http.put(url, stringBody, requestOptions)),
     );
   }
 
   openAppointment(id: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/open`, {}, { withCredentials: true });
+    return this.http.get(`${this.apiUrl}/${id}/open`, { withCredentials: true });
   }
 
   updateAppointment(id: number, payload: Record<string, unknown>): Observable<any> {
@@ -109,6 +95,41 @@ export class AppointmentService {
 
   getPatientTreatments(patientId: number): Observable<any> {
     return this.http.get(`${this.treatmentsUrl}/patient/${patientId}`);
+  }
+
+  private normalizeAppointmentStatus(nextStatus: string): string {
+    const normalized = String(nextStatus ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '');
+
+    if (normalized === 'programada' || normalized === 'programado' || normalized === 'scheduled') {
+      return 'Programada';
+    }
+    if (normalized === 'confirmada' || normalized === 'confirmado' || normalized === 'confirmed') {
+      return 'Confirmada';
+    }
+    if (normalized === 'encurs' || normalized === 'encurso' || normalized === 'inprogress') {
+      return 'En curs';
+    }
+    if (
+      normalized === 'cancelada' ||
+      normalized === 'cancellada' ||
+      normalized === 'cancelled' ||
+      normalized === 'canceled'
+    ) {
+      return 'Cancel·lada';
+    }
+    if (normalized === 'finalitzada' || normalized === 'finalizada' || normalized === 'finished') {
+      return 'Finalitzada';
+    }
+    if (normalized === 'faltaconsentiment' || normalized === 'faltaconsentimiento') {
+      return 'Falta Consentiment';
+    }
+
+    return 'Programada';
   }
 
   /**
