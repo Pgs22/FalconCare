@@ -380,6 +380,14 @@ export class AppointmentComponent implements OnInit {
     return this.selectedPatientAllergyText;
   }
 
+  hasAppointmentAllergy(appointment: Appointment): boolean {
+    const patientRecord = this.findPatientRecordForAppointment(appointment);
+    if (!patientRecord) {
+      return false;
+    }
+    return this.extractSelectedAllergyFlags(patientRecord).length > 0;
+  }
+
   private setSelectedPatientAllergies(patientId: any): void {
     const selectedPatientId = this.toNumberOrNull(patientId);
     if (selectedPatientId == null) {
@@ -635,6 +643,28 @@ export class AppointmentComponent implements OnInit {
       return null;
     }
     return found as ApiRecord;
+  }
+
+  private findPatientRecordForAppointment(appointment: Appointment): ApiRecord | null {
+    const patientId = this.getAppointmentPatientId(appointment);
+    if (patientId != null) {
+      const byId = this.findPatientRecordById(patientId);
+      if (byId) {
+        return byId;
+      }
+    }
+
+    const patientName = String(appointment?.patientName ?? '').trim();
+    if (!patientName) {
+      return null;
+    }
+
+    const inferredPatientId = this.findPatientIdByAppointmentName(patientName);
+    if (inferredPatientId == null) {
+      return null;
+    }
+
+    return this.findPatientRecordById(inferredPatientId);
   }
 
   loadPatients(afterLoad?: () => void): void {

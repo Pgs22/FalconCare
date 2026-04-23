@@ -158,7 +158,15 @@
                     <div class="info">
                       <div class="patient-row">
                         <span class="patient">
-                          {{ cita.patientName }}
+                          <span class="patient-label">
+                            <span
+                              *ngIf="hasAppointmentAllergy(cita)"
+                              class="allergy-pill"
+                              aria-label="Pacient amb al·lèrgia"
+                              title="Pacient amb al·lèrgia"
+                            >A</span>
+                            <span class="patient-name">{{ cita.patientName }}</span>
+                          </span>
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
                         <select
@@ -190,7 +198,7 @@
                     </div>
 
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
-                      <button title="Obrir cita" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
+                      <button title="Obrir Odontograma" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
                       <button title="Finalitzar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
                       <div class="quick-actions-wrap">
                         <button
@@ -282,7 +290,17 @@
                     >
                       <div class="info">
                         <div class="patient-row">
-                          <span class="patient">{{ cita.patientName }}</span>
+                          <span class="patient">
+                            <span class="patient-label">
+                              <span
+                                *ngIf="hasAppointmentAllergy(cita)"
+                                class="allergy-pill"
+                                aria-label="Pacient amb al·lèrgia"
+                                title="Pacient amb al·lèrgia"
+                              >A</span>
+                              <span class="patient-name">{{ cita.patientName }}</span>
+                            </span>
+                          </span>
                           <select
                             title="Canviar estat"
                             class="status-pill status-pill-btn"
