@@ -117,14 +117,14 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
   });
 
   it('pickMedicationAllergiesFromPatientApiPayload reads snake_case from API', () => {
-    expect(pickMedicationAllergiesFromPatientApiPayload({ medication_allergies: 'X' })).toBe('X');
-    expect(pickMedicationAllergiesFromPatientApiPayload({ medicationAllergies: 'Y' })).toBe('Y');
+    expect(pickMedicationAllergiesFromPatientApiPayload({ allergies_bitmask: 3 })).toBe('Penicilina, Latex');
+    expect(pickMedicationAllergiesFromPatientApiPayload({ selectedAllergies: [4, 8] })).toBe('Anestesia, AINEs');
     expect(pickMedicationAllergiesFromPatientApiPayload(null)).toBe('');
   });
 
   it('pickMedicationAllergiesFromPatientRecord matches PatientService / Neon keys', () => {
-    expect(pickMedicationAllergiesFromPatientRecord({ medication_allergies: 'A' })).toBe('A');
-    expect(pickMedicationAllergiesFromPatientRecord({ critical_allergies: 'B' })).toBe('B');
+    expect(pickMedicationAllergiesFromPatientRecord({ allergiesBitmask: 1 })).toBe('Penicilina');
+    expect(pickMedicationAllergiesFromPatientRecord({ selected_allergies: [2] })).toBe('Latex');
   });
 
   it('classifyAllergyAlertVariant marks latex as amber', () => {
@@ -132,7 +132,7 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
     expect(classifyAllergyAlertVariant('PENICILINA')).toBe('red');
   });
 
-  it('buildDoctorAllergyAlertsForToday uses embedded patient medication_allergies', () => {
+  it('buildDoctorAllergyAlertsForToday uses embedded patient allergies bitmask', () => {
     const at = new Date(2026, 3, 8, 12, 0, 0);
     const rows = [
       {
@@ -142,7 +142,7 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
           id: 42,
           firstName: 'Ana',
           lastName: 'López',
-          medication_allergies: 'Penicilina',
+          allergies_bitmask: 1,
         },
       },
     ];
