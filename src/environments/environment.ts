@@ -10,4 +10,6 @@ export const environment = {
   apiBaseUrl: apiUrl,
   /** Alias útil para documentación / nuevos servicios (`apiBaseUrl` y `apiUrl` son idénticos). */
   apiUrl,
+  /** Canal SSE para invalidación en tiempo real desde backend. */
+  syncEventsUrl: `${apiUrl}/api/events/sync`,
 } as const;
