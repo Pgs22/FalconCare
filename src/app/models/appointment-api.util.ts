@@ -1,7 +1,14 @@
 import type { Appointment } from './appointment.model';
 import type { PatientVisitHistoryEntry } from './patient-visit-history.model';
+import { AllergyFlag, selectedAllergiesFromBitmask } from './patient.model';
 
 const APPOINTMENT_TIME_ZONE = 'Europe/Berlin';
+const ALLERGY_LABEL_BY_FLAG: Record<number, string> = {
+  [AllergyFlag.PENICILLIN]: 'Penicilina',
+  [AllergyFlag.LATEX]: 'Latex',
+  [AllergyFlag.ANESTHESIA]: 'Anestesia',
+  [AllergyFlag.NSAIDS]: 'AINEs',
+};
 
 /** Respuestas tipo API Platform / JSON-LD o array plano. */
 export function extractApiCollection(body: unknown): unknown[] {
@@ -41,6 +48,35 @@ function pickNestedString(obj: unknown, keys: string[]): string {
     return '';
   }
   return pickString(obj as Record<string, unknown>, keys);
+}
+
+function pickAllergyFlags(r: Record<string, unknown>): number[] {
+  const rawSelected = r['selectedAllergies'] ?? r['selected_allergies'];
+  if (Array.isArray(rawSelected)) {
+    return rawSelected
+      .map((item) => Number(item))
+      .filter((item) => Number.isFinite(item) && item > 0);
+  }
+
+  const rawBitmask = r['allergiesBitmask'] ?? r['allergies_bitmask'];
+  const bitmask = typeof rawBitmask === 'number' && Number.isFinite(rawBitmask)
+    ? rawBitmask
+    : Number(rawBitmask);
+  if (Number.isFinite(bitmask) && bitmask > 0) {
+    return selectedAllergiesFromBitmask(bitmask);
+  }
+
+  return [];
+}
+
+function formatAllergyFlags(flags: number[]): string {
+  if (flags.length === 0) {
+    return '';
+  }
+
+  return flags
+    .map((flag) => ALLERGY_LABEL_BY_FLAG[flag] ?? `Allergy ${flag}`)
+    .join(', ');
 }
 
 /** Relación `treatment` (ManyToOne) en Doctrine: nombre del tratamiento. */
@@ -500,16 +536,10 @@ const ALLERGY_ALERT_ICONS: readonly DoctorAllergyAlertIcon[] = [
 
 /**
  * Campos de alergias en objeto paciente (embebido en cita o `GET /api/patients/{id}`).
- * Alineado con `PatientService.toApiPatientBody` → columna Neon `medication_allergies`.
+ * Fuente primaria: `allergiesBitmask` / `selectedAllergies`.
  */
 export function pickMedicationAllergiesFromPatientRecord(o: Record<string, unknown>): string {
-  return pickString(o, [
-    'medicationAllergies',
-    'medication_allergies',
-    'allergies',
-    'criticalAllergies',
-    'critical_allergies',
-  ]);
+  return formatAllergyFlags(pickAllergyFlags(o));
 }
 
 /** Respuesta de `GET /api/patients/{id}` (JSON plano o embebido en cita). */

@@ -355,6 +355,36 @@
   margin-top: 0.35rem;
 }
 
+.week-box-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.65rem;
+}
+
+.week-box-selector__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #516073;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.week-box-selector__select {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 1.75rem;
+  border: 1px solid #00b5ca;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.22rem 0.7rem;
+  outline: none;
+  cursor: pointer;
+}
+
 .week-schedule-grid {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
@@ -408,7 +438,7 @@
 
 .week-appointment-block {
   left: 0.3rem;
-  right: 0.3rem;
+  right: auto;
 }
 
 .week-appointment-block .card-appointment {
@@ -416,13 +446,25 @@
   padding: 0.35rem 0.45rem;
 }
 
+.week-appointment-block.week-overlap .card-appointment {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.week-appointment-block.week-overlap:not(:first-child) .card-appointment {
+  border-left: 2px solid rgba(2, 132, 199, 0.35);
+}
+
 .week-cleaning-slot {
   left: 0.3rem;
-  right: 0.3rem;
+  right: auto;
 }
 
 .week-cleaning-slot .cleaning-block {
   border-radius: 0 0 10px 10px;
+}
+
+.week-cleaning-slot.week-overlap .cleaning-block {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .time-axis {
@@ -530,7 +572,7 @@
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.3rem;
   position: relative;
   box-shadow: 0 1px 6px rgba(26, 44, 66, 0.06);
@@ -545,7 +587,6 @@
   gap: 0.08rem;
 }
 
-.card-appointment.compact-card .doctor-tag,
 .card-appointment.compact-card .first-visit-badge {
   display: none;
 }
@@ -635,10 +676,42 @@
   font-size: 0.79rem;
   font-weight: 800;
   color: #1f2a37;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 170px;
+}
+
+.patient-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.patient-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.allergy-pill {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #c62828;
+  color: #fff;
+  font-size: 0.56rem;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
 }
 
 .status-pill {
@@ -685,6 +758,21 @@
   text-overflow: ellipsis;
 }
 
+.doctor-under-time {
+  display: block;
+  width: 100%;
+  align-self: flex-start;
+  text-align: left;
+  margin-top: 0.08rem;
+}
+
+.card-appointment.compact-card .doctor-under-time {
+  font-size: 0.62rem;
+  line-height: 1;
+  margin-top: 0.04rem;
+  min-height: 0.62rem;
+}
+
 .reason-text {
   margin: 0;
   font-size: 0.68rem;
@@ -703,9 +791,9 @@
 }
 
 .urgency-note {
-  display: inline-block;
-  align-self: flex-start;
-  margin-top: 0.04rem;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
   font-size: 0.58rem;
   line-height: 1;
   font-weight: 800;

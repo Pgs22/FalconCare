@@ -29,8 +29,8 @@
 
       <div class="filters">
         <div class="filters-header">
-          <h4>Filtrar boxes</h4>
-          <label class="toggle-all-boxes">
+          <h4>{{ isWeekView() ? 'Box setmana' : 'Filtrar boxes' }}</h4>
+          <label class="toggle-all-boxes" *ngIf="isDayView()">
             <input
               type="checkbox"
               [checked]="areAllBoxesSelected()"
@@ -39,15 +39,42 @@
             <span>TOTS</span>
           </label>
         </div>
-        <div *ngFor="let b of getDisplayBoxes()" class="box-filter-item">
-          <label>
-            <input
-              type="checkbox"
-              [checked]="isBoxSelected(b)"
-              (change)="toggleBoxSelection(b, $any($event.target).checked)"
-            >
-            <span>{{ getBoxLabel(b) }}</span>
-          </label>
+
+        <div *ngIf="isDayView()">
+          <div *ngFor="let b of getDisplayBoxes()" class="box-filter-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="isBoxSelected(b)"
+                (change)="toggleBoxSelection(b, $any($event.target).checked)"
+              >
+              <span>{{ getBoxLabel(b) }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="week-box-selector" *ngIf="isWeekView() && getWeekBoxOptions().length > 0">
+          <select
+            class="week-box-selector__select"
+            [value]="selectedWeekBoxKey() || getWeekBoxOptionKey(getWeekBoxOptions()[0])"
+            (change)="onWeekBoxSelected($any($event.target).value)"
+          >
+            <option *ngFor="let box of getWeekBoxOptions()" [value]="getWeekBoxOptionKey(box)">
+              {{ getBoxLabel(box) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="week-box-selector" *ngIf="isWeekView()">
+          <select
+            class="week-box-selector__select"
+            [value]="selectedWeekDoctorKey()"
+            (change)="onWeekDoctorSelected($any($event.target).value)"
+          >
+            <option *ngFor="let doctor of getWeekDoctorOptions()" [value]="doctor.key">
+              {{ doctor.label }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -141,10 +168,9 @@
                 [style.top.px]="idx * hourSlotHeightPx"
               ></div>
 
-              <ng-container *ngFor="let cita of appointments()">
+              <ng-container *ngFor="let cita of getAppointmentsForDay(newAppointmentData.visitDate, b)">
                 <div
                   class="appointment-block"
-                  *ngIf="belongsToBox(cita, b)"
                   [class.menu-open]="isQuickActionsOpen(cita.id)"
                   [style.top.px]="getAppointmentTopPx(cita)"
                   [style.height.px]="getAppointmentHeightPx(cita)"
@@ -153,12 +179,21 @@
                     class="card-appointment"
                     [ngClass]="cita.status"
                     [class.compact-card]="isCompactAppointmentCard(cita)"
+                    [class.urgency-card]="cita.isUrgency"
                     [style.--appointment-color]="cita.color || '#00bcd4'"
                   >
                     <div class="info">
                       <div class="patient-row">
                         <span class="patient">
-                          {{ cita.patientName }}
+                          <span class="patient-label">
+                            <span
+                              *ngIf="hasAppointmentAllergy(cita)"
+                              class="allergy-pill"
+                              aria-label="Pacient amb al·lèrgia"
+                              title="Pacient amb al·lèrgia"
+                            >A</span>
+                            <span class="patient-name">{{ cita.patientName }}</span>
+                          </span>
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
                         <select
@@ -174,14 +209,13 @@
                         </select>
                       </div>
 
-                      <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
-
                       <div class="meta-row">
                         <span class="meta-icon clock" aria-hidden="true"></span>
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
+                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                       </div>
 
-                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                      <span class="doctor-tag doctor-under-time">Dr. {{ getAppointmentDoctorDisplay(cita) }}</span>
 
                       <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
@@ -190,7 +224,7 @@
                     </div>
 
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
-                      <button title="Obrir cita" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
+                      <button title="Obrir Odontograma" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
                       <button title="Finalitzar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
                       <div class="quick-actions-wrap">
                         <button
@@ -215,7 +249,7 @@
 
                 <div
                   class="cleaning-slot"
-                  *ngIf="belongsToBox(cita, b) && cita.cleaningTime > 0"
+                  *ngIf="cita.cleaningTime > 0"
                   [style.top.px]="getCleaningTopPx(cita)"
                   [style.height.px]="getCleaningHeightPx(cita)"
                 >
@@ -257,7 +291,7 @@
           <div class="week-days-columns">
             <article class="week-day-timeline" *ngFor="let day of weekDays()">
               <header class="week-day-header">
-                <h3>{{ day.label }}</h3>
+                <h3>{{ day.label }} · {{ getSelectedWeekBoxLabel() }} · {{ getSelectedWeekDoctorLabel() }}</h3>
                 <small>{{ getTotalAppointmentsForVisibleBoxes(day.date) }} cites</small>
               </header>
 
@@ -272,17 +306,31 @@
                   <div
                     class="appointment-block week-appointment-block"
                     [class.menu-open]="isQuickActionsOpen(cita.id)"
+                    [class.week-overlap]="isWeekAppointmentOverlapping(day.date, cita)"
                     [style.top.px]="getAppointmentTopPx(cita)"
                     [style.height.px]="getAppointmentHeightPx(cita)"
+                    [style.left]="getWeekAppointmentLeft(day.date, cita)"
+                    [style.width]="getWeekAppointmentWidth(day.date, cita)"
                   >
                     <div
                       class="card-appointment"
                       [class.compact-card]="isCompactAppointmentCard(cita)"
+                      [class.urgency-card]="cita.isUrgency"
                       [style.--appointment-color]="cita.color || '#00bcd4'"
                     >
                       <div class="info">
                         <div class="patient-row">
-                          <span class="patient">{{ cita.patientName }}</span>
+                          <span class="patient">
+                            <span class="patient-label">
+                              <span
+                                *ngIf="hasAppointmentAllergy(cita)"
+                                class="allergy-pill"
+                                aria-label="Pacient amb al·lèrgia"
+                                title="Pacient amb al·lèrgia"
+                              >A</span>
+                              <span class="patient-name">{{ cita.patientName }}</span>
+                            </span>
+                          </span>
                           <select
                             title="Canviar estat"
                             class="status-pill status-pill-btn"
@@ -296,14 +344,13 @@
                           </select>
                         </div>
 
-                        <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
-
                         <div class="meta-row">
                           <span class="meta-icon clock" aria-hidden="true"></span>
                           <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
+                          <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                         </div>
 
-                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                        <span class="doctor-tag doctor-under-time">Dr. {{ getAppointmentDoctorDisplay(cita) }} · {{ getAppointmentBoxLabel(cita) }}</span>
                       </div>
                     </div>
                   </div>
@@ -311,8 +358,11 @@
                   <div
                     class="cleaning-slot week-cleaning-slot"
                     *ngIf="cita.cleaningTime > 0"
+                    [class.week-overlap]="isWeekAppointmentOverlapping(day.date, cita)"
                     [style.top.px]="getCleaningTopPx(cita)"
                     [style.height.px]="getCleaningHeightPx(cita)"
+                    [style.left]="getWeekAppointmentLeft(day.date, cita)"
+                    [style.width]="getWeekAppointmentWidth(day.date, cita)"
                   >
                     <div class="cleaning-block">
                       <span class="cleaning-line">
@@ -344,7 +394,7 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Edita cita' : 'Detall de cita' }}</h2>
+        <h2>{{ isEditMode ? 'Edita cita' : 'Crear nova cita' }}</h2>
         <small>Gestió de cita i pacient</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
@@ -356,9 +406,6 @@
       <div class="form-group">
         <div class="label-header">
           <label>Pacient</label>
-          <button type="button" class="btn-text-link" (click)="openNewPatientRegister()">
-            Nou pacient
-          </button>
         </div>
 
         <select
