@@ -4,7 +4,6 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
 
-import { AppointmentService } from '../../services/appointment.service';
 import { AuthService } from '../../services/auth.service';
 import { DocumentService } from '../../services/document.service';
 import { PatientService } from '../../services/patient.service';
@@ -37,15 +36,10 @@ describe('PatientPanelComponent', () => {
                 email: 'ana@test.com',
                 address: 'Calle 1, 2, Madrid',
               }),
+            getAppointments: () => of([]),
           },
         },
         { provide: AuthService, useValue: { logout: jasmine.createSpy('logout') } },
-        {
-          provide: AppointmentService,
-          useValue: {
-            listByPatientId: () => of([]),
-          },
-        },
         {
           provide: DocumentService,
           useValue: {

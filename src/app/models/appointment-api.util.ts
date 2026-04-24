@@ -539,7 +539,17 @@ const ALLERGY_ALERT_ICONS: readonly DoctorAllergyAlertIcon[] = [
  * Fuente primaria: `allergiesBitmask` / `selectedAllergies`.
  */
 export function pickMedicationAllergiesFromPatientRecord(o: Record<string, unknown>): string {
-  return formatAllergyFlags(pickAllergyFlags(o));
+  const raw = pickString(o, [
+    'medicationAllergies',
+    'medication_allergies',
+    'patientMedicationAllergies',
+    'patient_medication_allergies',
+  ]);
+  if (raw.trim()) {
+    return parseMedicationAllergiesDbString(raw).join(', ');
+  }
+  const fromFlags = formatAllergyFlags(pickAllergyFlags(o));
+  return fromFlags.trim() ? fromFlags : '';
 }
 
 /** Respuesta de `GET /api/patients/{id}` (JSON plano o embebido en cita). */

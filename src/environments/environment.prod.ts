@@ -8,4 +8,5 @@ export const environment = {
   production: true,
   apiBaseUrl: apiUrl,
   apiUrl,
+  syncEventsUrl: `${apiUrl}/api/events/sync`,
 } as const;

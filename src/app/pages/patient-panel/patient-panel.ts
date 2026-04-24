@@ -49,17 +49,17 @@ import {
   rawAppointmentToVisitEntry,
   sortVisitHistoryEntries,
 } from '../../models/appointment-api.util';
-import { Patient } from '../../models/patient.model';
+import { AllergyFlag, Patient, buildAllergiesBitmask } from '../../models/patient.model';
 import type { PatientVisitHistoryEntry } from '../../models/patient-visit-history.model';
 import {
   belongsToPatientRelation,
   belongsToPatientRelationStrict,
 } from '../../models/patient-relation.util';
 import { normalizePatientProfileImage } from '../../models/patient-profile.util';
-import { AppointmentService } from '../../services/appointment.service';
 import { AuthService } from '../../services/auth.service';
 import { DocumentService } from '../../services/document.service';
 import { PatientService } from '../../services/patient.service';
+import { RealtimeSyncService } from '../../services/realtime-sync.service';
 
 /** Límite alineado con la UI; el backend puede imponer otro máximo. */
 const PATIENT_DOCUMENT_MAX_BYTES = 15 * 1024 * 1024;
@@ -76,10 +76,10 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly patientService = inject(PatientService);
-  private readonly appointmentService = inject(AppointmentService);
   private readonly documentService = inject(DocumentService);
   private readonly auth = inject(AuthService);
   private readonly translate = inject(TranslateService);
+  private readonly realtimeSync = inject(RealtimeSyncService);
 
   /** Misma imagen por defecto que el doctor: logotipo en `branding`. */
   readonly defaultPatientAvatarUrl = PROFILE_IMAGE_DEFAULT_URL;
@@ -108,6 +108,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
   private conditionsSub: Subscription | null = null;
   private visitHistorySub: Subscription | null = null;
   private patientDocumentsSub: Subscription | null = null;
+  private syncSub: Subscription | null = null;
   private syncTimer: ReturnType<typeof setInterval> | null = null;
   /** Tras ocultar la pestaña, al volver se refresca el historial (citas nuevas en Neon / API). */
   private visitHistoryTabWasHidden = false;
@@ -243,6 +244,17 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
           this.loadPatientDocuments(p.id);
         }
       });
+
+    this.syncSub = this.realtimeSync
+      .stream(['appointments.changed', 'allergies.changed', 'patients.changed'])
+      .subscribe(() => {
+        const id = this.patient()?.id;
+        if (id == null) {
+          return;
+        }
+        this.syncPatientFromApi();
+        this.loadVisitHistory(id);
+      });
   }
 
   ngOnDestroy(): void {
@@ -251,6 +263,8 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     this.visitHistorySub = null;
     this.patientDocumentsSub?.unsubscribe();
     this.patientDocumentsSub = null;
+    this.syncSub?.unsubscribe();
+    this.syncSub = null;
     this.clearPatientFileFeedbackTimer();
     this.clearProfileImageToastTimer();
     this.clearBlockFeedbackDismissTimers();
@@ -319,6 +333,8 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       return;
     }
     const medicationAllergies = this.allergiesToStorageString(items);
+    const selectedAllergies = this.allergyFlagsFromLabels(items);
+    const allergiesBitmask = selectedAllergies.length > 0 ? buildAllergiesBitmask(selectedAllergies) : 0;
     this.allergySaving.set(true);
     this.clearContactFeedbackDismissTimer();
     this.contactFeedbackError.set(null);
@@ -326,7 +342,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     this.clearAllergyFeedbackDismissTimer();
     this.allergyFeedbackError.set(null);
     this.allergyFeedbackOk.set(null);
-    this.patientService.update(p.id, { medicationAllergies }).subscribe({
+    this.patientService.update(p.id, { medicationAllergies, selectedAllergies, allergiesBitmask }).subscribe({
       next: (raw) => {
         this.patient.set(this.adaptPatient(raw as unknown));
         this.newAllergyText = '';
@@ -361,6 +377,36 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
 
   private toAllergyLabel(value: string): string {
     return value.trim().toLocaleUpperCase('es-ES');
+  }
+
+  private allergyFlagsFromLabels(items: string[]): number[] {
+    const out = new Set<number>();
+    for (const raw of items) {
+      const n = raw
+        .toLocaleLowerCase('es-ES')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+      if (!n) {
+        continue;
+      }
+      if (n.includes('penic')) {
+        out.add(AllergyFlag.PENICILLIN);
+        continue;
+      }
+      if (n.includes('latex')) {
+        out.add(AllergyFlag.LATEX);
+        continue;
+      }
+      if (n.includes('anest')) {
+        out.add(AllergyFlag.ANESTHESIA);
+        continue;
+      }
+      if (n.includes('aine') || n.includes('ibuprof') || n.includes('antiinflam')) {
+        out.add(AllergyFlag.NSAIDS);
+      }
+    }
+    return Array.from(out);
   }
 
   toggleContactEdit(): void {
@@ -843,7 +889,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     this.visitHistoryLoading.set(true);
     this.clearVisitHistoryErrorDismissTimer();
     this.visitHistoryError.set(null);
-    this.visitHistorySub = this.appointmentService.listByPatientId(patientId).subscribe({
+    this.visitHistorySub = this.patientService.getAppointments(patientId).subscribe({
       next: (rawList) => {
         if (!this.isCurrentPatient(patientId)) {
           return;

@@ -1,9 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { extractApiCollection } from '../models/appointment-api.util';
+import { RealtimeSyncService } from './realtime-sync.service';
+import { environment } from '../../environments/environment';
+import { AppointmentAgendaItem } from '../models/api-contracts.model';
 
-export interface Appointment {
+export interface Appointment extends AppointmentAgendaItem {
   id: number;
   time: string;
   duration: number;
@@ -26,23 +29,47 @@ export interface Appointment {
 })
 export class AppointmentService {
   
-  private apiUrl = 'http://localhost:8000/api/appointment';
-  private patientsUrl = 'http://localhost:8000/api/patients';
-  private treatmentsUrl = 'http://localhost:8000/api/treatments';
+  private apiUrl = `${environment.apiBaseUrl}/api/appointment`;
+  private patientsUrl = `${environment.apiBaseUrl}/api/patients`;
+  private treatmentsUrl = `${environment.apiBaseUrl}/api/treatments`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private readonly realtimeSync: RealtimeSyncService
+  ) {}
 
   getAppointments(date?: string): Observable<Appointment[]> {
-    const url = date ? `${this.apiUrl}/index?date=${date}` : `${this.apiUrl}/index`;
-    return this.http.get<Appointment[]>(url);
+    return this.getIndex(date);
   }
 
   getWeeklyAppointments(date?: string): Observable<Appointment[]> {
-    const url = date ? `${this.apiUrl}/weekly?date=${date}` : `${this.apiUrl}/weekly`;
-    return this.http.get<Appointment[]>(url);
+    return this.getWeekly(date);
   }
 
   getSetupFormData(date: string): Observable<any> {
+    return this.getSetup(date);
+  }
+
+  getIndex(date?: string, patientId?: number): Observable<Appointment[]> {
+    let params = new HttpParams();
+    if (date) {
+      params = params.set('date', date);
+    }
+    if (patientId != null && Number.isFinite(patientId)) {
+      params = params.set('patientId', String(patientId));
+    }
+    return this.http.get<Appointment[]>(`${this.apiUrl}/index`, { params });
+  }
+
+  getWeekly(date?: string): Observable<Appointment[]> {
+    let params = new HttpParams();
+    if (date) {
+      params = params.set('date', date);
+    }
+    return this.http.get<Appointment[]>(`${this.apiUrl}/weekly`, { params });
+  }
+
+  getSetup(date: string): Observable<any> {
     const params = new HttpParams().set('date', date);
     return this.http.get<{doctors: any[], boxes: any[]}>(
         `${this.apiUrl}/setup-appointment-form`, 
@@ -58,17 +85,22 @@ export class AppointmentService {
     };
 
     return this.http.post(`${this.apiUrl}/create`, appointmentData, opts).pipe(
+      tap(() => this.realtimeSync.emit('appointments.changed')),
       catchError((err) => {
         if (!isNotFound(err)) {
           return throwError(() => err);
         }
-        return this.http.post(this.apiUrl, appointmentData, opts);
+        return this.http.post(this.apiUrl, appointmentData, opts).pipe(
+          tap(() => this.realtimeSync.emit('appointments.changed'))
+        );
       })
     );
   }
 
   closeAppointment(id: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/close`, {}, { withCredentials: true });
+    return this.http.post(`${this.apiUrl}/${id}/close`, {}, { withCredentials: true }).pipe(
+      tap(() => this.realtimeSync.emit('appointments.changed'))
+    );
   }
 
   updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
@@ -80,10 +112,15 @@ export class AppointmentService {
     };
 
     const url = `${this.apiUrl}/${id}/status`;
-    const stringBody = canonicalStatus;
+    const payload = { status: canonicalStatus };
 
-    return this.http.patch(url, stringBody, requestOptions).pipe(
-      catchError(() => this.http.put(url, stringBody, requestOptions)),
+    return this.http.patch(url, payload, requestOptions).pipe(
+      tap(() => this.realtimeSync.emit('appointments.changed')),
+      catchError(() =>
+        this.http.put(url, payload, requestOptions).pipe(
+          tap(() => this.realtimeSync.emit('appointments.changed'))
+        )
+      ),
     );
   }
 
@@ -93,15 +130,26 @@ export class AppointmentService {
 
   updateAppointment(id: number, payload: Record<string, unknown>): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }).pipe(
-      catchError(() => this.http.put(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true })),
-      catchError(() => this.http.post(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }))
+      tap(() => this.realtimeSync.emit('appointments.changed')),
+      catchError(() =>
+        this.http.put(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }).pipe(
+          tap(() => this.realtimeSync.emit('appointments.changed'))
+        )
+      ),
+      catchError(() =>
+        this.http.post(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }).pipe(
+          tap(() => this.realtimeSync.emit('appointments.changed'))
+        )
+      )
     );
   }
 
   deleteAppointment(id: number): Observable<any> {
     const opts = { withCredentials: true };
 
-    return this.http.delete(`${this.apiUrl}/${id}`, opts);
+    return this.http.delete(`${this.apiUrl}/${id}`, opts).pipe(
+      tap(() => this.realtimeSync.emit('appointments.changed'))
+    );
   }
 
   getPatients(): Observable<any[]> {
@@ -168,7 +216,7 @@ export class AppointmentService {
       .pipe(map(extractApiCollection));
 
     const fromAppointmentsPlural = this.http
-      .get<unknown>('http://localhost:8000/api/appointments', {
+      .get<unknown>(`${environment.apiBaseUrl}/api/appointments`, {
         params: new HttpParams().set('patientId', idStr),
       })
       .pipe(map(extractApiCollection));

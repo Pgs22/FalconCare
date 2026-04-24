@@ -114,6 +114,7 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
   it('parseMedicationAllergiesDbString matches patient-panel separators', () => {
     expect(parseMedicationAllergiesDbString('Penicilina, Látex')).toEqual(['PENICILINA', 'LÁTEX']);
     expect(parseMedicationAllergiesDbString('Sin información inicial')).toEqual([]);
+    expect(parseMedicationAllergiesDbString('penicilina; penicilina, n/a,  ')).toEqual(['PENICILINA']);
   });
 
   it('pickMedicationAllergiesFromPatientApiPayload reads snake_case from API', () => {
@@ -125,6 +126,15 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
   it('pickMedicationAllergiesFromPatientRecord matches PatientService / Neon keys', () => {
     expect(pickMedicationAllergiesFromPatientRecord({ allergiesBitmask: 1 })).toBe('Penicilina');
     expect(pickMedicationAllergiesFromPatientRecord({ selected_allergies: [2] })).toBe('Latex');
+    expect(pickMedicationAllergiesFromPatientRecord({ medication_allergies: 'Penicilina, latex' })).toBe(
+      'PENICILINA, LATEX'
+    );
+    expect(
+      pickMedicationAllergiesFromPatientRecord({
+        medication_allergies: 'ANISAKIS',
+        selected_allergies: [1],
+      })
+    ).toBe('ANISAKIS');
   });
 
   it('classifyAllergyAlertVariant marks latex as amber', () => {
