@@ -949,8 +949,6 @@ export class AppointmentComponent implements OnInit {
       )
     ) {
       const conflictMessage = 'Aquest doctor ja té una cita en un altre box a aquesta hora.';
-      this.setCreateFieldError('doctor', conflictMessage);
-      this.setCreateFieldError('visitTime', conflictMessage);
       this.createFormError.set(conflictMessage);
       return;
     }
@@ -1193,8 +1191,6 @@ export class AppointmentComponent implements OnInit {
   }
 
   private applyDoctorOccupiedFormError(message: string): void {
-    this.setCreateFieldError('doctor', message);
-    this.setCreateFieldError('visitTime', message);
     this.createFormError.set(message);
   }
 
