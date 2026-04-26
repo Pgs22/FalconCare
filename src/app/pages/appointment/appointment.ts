@@ -2281,7 +2281,7 @@ export class AppointmentComponent implements OnInit {
   }
 
   isStatusSelectableFromCalendar(currentStatus: string): boolean {
-    return this.appointmentStatusOptions.includes(this.getAppointmentStatusDisplay(currentStatus));
+    return this.getManualCalendarStatusOption(currentStatus) != null;
   }
 
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
@@ -2461,10 +2461,22 @@ export class AppointmentComponent implements OnInit {
 
   private getManualCalendarStatusOption(status: string): string | null {
     const normalized = this.normalizeStatusToken(status);
-    return (
-      this.appointmentStatusOptions.find((option) => this.normalizeStatusToken(option) === normalized) ??
-      null
-    );
+    const aliases: Record<string, string> = {
+      confirmada: 'Confirmada',
+      confirmado: 'Confirmada',
+      confirmed: 'Confirmada',
+      arribada: 'Arribada',
+      arribado: 'Arribada',
+      arrived: 'Arribada',
+      arrival: 'Arribada',
+      checkedin: 'Arribada',
+      present: 'Arribada',
+      cancelada: 'Cancelada',
+      cancellada: 'Cancelada',
+      cancelled: 'Cancelada',
+      canceled: 'Cancelada',
+    };
+    return aliases[normalized] ?? null;
   }
 
   private getAppointmentPatientId(appointment: Appointment): number | null {

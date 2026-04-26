@@ -47,5 +47,8 @@ describe('AppointmentComponent', () => {
     expect(component.isStatusSelectableFromCalendar('En curs')).toBeFalse();
     expect(component.isStatusSelectableFromCalendar('Finalitzada')).toBeFalse();
     expect(component.isStatusSelectableFromCalendar('Confirmada')).toBeTrue();
+    expect(component.isStatusSelectableFromCalendar('confirmed')).toBeTrue();
+    expect(component.isStatusSelectableFromCalendar('arrived')).toBeTrue();
+    expect(component.isStatusSelectableFromCalendar('cancelled')).toBeTrue();
   });
 });
