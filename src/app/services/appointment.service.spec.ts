@@ -40,12 +40,22 @@ describe('AppointmentService', () => {
     expect(responseBody).toBe('ok');
   });
 
-  it('should send cancelled canonical status for Cancel·lada', () => {
-    service.updateAppointmentStatus(64, 'Cancel·lada').subscribe();
+  it('should send arrived canonical status for Arribada', () => {
+    service.updateAppointmentStatus(66, 'Arribada').subscribe();
+
+    const req = httpMock.expectOne('http://localhost:8000/api/appointment/66/status');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toBe('Arribada');
+
+    req.flush('ok');
+  });
+
+  it('should send cancelled canonical status for Cancelada', () => {
+    service.updateAppointmentStatus(64, 'Cancelada').subscribe();
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/64/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toBe('Cancel·lada');
+    expect(req.request.body).toBe('Cancelada');
 
     req.flush('ok');
   });

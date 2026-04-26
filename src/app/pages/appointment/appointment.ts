@@ -77,12 +77,9 @@ export class AppointmentComponent implements OnInit {
   selectedWeekDoctorKey = signal<string>('all');
   statusUpdatingIds = signal<number[]>([]);
   readonly appointmentStatusOptions: string[] = [
-    'Programada',
     'Confirmada',
-    'En curs',
-    'Cancel·lada',
-    'Finalitzada',
-    'Falta Consentiment',
+    'Arribada',
+    'Cancelada',
   ];
   quickActionsAppointmentId = signal<number | null>(null);
   cleaningSelectorAppointmentId = signal<number | null>(null);
@@ -969,7 +966,6 @@ export class AppointmentComponent implements OnInit {
       pathology: pathologyId,
       isFirstVisit: !!this.newAppointmentData.isFirstVisit,
       isUrgency: !!this.newAppointmentData.isUrgency,
-      status: this.newAppointmentData.isFirstVisit ? 'Falta Consentiment' : 'Programada'
     };
 
     if (this.isEditMode && this.editingAppointmentId != null) {
@@ -1496,7 +1492,7 @@ export class AppointmentComponent implements OnInit {
       duration,
       cleaningTime,
       totalBlockTime: duration + cleaningTime,
-      status: String(row['status'] ?? fallback.status ?? 'Programada'),
+      status: String(row['status'] ?? fallback.status ?? ''),
       patientName: String(row['patientName'] ?? row['patient_name'] ?? fallback.patientName ?? '—'),
       doctorName: String(row['doctorName'] ?? row['doctor_name'] ?? fallback.doctorName ?? '—'),
       boxId: this.toNumberOrNull(row['boxId'] ?? row['box_id'] ?? fallback.boxId),
@@ -2279,40 +2275,24 @@ export class AppointmentComponent implements OnInit {
     return this.statusUpdatingIds().includes(appointmentId);
   }
 
-  getStatusSelectValue(currentStatus: string): string {
-    const normalized = this.normalizeStatusToken(currentStatus);
-    if (normalized === 'programada' || normalized === 'programado' || normalized === 'scheduled') {
-      return 'Programada';
-    }
-    if (normalized === 'confirmada' || normalized === 'confirmado' || normalized === 'confirmed') {
-      return 'Confirmada';
-    }
-    if (normalized === 'encurs' || normalized === 'encurso' || normalized === 'inprogress') {
-      return 'En curs';
-    }
-    if (
-      normalized === 'cancelada' ||
-      normalized === 'cancel.lada' ||
-      normalized === 'cancel·lada' ||
-      normalized === 'cancelled' ||
-      normalized === 'canceled'
-    ) {
-      return 'Cancel·lada';
-    }
-    if (normalized === 'finalitzada' || normalized === 'finalizada' || normalized === 'finished') {
-      return 'Finalitzada';
-    }
-    if (normalized === 'faltaconsentiment' || normalized === 'faltaconsentimiento') {
-      return 'Falta Consentiment';
-    }
-    return 'Programada';
+  getAppointmentStatusDisplay(currentStatus: string): string {
+    const status = String(currentStatus ?? '').trim();
+    return status || 'Sense estat';
+  }
+
+  isStatusSelectableFromCalendar(currentStatus: string): boolean {
+    return this.appointmentStatusOptions.includes(this.getAppointmentStatusDisplay(currentStatus));
   }
 
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
-    const targetStatus = this.getStatusSelectValue(selectedStatus);
-    const currentStatus = this.getStatusSelectValue(appointment.status);
+    const targetStatus = this.getManualCalendarStatusOption(selectedStatus);
+    const currentStatus = this.getAppointmentStatusDisplay(appointment.status);
 
-    if (this.isStatusUpdating(appointment.id) || !targetStatus || targetStatus === currentStatus) {
+    if (
+      this.isStatusUpdating(appointment.id) ||
+      targetStatus == null ||
+      targetStatus === currentStatus
+    ) {
       return;
     }
 
@@ -2324,10 +2304,9 @@ export class AppointmentComponent implements OnInit {
       return;
     }
 
-    const normalizedNextStatus = this.getStatusSelectValue(nextStatus);
     this.markStatusUpdating(appointment.id, true);
 
-    this.appointmentService.updateAppointmentStatus(appointment.id, normalizedNextStatus).subscribe({
+    this.appointmentService.updateAppointmentStatus(appointment.id, nextStatus).subscribe({
       next: () => {
         this.fetchAppointments();
         if (this.isWeekView()) {
@@ -2478,6 +2457,14 @@ export class AppointmentComponent implements OnInit {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[\s_-]+/g, '');
+  }
+
+  private getManualCalendarStatusOption(status: string): string | null {
+    const normalized = this.normalizeStatusToken(status);
+    return (
+      this.appointmentStatusOptions.find((option) => this.normalizeStatusToken(option) === normalized) ??
+      null
+    );
   }
 
   private getAppointmentPatientId(appointment: Appointment): number | null {

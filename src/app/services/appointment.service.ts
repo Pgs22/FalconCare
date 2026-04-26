@@ -124,14 +124,18 @@ export class AppointmentService {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '');
 
-    if (normalized === 'programada' || normalized === 'programado' || normalized === 'scheduled') {
-      return 'Programada';
-    }
     if (normalized === 'confirmada' || normalized === 'confirmado' || normalized === 'confirmed') {
       return 'Confirmada';
     }
-    if (normalized === 'encurs' || normalized === 'encurso' || normalized === 'inprogress') {
-      return 'En curs';
+    if (
+      normalized === 'arribada' ||
+      normalized === 'arribado' ||
+      normalized === 'arrived' ||
+      normalized === 'arrival' ||
+      normalized === 'checkedin' ||
+      normalized === 'present'
+    ) {
+      return 'Arribada';
     }
     if (
       normalized === 'cancelada' ||
@@ -139,16 +143,10 @@ export class AppointmentService {
       normalized === 'cancelled' ||
       normalized === 'canceled'
     ) {
-      return 'Cancel·lada';
-    }
-    if (normalized === 'finalitzada' || normalized === 'finalizada' || normalized === 'finished') {
-      return 'Finalitzada';
-    }
-    if (normalized === 'faltaconsentiment' || normalized === 'faltaconsentimiento') {
-      return 'Falta Consentiment';
+      return 'Cancelada';
     }
 
-    return 'Programada';
+    return String(nextStatus ?? '').trim();
   }
 
   /**
