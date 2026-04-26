@@ -6,6 +6,44 @@
   min-width: 0;
 }
 
+.patient-topbar {
+  z-index: 10;
+  display: flex;
+  position: sticky;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0.75rem 1.5rem;
+}
+
+.patient-brand-wrap,
+.patient-nav-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.patient-brand {
+  display: flex;
+  align-items: center;
+}
+
+.patient-brand-logo {
+  display: block;
+  height: auto;
+  max-height: 4rem;
+  width: 100%;
+  object-fit: contain;
+}
+
+.patient-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .apple-input {
   width: 100%;
   background: rgb(248 250 252);
@@ -177,3 +215,28 @@
 .dark .visit-history-item__meta {
   color: #ffffff;
 }
+
+@media (width <= 1200px) {
+  .patient-topbar {
+    padding: 0.65rem 1rem;
+  }
+
+  .patient-brand-logo {
+    max-height: 3.25rem;
+  }
+
+  .patient-nav {
+    gap: 0.35rem;
+  }
+}
+
+@media (width <= 980px) {
+  .patient-topbar {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .patient-brand-logo {
+    max-height: 2.5rem;
+  }
+}
+

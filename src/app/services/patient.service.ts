@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
   buildAllergiesBitmask,
   Patient,
 } from '../models/patient.model';
+import { PatientRealtimeService } from './patient-realtime.service';
 
 export type RegisterPatientPayload = {
   identityDocument: string;
@@ -31,7 +32,10 @@ export type RegisterPatientPayload = {
 export class PatientService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/patients`;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly patientRealtime: PatientRealtimeService
+  ) {}
 
   list(search?: string): Observable<Patient[]> {
     let params = new HttpParams();
@@ -48,21 +52,29 @@ export class PatientService {
   }
 
   create(payload: Partial<Patient>): Observable<Patient> {
-    return this.http.post<Patient>(this.baseUrl, this.toApiPatientBody(payload));
+    return this.http.post<Patient>(this.baseUrl, this.toApiPatientBody(payload)).pipe(
+      tap((patient) => this.patientRealtime.publishMutation('created', patient?.id))
+    );
   }
 
   registerPatient(payload: RegisterPatientPayload): Observable<Patient> {
-    return this.http.post<Patient>(this.baseUrl, this.toApiPatientBody(payload));
+    return this.http.post<Patient>(this.baseUrl, this.toApiPatientBody(payload)).pipe(
+      tap((patient) => this.patientRealtime.publishMutation('created', patient?.id))
+    );
   }
 
   /** PUT parcial: `profileImage` → `profile_image` en BD Neon (Symfony/Doctrine). */
   update(id: number, payload: Partial<Patient>): Observable<Patient> {
-    return this.http.put<Patient>(`${this.baseUrl}/${id}`, this.toApiPatientBody(payload));
+    return this.http.put<Patient>(`${this.baseUrl}/${id}`, this.toApiPatientBody(payload)).pipe(
+      tap(() => this.patientRealtime.publishMutation('updated', id))
+    );
   }
 
   /** PATCH parcial (mismo cuerpo que PUT si el backend lo expone). */
   patch(id: number, payload: Partial<Patient>): Observable<Patient> {
-    return this.http.patch<Patient>(`${this.baseUrl}/${id}`, this.toApiPatientBody(payload));
+    return this.http.patch<Patient>(`${this.baseUrl}/${id}`, this.toApiPatientBody(payload)).pipe(
+      tap(() => this.patientRealtime.publishMutation('updated', id))
+    );
   }
 
   /**
@@ -130,7 +142,9 @@ export class PatientService {
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.patientRealtime.publishMutation('deleted', id))
+    );
   }
 }
 
