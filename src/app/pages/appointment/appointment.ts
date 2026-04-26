@@ -103,6 +103,7 @@ export class AppointmentComponent implements OnInit {
     [AllergyFlag.LATEX]: 'Làtex',
     [AllergyFlag.ANESTHESIA]: 'Anestèsia',
     [AllergyFlag.NSAIDS]: 'AINEs',
+    [AllergyFlag.CHLORHEXIDINE]: 'Clorhexidina',
   };
 
   private readonly createSuccessMessagesByCode: Record<string, string> = {

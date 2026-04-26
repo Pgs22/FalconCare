@@ -8,6 +8,7 @@ const ALLERGY_LABEL_BY_FLAG: Record<number, string> = {
   [AllergyFlag.LATEX]: 'Latex',
   [AllergyFlag.ANESTHESIA]: 'Anestesia',
   [AllergyFlag.NSAIDS]: 'AINEs',
+  [AllergyFlag.CHLORHEXIDINE]: 'Clorhexidina',
 };
 
 /** Respuestas tipo API Platform / JSON-LD o array plano. */

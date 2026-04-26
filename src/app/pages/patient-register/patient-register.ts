@@ -32,6 +32,7 @@ export class PatientRegisterComponent implements OnDestroy, OnInit {
     { flag: AllergyFlag.LATEX, label: 'Làtex' },
     { flag: AllergyFlag.ANESTHESIA, label: 'Anestèsia' },
     { flag: AllergyFlag.NSAIDS, label: 'AINEs' },
+    { flag: AllergyFlag.CHLORHEXIDINE, label: 'Clorhexidina' },
   ] as const;
   selectedAllergies: number[] = [];
 

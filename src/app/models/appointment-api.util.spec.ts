@@ -118,13 +118,14 @@ describe('appointment-api.util (agenda / doctor-panel / Neon shapes)', () => {
 
   it('pickMedicationAllergiesFromPatientApiPayload reads snake_case from API', () => {
     expect(pickMedicationAllergiesFromPatientApiPayload({ allergies_bitmask: 3 })).toBe('Penicilina, Latex');
-    expect(pickMedicationAllergiesFromPatientApiPayload({ selectedAllergies: [4, 8] })).toBe('Anestesia, AINEs');
+    expect(pickMedicationAllergiesFromPatientApiPayload({ selectedAllergies: [4, 8, 16] })).toBe('Anestesia, AINEs, Clorhexidina');
     expect(pickMedicationAllergiesFromPatientApiPayload(null)).toBe('');
   });
 
   it('pickMedicationAllergiesFromPatientRecord matches PatientService / Neon keys', () => {
     expect(pickMedicationAllergiesFromPatientRecord({ allergiesBitmask: 1 })).toBe('Penicilina');
     expect(pickMedicationAllergiesFromPatientRecord({ selected_allergies: [2] })).toBe('Latex');
+    expect(pickMedicationAllergiesFromPatientRecord({ allergiesBitmask: 16 })).toBe('Clorhexidina');
   });
 
   it('classifyAllergyAlertVariant marks latex as amber', () => {
