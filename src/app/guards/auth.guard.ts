@@ -27,25 +27,3 @@ export const guestOnlyGuard: CanActivateFn = () => {
   return true;
 };
 
-export const clinicalRoleGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
-  if (!auth.isAuthenticated()) {
-    return router.createUrlTree(['/login']);
-  }
-
-  const roles = auth.getCurrentUser()?.roles ?? [];
-  const hasClinicalRole = roles.some((role) =>
-    ['ROLE_DOCTOR', 'ROLE_STAFF', 'ROLE_ADMIN'].includes(String(role))
-  );
-
-  if (hasClinicalRole) {
-    return true;
-  }
-
-  return router.createUrlTree(['/settings'], {
-    queryParams: { forbidden: 'clinical' },
-  });
-};
-
