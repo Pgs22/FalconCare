@@ -41,7 +41,6 @@ import { AppointmentService } from '../../services/appointment.service';
 import { AuthService } from '../../services/auth.service';
 import { PatientService } from '../../services/patient.service';
 import { AppUser, UserService } from '../../services/user.service';
-import { RealtimeSyncService } from '../../services/realtime-sync.service';
 
 @Component({
   selector: 'app-doctor-panel',
@@ -58,12 +57,6 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   timeGreetingKey = 'doctorPanel.greetings.morning';
   timeGreetingIcon = 'wb_sunny';
   private greetingTimer: ReturnType<typeof setInterval> | null = null;
-  private dashboardRefreshTimer: ReturnType<typeof setInterval> | null = null;
-  private readonly visibilityChangeListener = (): void => {
-    if (document.visibilityState === 'visible') {
-      this.loadDashboardAppointmentStats();
-    }
-  };
 
   /** KPIs y agenda desde `AppointmentService.getAppointments()` (citas en Neon vía Symfony). */
   dashboardStatsLoading = true;
@@ -100,7 +93,6 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   searchDropdownOpen = false;
   private readonly patientSearchInput$ = new Subject<string>();
   private patientSearchSub: Subscription | null = null;
-  private syncSub: Subscription | null = null;
 
   private jwtPayload: Record<string, unknown> | null = null;
 
@@ -114,8 +106,7 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     private readonly patientService: PatientService,
     private readonly userService: UserService,
     private readonly appointmentService: AppointmentService,
-    private readonly translate: TranslateService,
-    private readonly realtimeSync: RealtimeSyncService
+    private readonly translate: TranslateService
   ) {
     this.refreshJwtPayload();
     this.doctorDisplayName = this.getDoctorDisplayNameFromPayload(this.jwtPayload);
@@ -130,11 +121,6 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     this.greetingTimer = setInterval(() => this.updateTimeGreeting(), 60_000);
 
     this.loadDashboardAppointmentStats();
-    this.syncSub = this.realtimeSync
-      .stream(['appointments.changed', 'allergies.changed', 'patients.changed'])
-      .subscribe(() => this.loadDashboardAppointmentStats());
-    this.dashboardRefreshTimer = setInterval(() => this.loadDashboardAppointmentStats(), 20_000);
-    document.addEventListener('visibilitychange', this.visibilityChangeListener);
 
     this.patientSearchSub = this.patientSearchInput$
       .pipe(
@@ -166,17 +152,10 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     this.dashboardStatsSub = null;
     this.patientSearchSub?.unsubscribe();
     this.patientSearchSub = null;
-    this.syncSub?.unsubscribe();
-    this.syncSub = null;
     if (this.greetingTimer) {
       clearInterval(this.greetingTimer);
       this.greetingTimer = null;
     }
-    if (this.dashboardRefreshTimer) {
-      clearInterval(this.dashboardRefreshTimer);
-      this.dashboardRefreshTimer = null;
-    }
-    document.removeEventListener('visibilitychange', this.visibilityChangeListener);
   }
 
   /** Etiqueta "+n%" / "-n%" respecto a ayer; `null` si no hay base de comparación. */

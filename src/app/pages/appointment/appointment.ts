@@ -3,7 +3,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppointmentService, Appointment } from '../../services/appointment.service';
-import { RealtimeSyncService } from '../../services/realtime-sync.service';
 import { FormsModule } from '@angular/forms';
 import {
   parseMedicationAllergiesDbString,
@@ -13,7 +12,6 @@ import {
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
 import { catchError, of } from 'rxjs';
-import { Subscription } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
 const BOX_CLEANING_BUFFER_MINUTES = 5;
@@ -39,13 +37,6 @@ interface WeekDayItem {
 
 export class AppointmentComponent implements OnInit {
   private errorDismissTimer: ReturnType<typeof setTimeout> | null = null;
-  private autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
-  private readonly visibilityChangeListener = (): void => {
-    if (document.visibilityState === 'visible') {
-      this.refreshAgendaAndAllergies();
-    }
-  };
-  private syncSub: Subscription | null = null;
 
   private selectedTreatment: {
     treatmentId: number;
@@ -178,19 +169,11 @@ export class AppointmentComponent implements OnInit {
 
   constructor(
     private readonly appointmentService: AppointmentService,
-    private readonly router: Router,
-    private readonly realtimeSync: RealtimeSyncService
+    private readonly router: Router
   ) {}
 
   ngOnDestroy(): void {
     this.clearErrorDismissTimer();
-    if (this.autoRefreshTimer) {
-      clearInterval(this.autoRefreshTimer);
-      this.autoRefreshTimer = null;
-    }
-    document.removeEventListener('visibilitychange', this.visibilityChangeListener);
-    this.syncSub?.unsubscribe();
-    this.syncSub = null;
   }
 
   getCreateFieldError(field: string): string | null {
@@ -242,19 +225,6 @@ export class AppointmentComponent implements OnInit {
     this.fetchAppointments();
     this.loadPatients();
     this.loadSetupData(this.newAppointmentData.visitDate);
-    this.autoRefreshTimer = setInterval(() => this.refreshAgendaAndAllergies(), 20_000);
-    document.addEventListener('visibilitychange', this.visibilityChangeListener);
-    this.syncSub = this.realtimeSync
-      .stream(['appointments.changed', 'allergies.changed', 'patients.changed'])
-      .subscribe(() => this.refreshAgendaAndAllergies());
-  }
-
-  private refreshAgendaAndAllergies(): void {
-    this.fetchAppointments();
-    this.loadPatients();
-    if (this.isWeekView()) {
-      this.fetchWeekAppointments();
-    }
   }
 
   setViewMode(mode: 'day' | 'week'): void {
@@ -543,12 +513,6 @@ export class AppointmentComponent implements OnInit {
   }
 
   private getAllergyTextFromPatient(patient: ApiRecord): string {
-    const rawAllergies = pickMedicationAllergiesFromPatientApiPayload(patient);
-    const fromRaw = this.sanitizeAllergyItems(parseMedicationAllergiesDbString(rawAllergies)).join(', ');
-    if (fromRaw) {
-      return fromRaw;
-    }
-
     const selectedAllergies = this.extractSelectedAllergies(patient);
     if (selectedAllergies.length > 0) {
       return selectedAllergies
@@ -556,7 +520,8 @@ export class AppointmentComponent implements OnInit {
         .join(', ');
     }
 
-    return '';
+    const rawAllergies = pickMedicationAllergiesFromPatientApiPayload(patient);
+    return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(rawAllergies)).join(', ');
   }
 
   private extractSelectedAllergies(patient: ApiRecord): number[] {
@@ -714,14 +679,14 @@ export class AppointmentComponent implements OnInit {
   }
 
   private extractAllergyLabelsFromRecord(record: ApiRecord): string[] {
-    const raw = pickMedicationAllergiesFromPatientApiPayload(record);
-    if (raw.trim()) {
-      return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(raw));
-    }
-
     const selectedAllergies = this.extractSelectedAllergyFlags(record);
     if (selectedAllergies.length > 0) {
       return selectedAllergies.map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`);
+    }
+
+    const raw = pickMedicationAllergiesFromPatientApiPayload(record);
+    if (raw.trim()) {
+      return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(raw));
     }
 
     return [];
