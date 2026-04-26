@@ -11,6 +11,7 @@ export interface Appointment {
   totalBlockTime: number;
   status: string;
   patientName: string;
+  doctorId?: number | null;
   doctorName: string;
   boxId: number | null;
   box: string;

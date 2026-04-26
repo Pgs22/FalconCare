@@ -120,6 +120,7 @@ export class AppointmentComponent implements OnInit {
     APPOINTMENT_VALIDATION_FAILED: 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
     APPOINTMENT_TIME_CONFLICT: 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
     APPOINTMENT_OVERLAP: 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
+    DOCTOR_OCCUPIED: 'Aquest doctor ja té una cita en aquest horari.',
     PATIENT_NOT_FOUND: 'No s\'ha trobat el pacient seleccionat.',
     DOCTOR_NOT_FOUND: 'No s\'ha trobat el doctor seleccionat.',
     BOX_NOT_FOUND: 'No s\'ha trobat el box seleccionat.',
@@ -128,6 +129,7 @@ export class AppointmentComponent implements OnInit {
   private readonly createErrorMessagesByKey: Record<string, string> = {
     'appointment.error.validation': 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
     'appointment.error.time_conflict': 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
+    'appointment.doctor.occupied': 'Aquest doctor ja té una cita en aquest horari.',
     'appointment.error.patient_not_found': 'No s\'ha trobat el pacient seleccionat.',
     'appointment.error.doctor_not_found': 'No s\'ha trobat el doctor seleccionat.',
     'appointment.error.box_not_found': 'No s\'ha trobat el box seleccionat.',
@@ -941,12 +943,14 @@ export class AppointmentComponent implements OnInit {
         doctorId,
         normalizedVisitDate,
         normalizedVisitTime,
+        baseDuration,
         boxId,
         this.isEditMode ? this.editingAppointmentId : null,
       )
     ) {
       const conflictMessage = 'Aquest doctor ja té una cita en un altre box a aquesta hora.';
       this.setCreateFieldError('doctor', conflictMessage);
+      this.setCreateFieldError('visitTime', conflictMessage);
       this.createFormError.set(conflictMessage);
       return;
     }
@@ -981,7 +985,12 @@ export class AppointmentComponent implements OnInit {
         error: (err: unknown) => {
           const httpError = err as HttpErrorResponse;
           console.error('Resposta crua del servidor:', httpError?.error);
-          alert('No s\'ha pogut actualitzar la cita.');
+          if (this.isDoctorOccupiedError(httpError)) {
+            const message = this.resolveCreateErrorMessage(httpError);
+            this.applyDoctorOccupiedFormError(message);
+            return;
+          }
+          alert(this.resolveCreateErrorMessage(httpError) || 'No s\'ha pogut actualitzar la cita.');
         }
       });
       return;
@@ -1010,6 +1019,11 @@ export class AppointmentComponent implements OnInit {
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
           console.error('Resposta crua del servidor:', httpError?.error);
+        if (this.isDoctorOccupiedError(httpError)) {
+          const message = this.resolveCreateErrorMessage(httpError);
+          this.applyDoctorOccupiedFormError(message);
+          return;
+        }
         const fieldError = this.resolveCreateFieldError(httpError);
         if (fieldError) {
           this.setCreateFieldError(fieldError.field, fieldError.message);
@@ -1160,6 +1174,28 @@ export class AppointmentComponent implements OnInit {
     }
 
     return 'No s\'ha pogut crear la cita en aquest moment.';
+  }
+
+  private isDoctorOccupiedError(err: HttpErrorResponse): boolean {
+    if (err.status !== 409) {
+      return false;
+    }
+
+    const payload = this.asRecord(err.error);
+    const errorNode = this.asRecord(payload?.['error']);
+    const code = this.pickString(payload, ['code'])?.toUpperCase();
+    const nestedCode = this.pickString(errorNode, ['code'])?.toUpperCase();
+    const messageKey =
+      this.pickString(errorNode, ['messageKey', 'message_key']) ||
+      this.pickString(payload, ['messageKey', 'message_key']);
+
+    return code === 'DOCTOR_OCCUPIED' || nestedCode === 'DOCTOR_OCCUPIED' || messageKey === 'appointment.doctor.occupied';
+  }
+
+  private applyDoctorOccupiedFormError(message: string): void {
+    this.setCreateFieldError('doctor', message);
+    this.setCreateFieldError('visitTime', message);
+    this.createFormError.set(message);
   }
 
   private resolveCreateFieldError(err: HttpErrorResponse): { field: string; message: string } | null {
@@ -1485,6 +1521,27 @@ export class AppointmentComponent implements OnInit {
       row['cleaningTime'] ?? row['cleaning_time'] ?? row['cleaningMinutes'] ?? fallback.cleaningTime,
       5
     );
+    const doctorNode = this.asRecord(row['doctor']);
+    const doctorId = this.toNumberOrNull(
+      row['doctorId'] ??
+        row['doctor_id'] ??
+        row['doctorID'] ??
+        doctorNode?.['id'] ??
+        doctorNode?.['doctorId'] ??
+        doctorNode?.['doctor_id'] ??
+        (fallback as Appointment & { doctorId?: unknown }).doctorId
+    );
+    const doctorName = String(
+      row['doctorName'] ??
+        row['doctor_name'] ??
+        doctorNode?.['name'] ??
+        doctorNode?.['fullName'] ??
+        doctorNode?.['full_name'] ??
+        doctorNode?.['firstName'] ??
+        doctorNode?.['first_name'] ??
+        fallback.doctorName ??
+        '—'
+    );
 
     return {
       id,
@@ -1494,7 +1551,8 @@ export class AppointmentComponent implements OnInit {
       totalBlockTime: duration + cleaningTime,
       status: String(row['status'] ?? fallback.status ?? ''),
       patientName: String(row['patientName'] ?? row['patient_name'] ?? fallback.patientName ?? '—'),
-      doctorName: String(row['doctorName'] ?? row['doctor_name'] ?? fallback.doctorName ?? '—'),
+      doctorId,
+      doctorName,
       boxId: this.toNumberOrNull(row['boxId'] ?? row['box_id'] ?? fallback.boxId),
       box: String(row['box'] ?? row['boxName'] ?? row['box_name'] ?? fallback.box ?? ''),
       reason: String(row['reason'] ?? row['motive'] ?? fallback.reason ?? ''),
@@ -1739,6 +1797,7 @@ export class AppointmentComponent implements OnInit {
     doctorId: number,
     visitDate: string,
     visitTime: string,
+    durationMinutes: number,
     targetBoxId: number,
     excludedAppointmentId: number | null,
   ): boolean {
@@ -1756,6 +1815,9 @@ export class AppointmentComponent implements OnInit {
       return id === targetBoxId;
     });
     const targetBoxLabel = this.normalizeBoxLabel(this.getBoxLabel(targetBox));
+    const targetStart = this.parseTimeToMinutes(visitTime);
+    const targetDuration = this.toPositiveNumberOrDefault(durationMinutes, 30);
+    const targetEnd = targetStart + targetDuration;
 
     return this.appointments().some((appointment) => {
       if (excludedAppointmentId != null && appointment.id === excludedAppointmentId) {
@@ -1766,7 +1828,11 @@ export class AppointmentComponent implements OnInit {
         return false;
       }
 
-      if (this.normalizeAppointmentTime(appointment.time) !== visitTime) {
+      const appointmentStart = this.parseTimeToMinutes(appointment.time);
+      const appointmentDuration = this.toPositiveNumberOrDefault(appointment.duration, 30);
+      const appointmentEnd = appointmentStart + appointmentDuration;
+      const overlaps = appointmentStart < targetEnd && appointmentEnd > targetStart;
+      if (!overlaps) {
         return false;
       }
 
