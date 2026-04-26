@@ -25,6 +25,7 @@ export const AllergyFlag = {
   LATEX: 2,
   ANESTHESIA: 4,
   NSAIDS: 8,
+  CHLORHEXIDINE: 16,
 } as const;
 
 export function buildAllergiesBitmask(selected: number[]): number {
@@ -37,6 +38,7 @@ export function selectedAllergiesFromBitmask(mask: number): number[] {
     AllergyFlag.LATEX,
     AllergyFlag.ANESTHESIA,
     AllergyFlag.NSAIDS,
+    AllergyFlag.CHLORHEXIDINE,
   ];
 
   return allFlags.filter((flag) => (mask & flag) === flag);
