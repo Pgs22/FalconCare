@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import {
   Component,
   DestroyRef,
@@ -12,7 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   Subject,
   Subscription,
@@ -59,15 +59,17 @@ import { normalizePatientProfileImage } from '../../models/patient-profile.util'
 import { AppointmentService } from '../../services/appointment.service';
 import { AuthService } from '../../services/auth.service';
 import { DocumentService } from '../../services/document.service';
+import { PatientRealtimeService } from '../../services/patient-realtime.service';
 import { PatientService } from '../../services/patient.service';
 
 /** Límite alineado con la UI; el backend puede imponer otro máximo. */
 const PATIENT_DOCUMENT_MAX_BYTES = 15 * 1024 * 1024;
+type PatientDocumentFilterKind = 'all' | 'radiology' | 'consent' | 'report' | 'analytics';
 
 @Component({
   selector: 'app-patient-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './patient-panel.html',
   styleUrl: './patient-panel.css',
 })
@@ -80,6 +82,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
   private readonly documentService = inject(DocumentService);
   private readonly auth = inject(AuthService);
   private readonly translate = inject(TranslateService);
+  private readonly patientRealtime = inject(PatientRealtimeService);
 
   /** Misma imagen por defecto que el doctor: logotipo en `branding`. */
   readonly defaultPatientAvatarUrl = PROFILE_IMAGE_DEFAULT_URL;
@@ -108,7 +111,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
   private conditionsSub: Subscription | null = null;
   private visitHistorySub: Subscription | null = null;
   private patientDocumentsSub: Subscription | null = null;
-  private syncTimer: ReturnType<typeof setInterval> | null = null;
+  private patientRealtimeSub: Subscription | null = null;
   /** Tras ocultar la pestaña, al volver se refresca el historial (citas nuevas en Neon / API). */
   private visitHistoryTabWasHidden = false;
   private readonly visibilityChangeListener = (): void => {
@@ -143,15 +146,69 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
 
   /** Documentos clínicos (`documents` en BD), filtrados por paciente actual. */
   readonly patientDocuments = signal<PatientDocumentView[]>([]);
+  readonly patientDocumentTypeFilter = signal<PatientDocumentFilterKind>('all');
+  readonly patientDocumentDateFrom = signal('');
+  readonly patientDocumentDateTo = signal('');
+  readonly patientDocumentCounts = computed(() => {
+    const docs = this.patientDocuments();
+    const counts: Record<PatientDocumentFilterKind, number> = {
+      all: docs.length,
+      radiology: 0,
+      consent: 0,
+      report: 0,
+      analytics: 0,
+    };
+    for (const doc of docs) {
+      const kind = this.classifyDocumentKind(doc);
+      counts[kind] += 1;
+    }
+    return counts;
+  });
+  readonly patientDocumentFiltersActive = computed(
+    () => this.patientDocumentTypeFilter() !== 'all' || !!this.patientDocumentDateFrom() || !!this.patientDocumentDateTo()
+  );
+  readonly filteredPatientDocuments = computed(() => {
+    const typeFilter = this.patientDocumentTypeFilter();
+    const from = this.patientDocumentDateFrom();
+    const to = this.patientDocumentDateTo();
+    return this.patientDocuments().filter((doc) => {
+      if (typeFilter !== 'all') {
+        const kind = this.classifyDocumentKind(doc);
+        if (kind !== typeFilter) {
+          return false;
+        }
+      }
+      const docDate = this.documentDateKey(doc);
+      if (from && docDate && docDate < from) {
+        return false;
+      }
+      if (to && docDate && docDate > to) {
+        return false;
+      }
+      if ((from || to) && !docDate) {
+        return false;
+      }
+      return true;
+    });
+  });
   readonly patientDocumentsLoading = signal(false);
   readonly patientDocumentsError = signal<string | null>(null);
   readonly patientDocumentsUploading = signal(false);
+  readonly patientDocumentsUploadPercent = signal(0);
+  readonly patientDocumentsUploadCurrentName = signal<string | null>(null);
   /** Subida / zona de drop desactivadas (sin paciente o subida en curso). */
   readonly patientDocumentsZoneLocked = computed(
     () => this.patient()?.id == null || this.patientDocumentsUploading()
   );
   readonly patientFileFeedback = signal<{ kind: 'success' | 'error'; text: string } | null>(null);
+  readonly patientDocumentThumbById = signal<Record<number, string>>({});
+  readonly previewOpen = signal(false);
+  readonly previewDocumentId = signal<number | null>(null);
+  readonly previewKind = signal<'image' | 'pdf' | 'other'>('other');
+  readonly previewName = signal('');
+  readonly previewUrl = signal<string | null>(null);
   private patientFileFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly objectUrlsToRevoke = new Set<string>();
 
   /** Aviso temporal (éxito/error) al subir foto; misma lógica y textos que `doctor-panel` (vista previa + reversión si falla el guardado). */
   readonly profileImageToast = signal<{ kind: ProfileImageToastKind; text: string } | null>(null);
@@ -174,9 +231,18 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    this.syncTimer = setInterval(() => {
+    this.patientRealtimeSub = this.patientRealtime.changes$.subscribe((event) => {
       this.syncPatientFromApi();
-    }, 20_000);
+      if (event.kind !== 'patient-mutated') {
+        return;
+      }
+      const id = this.patient()?.id;
+      if (id == null) {
+        return;
+      }
+      this.loadVisitHistory(id);
+      this.loadPatientDocuments(id);
+    });
 
     document.addEventListener('visibilitychange', this.visibilityChangeListener);
 
@@ -252,14 +318,13 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     this.patientDocumentsSub?.unsubscribe();
     this.patientDocumentsSub = null;
     this.clearPatientFileFeedbackTimer();
+    this.revokeAllObjectUrls();
     this.clearProfileImageToastTimer();
     this.clearBlockFeedbackDismissTimers();
     this.conditionsSub?.unsubscribe();
     this.conditionsSub = null;
-    if (this.syncTimer) {
-      clearInterval(this.syncTimer);
-      this.syncTimer = null;
-    }
+    this.patientRealtimeSub?.unsubscribe();
+    this.patientRealtimeSub = null;
   }
 
   /** Lista para la UI: misma regla que alertas del doctor-panel y columna `medication_allergies` (Neon). */
@@ -837,6 +902,24 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     });
   }
 
+  setPatientDocumentTypeFilter(filter: PatientDocumentFilterKind): void {
+    this.patientDocumentTypeFilter.set(filter);
+  }
+
+  onPatientDocumentDateFromChange(value: string): void {
+    this.patientDocumentDateFrom.set(value?.trim() ?? '');
+  }
+
+  onPatientDocumentDateToChange(value: string): void {
+    this.patientDocumentDateTo.set(value?.trim() ?? '');
+  }
+
+  clearPatientDocumentFilters(): void {
+    this.patientDocumentTypeFilter.set('all');
+    this.patientDocumentDateFrom.set('');
+    this.patientDocumentDateTo.set('');
+  }
+
   /** Carga citas del paciente actual (`GET /api/appointments?patientId=…`). */
   private loadVisitHistory(patientId: number): void {
     this.visitHistorySub?.unsubscribe();
@@ -920,6 +1003,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
           .filter((d): d is PatientDocumentView => d != null);
         views.sort((a, b) => a.displayName.localeCompare(b.displayName, 'es'));
         this.patientDocuments.set(views);
+        this.loadPatientDocumentThumbnails(patientId, views);
         this.clearPatientDocumentsErrorDismissTimer();
         this.patientDocumentsError.set(null);
         this.patientDocumentsLoading.set(false);
@@ -947,6 +1031,41 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
         this.patientDocumentsLoading.set(false);
       },
     });
+  }
+
+  private classifyDocumentKind(doc: PatientDocumentView): PatientDocumentFilterKind {
+    const haystack = `${doc.displayName} ${doc.typeLabel ?? ''}`.toLowerCase();
+    if (
+      doc.iconKind === 'image' ||
+      haystack.includes('radio') ||
+      haystack.includes('rx') ||
+      haystack.includes('panor') ||
+      haystack.includes('peri')
+    ) {
+      return 'radiology';
+    }
+    if (haystack.includes('consent') || haystack.includes('consenti') || haystack.includes('autoriz')) {
+      return 'consent';
+    }
+    if (haystack.includes('analit') || haystack.includes('laborat') || haystack.includes('lab')) {
+      return 'analytics';
+    }
+    if (haystack.includes('informe') || haystack.includes('report') || haystack.includes('clinical')) {
+      return 'report';
+    }
+    return 'report';
+  }
+
+  private documentDateKey(doc: PatientDocumentView): string {
+    const raw = String(doc.capturedAtIso ?? '').trim();
+    if (!raw) {
+      return '';
+    }
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) {
+      return '';
+    }
+    return d.toISOString().slice(0, 10);
   }
 
   openPatientDocumentsFilePicker(input: HTMLInputElement): void {
@@ -1019,23 +1138,55 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       );
       return;
     }
+    const typeError = this.findFirstUnsupportedDocumentFile(nonEmpty);
+    if (typeError) {
+      this.showPatientFileFeedback(
+        'error',
+        `Formato no permitido: ${typeError.name}. Usa PDF, imágenes (JPG/PNG/WebP/TIFF) o documentos DOC/DOCX/XLS/XLSX/CSV/TXT.`
+      );
+      return;
+    }
 
     this.patientDocumentsUploading.set(true);
+    this.patientDocumentsUploadPercent.set(0);
+    this.patientDocumentsUploadCurrentName.set(null);
     this.clearPatientFileFeedbackTimer();
     this.patientFileFeedback.set(null);
 
     from(nonEmpty)
       .pipe(
-        concatMap((file) =>
-          this.documentService.create({
-            file,
-            patientId: pid,
-            type: documentTypeForUpload(file),
-            description: file.name,
-          })
+        concatMap((file, index) =>
+          this.documentService
+            .createWithProgress({
+              file,
+              patientId: pid,
+              type: documentTypeForUpload(file),
+              description: file.name,
+            })
+            .pipe(
+              map((event) => {
+                this.patientDocumentsUploadCurrentName.set(file.name);
+                if (event.type === HttpEventType.UploadProgress) {
+                  const loaded = event.loaded ?? 0;
+                  const total = event.total ?? file.size;
+                  const fileProgress = total > 0 ? loaded / total : 0;
+                  const overall = ((index + fileProgress) / nonEmpty.length) * 100;
+                  this.patientDocumentsUploadPercent.set(Math.max(0, Math.min(100, Math.round(overall))));
+                }
+                if (event.type === HttpEventType.Response) {
+                  const overall = ((index + 1) / nonEmpty.length) * 100;
+                  this.patientDocumentsUploadPercent.set(Math.round(overall));
+                }
+                return event;
+              })
+            )
         ),
         toArray(),
-        finalize(() => this.patientDocumentsUploading.set(false)),
+        finalize(() => {
+          this.patientDocumentsUploading.set(false);
+          this.patientDocumentsUploadCurrentName.set(null);
+          this.patientDocumentsUploadPercent.set(0);
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
@@ -1114,6 +1265,44 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       });
   }
 
+  onPatientDocumentOpen(doc: PatientDocumentView): void {
+    if (doc.iconKind === 'other') {
+      this.onPatientDocumentDownload(doc);
+      return;
+    }
+    const patientId = this.verifiedPatientIdForRoute();
+    if (patientId == null) {
+      this.showPatientFileFeedback(
+        'error',
+        this.t('patientPanel.documents.errors.invalidPatientContext')
+      );
+      return;
+    }
+    this.documentService
+      .download(doc.id, patientId)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          this.objectUrlsToRevoke.add(objectUrl);
+          this.previewKind.set(doc.iconKind);
+          this.previewDocumentId.set(doc.id);
+          this.previewName.set(doc.displayName);
+          this.previewUrl.set(objectUrl);
+          this.previewOpen.set(true);
+        },
+        error: () => this.onPatientDocumentDownload(doc),
+      });
+  }
+
+  closePatientDocumentPreview(): void {
+    this.previewOpen.set(false);
+    this.previewDocumentId.set(null);
+    this.previewKind.set('other');
+    this.previewName.set('');
+    this.previewUrl.set(null);
+  }
+
   /** Evita caracteres inválidos en el atributo `download` del navegador. */
   private sanitizeDownloadFileName(name: string): string {
     const base = name.trim() || this.t('patientPanel.documents.defaults.fileName');
@@ -1127,6 +1316,60 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
       this.patientFileFeedback.set(null);
       this.patientFileFeedbackTimer = null;
     }, FEEDBACK_MESSAGE_AUTO_HIDE_MS);
+  }
+
+  private isAllowedDocumentType(file: File): boolean {
+    const mime = (file.type || '').toLowerCase();
+    const name = file.name.toLowerCase();
+    const allowedMimePrefixes = ['image/'];
+    const allowedExactMimes = new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
+      'text/csv',
+    ]);
+    if (allowedMimePrefixes.some((prefix) => mime.startsWith(prefix))) {
+      return true;
+    }
+    if (allowedExactMimes.has(mime)) {
+      return true;
+    }
+    return /\.(pdf|jpg|jpeg|png|gif|webp|bmp|svg|tif|tiff|doc|docx|xls|xlsx|csv|txt)$/i.test(name);
+  }
+
+  private findFirstUnsupportedDocumentFile(files: File[]): File | null {
+    return files.find((file) => !this.isAllowedDocumentType(file)) ?? null;
+  }
+
+  private loadPatientDocumentThumbnails(patientId: number, docs: PatientDocumentView[]): void {
+    this.revokeAllObjectUrls();
+    this.patientDocumentThumbById.set({});
+    const imageDocs = docs.filter((doc) => doc.iconKind === 'image').slice(0, 24);
+    if (imageDocs.length === 0) {
+      return;
+    }
+    imageDocs.forEach((doc) => {
+      this.documentService
+        .download(doc.id, patientId)
+        .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (blob) => {
+            const objectUrl = URL.createObjectURL(blob);
+            this.objectUrlsToRevoke.add(objectUrl);
+            this.patientDocumentThumbById.update((current) => ({ ...current, [doc.id]: objectUrl }));
+          },
+        });
+    });
+  }
+
+  private revokeAllObjectUrls(): void {
+    this.objectUrlsToRevoke.forEach((url) => URL.revokeObjectURL(url));
+    this.objectUrlsToRevoke.clear();
+    this.patientDocumentThumbById.set({});
+    this.previewUrl.set(null);
   }
 
   private clearPatientFileFeedbackTimer(): void {
