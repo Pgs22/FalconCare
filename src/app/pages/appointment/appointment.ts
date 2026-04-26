@@ -1003,7 +1003,8 @@ export class AppointmentComponent implements OnInit {
       treatment: treatmentId,
       pathology: pathologyId,
       isFirstVisit: !!this.newAppointmentData.isFirstVisit,
-      isUrgency: !!this.newAppointmentData.isUrgency
+      isUrgency: !!this.newAppointmentData.isUrgency,
+      status: this.newAppointmentData.isFirstVisit ? 'Falta Consentiment' : 'Programada'
     };
 
     if (this.isEditMode && this.editingAppointmentId != null) {
