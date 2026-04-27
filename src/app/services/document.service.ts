@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpEvent, HttpEventType, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, tap, throwError } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { extractApiCollection } from '../models/appointment-api.util';
 import { Document } from '../models/document.model';
-import { PatientRealtimeService } from './patient-realtime.service';
 
 export type CreateDocumentPayload = {
   file: File;
@@ -18,10 +17,7 @@ export type CreateDocumentPayload = {
 export class DocumentService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/documents`;
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly patientRealtime: PatientRealtimeService
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   /** IRI absoluto del `Patient` en API Platform (necesario con front en otro origen que `/api/...` relativo). */
   private patientResourceIri(patientId: number): string {
@@ -82,8 +78,8 @@ export class DocumentService {
     );
   }
 
-  listByCaptureDate(patientId: number, date: string): Observable<Document[]> {
-    const params = new HttpParams().set('patientId', String(patientId)).set('date', date);
+  listByCaptureDate(date: string): Observable<Document[]> {
+    const params = new HttpParams().set('date', date);
     return this.http.get<Document[]>(`${this.baseUrl}/captureDate`, { params });
   }
 
@@ -106,34 +102,7 @@ export class DocumentService {
     form.append('patient', this.patientResourceIri(payload.patientId));
     form.append('type', payload.type);
     if (payload.description) form.append('description', payload.description);
-    return this.http.post<Document>(this.baseUrl, form).pipe(
-      tap((doc) => this.patientRealtime.publishDocumentMutation('created', payload.patientId, doc?.id))
-    );
-  }
-
-  /**
-   * Variante con eventos de progreso para UI de subida.
-   */
-  createWithProgress(payload: CreateDocumentPayload): Observable<HttpEvent<Document>> {
-    const form = new FormData();
-    form.append('file', payload.file);
-    form.append('patient', this.patientResourceIri(payload.patientId));
-    form.append('type', payload.type);
-    if (payload.description) form.append('description', payload.description);
-    return this.http
-      .post<Document>(this.baseUrl, form, {
-        observe: 'events',
-        reportProgress: true,
-      })
-      .pipe(
-        tap((event) => {
-          if (event.type !== HttpEventType.Response) {
-            return;
-          }
-          const doc = event.body;
-          this.patientRealtime.publishDocumentMutation('created', payload.patientId, doc?.id);
-        })
-      );
+    return this.http.post<Document>(this.baseUrl, form);
   }
 
   /**
@@ -150,18 +119,14 @@ export class DocumentService {
    * Actualización parcial vía PUT; `patientId` en query debe coincidir con el documento.
    */
   update(documentId: number, patientId: number, body: Record<string, unknown>): Observable<Document> {
-    return this.http
-      .put<Document>(`${this.baseUrl}/${documentId}`, body, {
-        params: this.patientIdQueryParams(patientId),
-      })
-      .pipe(tap(() => this.patientRealtime.publishDocumentMutation('updated', patientId, documentId)));
+    return this.http.put<Document>(`${this.baseUrl}/${documentId}`, body, {
+      params: this.patientIdQueryParams(patientId),
+    });
   }
 
   /** `DELETE /api/documents/{patientId}/{documentId}` */
   delete(patientId: number, documentId: number): Observable<void> {
-    return this.http
-      .delete<void>(`${this.baseUrl}/${patientId}/${documentId}`)
-      .pipe(tap(() => this.patientRealtime.publishDocumentMutation('deleted', patientId, documentId)));
+    return this.http.delete<void>(`${this.baseUrl}/${patientId}/${documentId}`);
   }
 }
 
