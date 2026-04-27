@@ -44,7 +44,7 @@ El frontend implementa las siguientes vistas y módulos:
 * **Agenda de citas**
   Vista semanal y diaria de las citas, asignación de boxes y profesionales.
 
-* **Colección de Archivos**
+* **Repositorio de radiografías**
   Visualización de imágenes radiológicas asociadas al paciente.
 
 ---
