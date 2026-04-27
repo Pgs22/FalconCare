@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestOnlyGuard } from './guards/auth.guard';
+import { authGuard, clinicalRoleGuard, guestOnlyGuard } from './guards/auth.guard';
 import { environment } from '../environments/environment';
 import { LoginComponent } from './pages/login/login';
 import { PatientRegisterComponent } from './pages/patient-register/patient-register';
@@ -21,17 +21,17 @@ export const routes: Routes = [
   { path: 'register', component: DoctorRegisterComponent, canActivate: [guestOnlyGuard] },
   { path: 'doctor-register', component: DoctorRegisterComponent, canActivate: [guestOnlyGuard] },
   { path: 'registro', redirectTo: 'doctor-register', pathMatch: 'full' },
-  { path: 'patient-register', component: PatientRegisterComponent, canActivate: [authGuard] },
-  { path: 'doctor-panel', component: DoctorPanelComponent, canActivate: [authGuard] },
-  { path: 'patient-panel/:patientId', component: PatientPanelComponent, canActivate: [authGuard] },
+  { path: 'patient-register', component: PatientRegisterComponent, canActivate: [clinicalRoleGuard] },
+  { path: 'doctor-panel', component: DoctorPanelComponent, canActivate: [clinicalRoleGuard] },
+  { path: 'patient-panel/:patientId', component: PatientPanelComponent, canActivate: [clinicalRoleGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
 
-  { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },
-  { path: 'patients', component: PatientsPageComponent, canActivate: [authGuard] },
+  { path: 'dashboard', component: DashboardPageComponent, canActivate: [clinicalRoleGuard] },
+  { path: 'patients', component: PatientsPageComponent, canActivate: [clinicalRoleGuard] },
 
-  { path: 'appointments', component: AppointmentPageComponent, canActivate: [authGuard] },
-  { path: 'odontogram', component: OdontogramPageComponent, canActivate: [authGuard] },
-  { path: 'documents', component: DocumentsPageComponent, canActivate: [authGuard] },
+  { path: 'appointments', component: AppointmentPageComponent, canActivate: [clinicalRoleGuard] },
+  { path: 'odontogram', component: OdontogramPageComponent, canActivate: [clinicalRoleGuard] },
+  { path: 'documents', component: DocumentsPageComponent, canActivate: [clinicalRoleGuard] },
 
   { path: '**', component: NotFoundPageComponent },
 ];
