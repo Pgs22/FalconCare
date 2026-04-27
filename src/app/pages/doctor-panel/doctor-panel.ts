@@ -75,8 +75,6 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   allergyAlerts: DoctorAllergyAlert[] = [];
   /** Citas de hoy para «Agenda de Hoy» (misma carga que KPIs). */
   agendaRows: DoctorAgendaRow[] = [];
-  openAgendaMenuAppointmentId: number | null = null;
-  agendaStatusUpdatingId: number | null = null;
   readonly agendaStatusPillClasses: Record<DoctorAgendaStatusPillVariant, string> = {
     green:
       'px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold',
@@ -400,41 +398,6 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
       return;
     }
     void this.router.navigate(['/patient-panel', row.patientId]);
-  }
-
-  toggleAgendaMenu(appointmentId: number, event?: Event): void {
-    event?.stopPropagation();
-    this.openAgendaMenuAppointmentId =
-      this.openAgendaMenuAppointmentId === appointmentId ? null : appointmentId;
-  }
-
-  closeAgendaMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.openAgendaMenuAppointmentId = null;
-  }
-
-  isAgendaMenuOpen(appointmentId: number): boolean {
-    return this.openAgendaMenuAppointmentId === appointmentId;
-  }
-
-  onAgendaQuickStatusChange(row: DoctorAgendaRow, nextStatus: 'Confirmada' | 'Cancelada', event?: Event): void {
-    event?.stopPropagation();
-    if (this.agendaStatusUpdatingId != null) {
-      return;
-    }
-    this.agendaStatusUpdatingId = row.appointmentId;
-    this.appointmentService
-      .updateAppointmentStatus(row.appointmentId, nextStatus)
-      .pipe(finalize(() => (this.agendaStatusUpdatingId = null)))
-      .subscribe({
-        next: () => {
-          this.closeAgendaMenu();
-          this.loadDashboardAppointmentStats();
-        },
-        error: () => {
-          this.closeAgendaMenu();
-        },
-      });
   }
 
   openPatientFromAllergyAlert(alert: DoctorAllergyAlert, event?: Event): void {

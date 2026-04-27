@@ -1,6 +1,5 @@
 <div
   class="doctor-panel-shell bg-background-light dark:bg-background-dark text-text-main dark:text-white font-sans overflow-hidden flex-1 flex flex-col min-h-0 min-w-0"
-  (click)="closeAgendaMenu()"
 >
   <div class="flex flex-1 min-h-0 min-w-0 w-full overflow-hidden items-stretch">
     <aside
@@ -32,12 +31,12 @@
           <span class="text-sm">{{ 'doctorPanel.nav.agenda' | translate }}</span>
         </a>
         <a
-          routerLink="/documents"
+          routerLink="/patients"
           routerLinkActive="bg-primary/10 text-primary font-bold"
           class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
         >
-          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">description</span>
-          <span class="text-sm">Documentos</span>
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">group</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.patients' | translate }}</span>
         </a>
         <a
           routerLink="/settings"
@@ -138,7 +137,6 @@
               id="doctorPatientSearchInput"
               class="block w-[32.4ch] max-w-full p-2.5 pl-10 pr-4 text-sm font-medium text-text-main dark:text-white bg-[#f0f5f5] dark:bg-[#0f2323] border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#162a2a] transition-all placeholder:text-text-muted"
               [placeholder]="'doctorPanel.search.placeholder' | translate"
-              [title]="'doctorPanel.search.label' | translate"
               type="search"
               name="doctorPatientSearch"
               autocomplete="off"
@@ -160,7 +158,7 @@
                 class="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg py-1 z-30"
                 role="listbox"
                 [attr.aria-label]="'doctorPanel.search.resultsAria' | translate"
-                title="Resultados de búsqueda de pacientes"
+                [title]="'doctorPanel.search.resultsAria' | translate"
               >
                 @if (searchPatientsLoading) {
                   <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.searching' | translate }}</li>
@@ -421,30 +419,26 @@
                           <span class="text-xs font-medium text-text-muted truncate">{{ row.metaLine }}</span>
                         </div>
                       </div>
-                      <div class="relative flex items-center shrink-0 gap-2">
+                      <div class="flex items-center shrink-0 gap-2">
                         <span [class]="agendaStatusPillClasses[row.statusPillVariant]">{{ row.statusLabel }}</span>
-                        <button
-                          type="button"
-                          class="list-none flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:text-text-main hover:bg-slate-100 dark:hover:bg-[#1f3636] transition-colors cursor-pointer"
-                          [attr.aria-label]="'doctorPanel.agenda.actionsMenu' | translate"
-                          [attr.aria-expanded]="isAgendaMenuOpen(row.appointmentId)"
-                          (click)="toggleAgendaMenu(row.appointmentId, $event)"
-                        >
-                          <span class="material-symbols-outlined text-[18px]">more_horiz</span>
-                        </button>
-                        @if (isAgendaMenuOpen(row.appointmentId)) {
+                        <details class="relative" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+                          <summary
+                            class="list-none flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:text-text-main hover:bg-slate-100 dark:hover:bg-[#1f3636] transition-colors cursor-pointer"
+                            [attr.aria-label]="'doctorPanel.agenda.actionsMenu' | translate"
+                            (click)="$event.stopPropagation()"
+                          >
+                            <span class="material-symbols-outlined text-[18px]">more_horiz</span>
+                          </summary>
                           <div
                             class="absolute right-0 top-[calc(100%+0.35rem)] z-20 min-w-[10rem] rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg p-1.5"
                             role="menu"
                             [attr.aria-label]="'doctorPanel.agenda.actionsMenu' | translate"
-                            (click)="$event.stopPropagation()"
                           >
                             <button
                               type="button"
                               class="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/25 transition-colors"
                               role="menuitem"
-                              [disabled]="agendaStatusUpdatingId === row.appointmentId"
-                              (click)="onAgendaQuickStatusChange(row, 'Confirmada', $event)"
+                              (click)="$event.stopPropagation()"
                             >
                               {{ 'doctorPanel.agenda.confirmVisit' | translate }}
                             </button>
@@ -452,13 +446,12 @@
                               type="button"
                               class="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/25 transition-colors"
                               role="menuitem"
-                              [disabled]="agendaStatusUpdatingId === row.appointmentId"
-                              (click)="onAgendaQuickStatusChange(row, 'Cancelada', $event)"
+                              (click)="$event.stopPropagation()"
                             >
                               {{ 'doctorPanel.agenda.cancelVisit' | translate }}
                             </button>
                           </div>
-                        }
+                        </details>
                       </div>
                     </div>
                   }

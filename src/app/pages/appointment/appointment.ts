@@ -1,7 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router } from '@angular/router';
 import { AppointmentService, Appointment } from '../../services/appointment.service';
 import { FormsModule } from '@angular/forms';
 import {
@@ -11,8 +11,7 @@ import {
   rawAppointmentOccurredAt,
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
-import { Subscription, auditTime, catchError, of } from 'rxjs';
-import { PatientRealtimeService } from '../../services/patient-realtime.service';
+import { catchError, of } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
 const BOX_CLEANING_BUFFER_MINUTES = 5;
@@ -31,14 +30,13 @@ interface WeekDayItem {
 @Component({
   selector: 'app-appointment',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './appointment.html',
   styleUrl: './appointment.css',
 })
 
 export class AppointmentComponent implements OnInit {
   private errorDismissTimer: ReturnType<typeof setTimeout> | null = null;
-  private patientRealtimeSub: Subscription | null = null;
 
   private selectedTreatment: {
     treatmentId: number;
@@ -67,7 +65,6 @@ export class AppointmentComponent implements OnInit {
   readonly dayGridHeightPx = (this.dayHours.length - 1) * this.hourSlotHeightPx;
 
   appointments = signal<Appointment[]>([]);
-  lastRealtimeSyncAt = signal<Date | null>(null);
   viewMode = signal<'day' | 'week'>('day');
   weekDays = signal<WeekDayItem[]>([]);
   weeklyAppointments = signal<Record<string, Appointment[]>>({});
@@ -172,14 +169,11 @@ export class AppointmentComponent implements OnInit {
 
   constructor(
     private readonly appointmentService: AppointmentService,
-    private readonly router: Router,
-    private readonly patientRealtime: PatientRealtimeService
+    private readonly router: Router
   ) {}
 
   ngOnDestroy(): void {
     this.clearErrorDismissTimer();
-    this.patientRealtimeSub?.unsubscribe();
-    this.patientRealtimeSub = null;
   }
 
   getCreateFieldError(field: string): string | null {
@@ -231,9 +225,6 @@ export class AppointmentComponent implements OnInit {
     this.fetchAppointments();
     this.loadPatients();
     this.loadSetupData(this.newAppointmentData.visitDate);
-    this.patientRealtimeSub = this.patientRealtime.changes$
-      .pipe(auditTime(300))
-      .subscribe(() => this.loadPatients());
   }
 
   setViewMode(mode: 'day' | 'week'): void {
@@ -759,23 +750,10 @@ export class AppointmentComponent implements OnInit {
       next: (data) => {
         this.patientsList.set(data);
         this.dayAllergySummary.set(this.buildDayAllergySummary(this.appointments()));
-        this.lastRealtimeSyncAt.set(new Date());
         afterLoad?.();
         },
         error: () => console.error('Error carregant pacients')
     });
-  }
-
-  get realtimeSyncLabel(): string {
-    const date = this.lastRealtimeSyncAt();
-    if (!date) {
-      return 'Sincronizando...';
-    }
-    return `Sincronizado en tiempo real · ${new Intl.DateTimeFormat('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(date)}`;
   }
 
   loadSetupData(date?: string): void {
