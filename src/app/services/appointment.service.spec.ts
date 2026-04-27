@@ -33,7 +33,7 @@ describe('AppointmentService', () => {
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/63/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ status: 'Confirmada' });
+    expect(req.request.body).toBe('Confirmada');
     expect(req.request.withCredentials).toBeTrue();
 
     req.flush('ok');
@@ -45,7 +45,7 @@ describe('AppointmentService', () => {
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/66/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ status: 'Arribada' });
+    expect(req.request.body).toBe('Arribada');
 
     req.flush('ok');
   });
@@ -55,43 +55,23 @@ describe('AppointmentService', () => {
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/64/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ status: 'Cancelada' });
+    expect(req.request.body).toBe('Cancelada');
 
     req.flush('ok');
   });
 
-  it('should canonicalize manual status aliases from other languages', () => {
-    service.updateAppointmentStatus(67, 'confirmed').subscribe();
-
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/67/status');
-    expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ status: 'Confirmada' });
-
-    req.flush('ok');
-  });
-
-  it('should fallback from JSON PATCH to text PATCH and PUT variants', () => {
+  it('should fallback from PATCH to PUT with the same status body', () => {
     service.updateAppointmentStatus(65, 'Confirmada').subscribe();
 
     const firstReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
     expect(firstReq.request.method).toBe('PATCH');
-    expect(firstReq.request.body).toEqual({ status: 'Confirmada' });
+    expect(firstReq.request.body).toBe('Confirmada');
     firstReq.flush('boom', { status: 500, statusText: 'Server Error' });
 
     const secondReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
-    expect(secondReq.request.method).toBe('PATCH');
+    expect(secondReq.request.method).toBe('PUT');
     expect(secondReq.request.body).toBe('Confirmada');
-    secondReq.flush('boom', { status: 415, statusText: 'Unsupported Media Type' });
-
-    const thirdReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
-    expect(thirdReq.request.method).toBe('PUT');
-    expect(thirdReq.request.body).toEqual({ status: 'Confirmada' });
-    thirdReq.flush('boom', { status: 405, statusText: 'Method Not Allowed' });
-
-    const fourthReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
-    expect(fourthReq.request.method).toBe('PUT');
-    expect(fourthReq.request.body).toBe('Confirmada');
-    fourthReq.flush('ok');
+    secondReq.flush('ok');
   });
 
   it('should use GET for openAppointment', () => {
