@@ -1,46 +1,17 @@
 <div class="agenda-wrapper">
   <header class="appointment-header">
-    <div class="documents-brand-wrap">
-      <div class="documents-brand" aria-label="Clínica Dental FalconCare">
-        <img
-          src="/assets/branding/logo-fullname.png"
-          alt="Clínica Dental FalconCare"
-          class="documents-brand-logo"
-        />
-      </div>
-    </div>
-    <div class="documents-nav-wrap">
-      <nav class="documents-nav">
-        <a
-          routerLink="/doctor-panel"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Panel</span>
-        </a>
-        <a
-          routerLink="/appointments"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Agenda</span>
-        </a>
-        <a
-          routerLink="/documents"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Documentos</span>
-        </a>
-        <a
-          routerLink="/settings"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Ajustes</span>
-        </a>
+    <div class="top-nav">
+      <nav class="view-selector">
+        <button>Panel</button>
+        <button class="active">Agenda</button>
+        <button>Pacients</button>
+        <button>Documents</button>
       </nav>
+
+      <div class="header-actions">
+        <input class="search-input" type="search" placeholder="Cercar cites...">
+        <button class="avatar-btn" type="button" aria-label="Perfil">👨‍⚕️</button>
+      </div>
     </div>
   </header>
 
@@ -53,8 +24,6 @@
           [ngModel]="newAppointmentData.visitDate"
           (ngModelChange)="onDateChange($event)"
           class="custom-datepicker"
-          aria-label="Seleccionar fecha de agenda"
-          title="Seleccionar fecha de agenda"
         >
       </div>
 
@@ -87,8 +56,6 @@
         <div class="week-box-selector" *ngIf="isWeekView() && getWeekBoxOptions().length > 0">
           <select
             class="week-box-selector__select"
-            title="Seleccionar box semanal"
-            aria-label="Seleccionar box semanal"
             [value]="selectedWeekBoxKey() || getWeekBoxOptionKey(getWeekBoxOptions()[0])"
             (change)="onWeekBoxSelected($any($event.target).value)"
           >
@@ -101,8 +68,6 @@
         <div class="week-box-selector" *ngIf="isWeekView()">
           <select
             class="week-box-selector__select"
-            title="Seleccionar doctor semanal"
-            aria-label="Seleccionar doctor semanal"
             [value]="selectedWeekDoctorKey()"
             (change)="onWeekDoctorSelected($any($event.target).value)"
           >
@@ -162,7 +127,6 @@
             Setmana: {{ getWeekRangeLabel() }}
           </ng-template>
         </h1>
-        <span class="agenda-sync-indicator" aria-live="polite">{{ realtimeSyncLabel }}</span>
         <div class="header-tools">
           <div class="week-nav" *ngIf="isWeekView()">
             <button type="button" (click)="goToPreviousWeek()">←</button>
@@ -306,8 +270,6 @@
                       <select
                         *ngIf="isCleaningSelectorOpen(cita.id)"
                         class="cleaning-select"
-                        title="Seleccionar minutos de limpieza"
-                        aria-label="Seleccionar minutos de limpieza"
                         [value]="cita.cleaningTime + ''"
                         (change)="onCleaningOptionSelected(cita, $any($event.target).value)"
                       >
@@ -429,8 +391,6 @@
                         <select
                           *ngIf="isCleaningSelectorOpen(cita.id)"
                           class="cleaning-select"
-                          title="Seleccionar minutos de limpieza"
-                          aria-label="Seleccionar minutos de limpieza"
                           [value]="cita.cleaningTime + ''"
                           (change)="onCleaningOptionSelected(cita, $any($event.target).value)"
                         >
@@ -473,8 +433,6 @@
           [(ngModel)]="newAppointmentData.patient"
           name="patient"
           class="form-control"
-          title="Seleccionar paciente"
-          aria-label="Seleccionar paciente"
           required
           (ngModelChange)="clearCreateFieldError('patient')"
           (change)="onPatientChange(newAppointmentData.patient)"
@@ -502,7 +460,7 @@
       <div class="form-row">
         <div class="form-group col">
           <label>Data de la cita</label>
-          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" title="Seleccionar fecha de cita" aria-label="Seleccionar fecha de cita" required (ngModelChange)="clearCreateFieldError('visitDate')" (change)="onDateChange()">
+          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (ngModelChange)="clearCreateFieldError('visitDate')" (change)="onDateChange()">
           <div *ngIf="getCreateFieldError('visitDate')" class="form-field-error">{{ getCreateFieldError('visitDate') }}</div>
         </div>
 
@@ -531,8 +489,6 @@
               (ngModelChange)="onVisitHourChange($event)"
               name="visitHour"
               class="form-control"
-              title="Seleccionar hora"
-              aria-label="Seleccionar hora"
               required
             >
               <option *ngFor="let h of appointmentHourOptions" [ngValue]="h">{{ h }}</option>
@@ -543,8 +499,6 @@
               (ngModelChange)="onVisitMinuteChange($event)"
               name="visitMinute"
               class="form-control"
-              title="Seleccionar minutos"
-              aria-label="Seleccionar minutos"
               required
             >
               <option *ngFor="let m of appointmentMinuteOptions" [ngValue]="m">{{ m }}</option>
@@ -554,7 +508,7 @@
         </div>
         <div class="form-group col">
           <label>Duracio</label>
-          <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" title="Duración en minutos" aria-label="Duración en minutos" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
+          <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
           <div *ngIf="getCreateFieldError('durationMinutes')" class="form-field-error">{{ getCreateFieldError('durationMinutes') }}</div>
         </div>
       </div>
@@ -562,7 +516,7 @@
       <div class="form-row">
         <div class="form-group col">
           <label>Doctor</label>
-          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" title="Seleccionar doctor" aria-label="Seleccionar doctor" required (ngModelChange)="clearCreateFieldError('doctor')">
+          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required (ngModelChange)="clearCreateFieldError('doctor')">
             <option value="" disabled selected>Doctor...</option>
             <option *ngFor="let d of doctorsList()" [value]="d.id">{{ d.name || d.firstName }}</option>
           </select>
@@ -570,7 +524,7 @@
         </div>
         <div class="form-group col">
           <label>Box</label>
-          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" title="Seleccionar box" aria-label="Seleccionar box" required (ngModelChange)="clearCreateFieldError('box')">
+          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required (ngModelChange)="clearCreateFieldError('box')">
             <option value="" disabled selected>Box...</option>
             <option *ngFor="let b of boxesList()" [value]="b.id">{{ b.name }}</option>
           </select>
@@ -582,7 +536,7 @@
 
         <div class="mb-3" *ngIf="treatmentsList().length > 0">
           <label class="text-primary text-xs mb-1 d-block font-weight-bold">Continua tractament actiu</label>
-          <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm" title="Seleccionar tratamiento" aria-label="Seleccionar tratamiento">
+          <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm">
             <option value="">Patologia programada</option>
             <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId ?? t.id">
               {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})
@@ -595,7 +549,7 @@
           <label class="text-xs mb-1 d-block">
             {{ treatmentsList().length > 0 ? 'Nova patologia' : 'Selecciona patologia' }}
           </label>
-          <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" title="Seleccionar patología" aria-label="Seleccionar patología" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
+          <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
             <option value="" disabled selected>Tipus de patologia...</option>
             <option *ngFor="let p of pathologiesList()" [value]="p.id">{{ p.name }} ({{ p.duration }} min)</option>
           </select>

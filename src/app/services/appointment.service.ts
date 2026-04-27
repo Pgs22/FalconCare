@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { extractApiCollection } from '../models/appointment-api.util';
-import { environment } from '../../environments/environment';
 
 export interface Appointment {
   id: number;
@@ -27,11 +26,10 @@ export interface Appointment {
   providedIn: 'root',
 })
 export class AppointmentService {
-  private readonly apiBaseUrl = environment.apiBaseUrl;
-  private apiUrl = `${this.apiBaseUrl}/api/appointment`;
-  private appointmentsUrl = `${this.apiBaseUrl}/api/appointments`;
-  private patientsUrl = `${this.apiBaseUrl}/api/patients`;
-  private treatmentsUrl = `${this.apiBaseUrl}/api/treatments`;
+  
+  private apiUrl = 'http://localhost:8000/api/appointment';
+  private patientsUrl = 'http://localhost:8000/api/patients';
+  private treatmentsUrl = 'http://localhost:8000/api/treatments';
 
   constructor(private http: HttpClient) {}
 
@@ -111,7 +109,7 @@ export class AppointmentService {
   }
 
   getPatients(): Observable<any[]> {
-    return this.http.get<unknown>(this.patientsUrl).pipe(map(extractApiCollection));
+    return this.http.get<any[]>(`${this.patientsUrl}`);
   }
 
   createQuickPatient(patientData: any): Observable<any> {
@@ -166,26 +164,8 @@ export class AppointmentService {
       .pipe(map(extractApiCollection));
 
     const fromAppointmentsPlural = this.http
-      .get<unknown>(this.appointmentsUrl, {
+      .get<unknown>('http://localhost:8000/api/appointments', {
         params: new HttpParams().set('patientId', idStr),
-      })
-      .pipe(map(extractApiCollection));
-
-    const fromAppointmentsPluralDot = this.http
-      .get<unknown>(this.appointmentsUrl, {
-        params: new HttpParams().set('patient.id', idStr),
-      })
-      .pipe(map(extractApiCollection));
-
-    const fromAppointmentsPluralUnderscore = this.http
-      .get<unknown>(this.appointmentsUrl, {
-        params: new HttpParams().set('patient_id', idStr),
-      })
-      .pipe(map(extractApiCollection));
-
-    const fromAppointmentsPluralIri = this.http
-      .get<unknown>(this.appointmentsUrl, {
-        params: new HttpParams().set('patient', `${this.apiBaseUrl}/api/patients/${patientId}`),
       })
       .pipe(map(extractApiCollection));
 
@@ -193,9 +173,6 @@ export class AppointmentService {
       catchError(() =>
         fromAppointmentIndex.pipe(
           catchError(() => fromAppointmentsPlural),
-          catchError(() => fromAppointmentsPluralDot),
-          catchError(() => fromAppointmentsPluralUnderscore),
-          catchError(() => fromAppointmentsPluralIri),
           catchError((err: unknown) => throwError(() => err))
         )
       )

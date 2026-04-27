@@ -3,7 +3,7 @@
 }
 
 .agenda-wrapper {
-  font-family: Outfit, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f4f6f9;
   border-radius: 16px;
   min-height: calc(100vh - 2rem);
@@ -11,41 +11,16 @@
 }
 
 .appointment-header {
-  z-index: 10;
+  padding: 1rem 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid #e8edf3;
+}
+
+.top-nav {
   display: flex;
-  position: sticky;
-  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0.75rem 1.5rem;
-}
-
-.documents-brand-wrap,
-.documents-nav-wrap {
-  display: flex;
-  align-items: center;
   gap: 1rem;
-}
-
-.documents-brand {
-  display: flex;
-  align-items: center;
-}
-
-.documents-brand-logo {
-  display: block;
-  height: auto;
-  max-height: 4rem;
-  width: 100%;
-  object-fit: contain;
-}
-
-.documents-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .view-selector {
@@ -68,6 +43,30 @@
 .view-selector button.active {
   background: #dffafe;
   color: #00a7bf;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.search-input {
+  width: 220px;
+  border: 1px solid #e6ebf2;
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.82rem;
+  background: #f9fbfd;
+}
+
+.avatar-btn {
+  border: 1px solid #e6ebf2;
+  background: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .appointment-layout {
@@ -299,18 +298,6 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 0.8rem;
-}
-
-.agenda-sync-indicator {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid #beeef0;
-  border-radius: 999px;
-  background: #ecfeff;
-  color: #0f766e;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.2rem 0.55rem;
 }
 
 .header-main h1 {
@@ -791,8 +778,8 @@
   font-size: 0.68rem;
   color: #5b6778;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
   line-clamp: 1;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1202,8 +1189,8 @@
 }
 
 .checkbox-container input[type="checkbox"] {
-  -webkit-appearance: none;
   appearance: none;
+  -webkit-appearance: none;
   width: 14px;
   height: 14px;
   margin: 0;
@@ -1303,7 +1290,20 @@
 
 @media (max-width: 760px) {
   .appointment-header {
-    padding: 0.6rem 0.75rem;
+    padding: 0.8rem;
+  }
+
+  .top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
   }
 
   .header-main,
@@ -1338,29 +1338,5 @@
     width: 100%;
     right: -100%;
     max-width: 100%;
-  }
-}
-
-@media (max-width: 1200px) {
-  .appointment-header {
-    padding: 0.65rem 1rem;
-  }
-
-  .documents-brand-logo {
-    max-height: 3.25rem;
-  }
-
-  .documents-nav {
-    gap: 0.35rem;
-  }
-}
-
-@media (max-width: 980px) {
-  .appointment-header {
-    padding: 0.6rem 0.75rem;
-  }
-
-  .documents-brand-logo {
-    max-height: 2.5rem;
   }
 }
