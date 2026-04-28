@@ -72,6 +72,8 @@ export class AppointmentComponent implements OnInit {
   doctorsList = signal<any[]>([]);
   boxesList = signal<any[]>([]);
   selectedBoxKeys = signal<string[]>([]);
+  selectedWeekBoxKey = signal<string>('');
+  selectedWeekDoctorKey = signal<string>('all');
   statusUpdatingIds = signal<number[]>([]);
   readonly appointmentStatusOptions: string[] = [
     'Programada',
@@ -274,8 +276,10 @@ export class AppointmentComponent implements OnInit {
 
   getVisibleAppointmentsForWeekDay(date: string): Appointment[] {
     const visibleBoxes = this.getVisibleBoxes();
+    const selectedDoctorKey = this.selectedWeekDoctorKey();
     return this.getAppointmentsForWeekDay(date)
       .filter((appointment) => visibleBoxes.some((box) => this.belongsToBox(appointment, box)))
+      .filter((appointment) => selectedDoctorKey === 'all' || this.getAppointmentDoctorKey(appointment) === selectedDoctorKey)
       .sort((a, b) => this.parseTimeToMinutes(a.time) - this.parseTimeToMinutes(b.time));
   }
 
@@ -285,8 +289,12 @@ export class AppointmentComponent implements OnInit {
 
   getTotalAppointmentsForVisibleBoxes(date: string): number {
     const visibleBoxes = this.getVisibleBoxes();
+    const selectedDoctorKey = this.selectedWeekDoctorKey();
     const appointments = this.getAppointmentsForWeekDay(date);
-    return appointments.filter((appointment) => visibleBoxes.some((box) => this.belongsToBox(appointment, box))).length;
+    return appointments
+      .filter((appointment) => visibleBoxes.some((box) => this.belongsToBox(appointment, box)))
+      .filter((appointment) => selectedDoctorKey === 'all' || this.getAppointmentDoctorKey(appointment) === selectedDoctorKey)
+      .length;
   }
 
   toggleNewPatientMode(): void {
@@ -1495,13 +1503,19 @@ export class AppointmentComponent implements OnInit {
 
     if (!this.boxesSelectionInitialized || !this.hasUserAdjustedBoxSelection) {
       this.selectedBoxKeys.set(availableKeys);
+      this.selectedWeekBoxKey.set(availableKeys[0] ?? '');
       this.boxesSelectionInitialized = true;
       return;
     }
 
     const selected = new Set(this.selectedBoxKeys());
     const preserved = availableKeys.filter((key) => selected.has(key));
-    this.selectedBoxKeys.set(preserved.length > 0 ? preserved : availableKeys);
+    const nextSelectedKeys = preserved.length > 0 ? preserved : availableKeys;
+    this.selectedBoxKeys.set(nextSelectedKeys);
+
+    if (!nextSelectedKeys.includes(this.selectedWeekBoxKey())) {
+      this.selectedWeekBoxKey.set(nextSelectedKeys[0] ?? '');
+    }
   }
 
   private inferBoxesFromAppointments(rows: Appointment[]): Array<Record<string, unknown>> {
@@ -1563,6 +1577,60 @@ export class AppointmentComponent implements OnInit {
     return filtered.length > 0 ? filtered : boxes;
   }
 
+  getWeekBoxOptions(): any[] {
+    return this.getDisplayBoxes();
+  }
+
+  getWeekBoxOptionKey(box: unknown): string {
+    return this.getBoxKey(box);
+  }
+
+  onWeekBoxSelected(key: string): void {
+    if (!key) {
+      return;
+    }
+
+    this.selectedWeekBoxKey.set(key);
+    this.hasUserAdjustedBoxSelection = true;
+    this.selectedBoxKeys.set([key]);
+  }
+
+  getWeekDoctorOptions(): Array<{ key: string; label: string }> {
+    const options: Array<{ key: string; label: string }> = [
+      { key: 'all', label: 'Tots els doctors' },
+    ];
+    const used = new Set<string>(['all']);
+
+    for (const doctor of this.doctorsList()) {
+      const key = this.getDoctorOptionKey(doctor);
+      if (!key || used.has(key)) {
+        continue;
+      }
+
+      used.add(key);
+      options.push({ key, label: this.getDoctorOptionLabel(doctor) });
+    }
+
+    for (const dayAppointments of Object.values(this.weeklyAppointments())) {
+      for (const appointment of dayAppointments) {
+        const key = this.getAppointmentDoctorKey(appointment);
+        if (!key || used.has(key)) {
+          continue;
+        }
+
+        used.add(key);
+        options.push({ key, label: `Dr. ${appointment.doctorName || key}` });
+      }
+    }
+
+    return options;
+  }
+
+  onWeekDoctorSelected(key: string): void {
+    const validKeys = new Set(this.getWeekDoctorOptions().map((doctor) => doctor.key));
+    this.selectedWeekDoctorKey.set(validKeys.has(key) ? key : 'all');
+  }
+
   isBoxSelected(box: unknown): boolean {
     const key = this.getBoxKey(box);
     return key ? this.selectedBoxKeys().includes(key) : false;
@@ -1581,7 +1649,11 @@ export class AppointmentComponent implements OnInit {
     } else {
       selected.delete(key);
     }
-    this.selectedBoxKeys.set(Array.from(selected));
+    const nextSelectedKeys = Array.from(selected);
+    this.selectedBoxKeys.set(nextSelectedKeys);
+    if (!nextSelectedKeys.includes(this.selectedWeekBoxKey())) {
+      this.selectedWeekBoxKey.set(nextSelectedKeys[0] ?? '');
+    }
   }
 
   areAllBoxesSelected(): boolean {
@@ -1596,15 +1668,17 @@ export class AppointmentComponent implements OnInit {
     const boxes = this.getDisplayBoxes();
     this.hasUserAdjustedBoxSelection = true;
     if (checked) {
-      this.selectedBoxKeys.set(
+      const nextSelectedKeys = 
         boxes
           .map((box) => this.getBoxKey(box))
-          .filter((key) => !!key)
-      );
+          .filter((key) => !!key);
+      this.selectedBoxKeys.set(nextSelectedKeys);
+      this.selectedWeekBoxKey.set(nextSelectedKeys[0] ?? '');
       return;
     }
 
     this.selectedBoxKeys.set([]);
+    this.selectedWeekBoxKey.set('');
   }
 
   getBoxLabel(box: unknown): string {
@@ -1864,8 +1938,46 @@ export class AppointmentComponent implements OnInit {
     return status || 'Sense estat';
   }
 
+  getStatusSelectValue(currentStatus: string): string {
+    const status = this.getAppointmentStatusDisplay(currentStatus);
+    const directMatch = this.appointmentStatusOptions.find((option) => option === status);
+    if (directMatch) {
+      return directMatch;
+    }
+
+    const token = this.normalizeStatusToken(status);
+    const normalizedMatch = this.appointmentStatusOptions.find(
+      (option) => this.normalizeStatusToken(option) === token
+    );
+    if (normalizedMatch) {
+      return normalizedMatch;
+    }
+
+    const cancelStatus = this.appointmentStatusOptions.find(
+      (option) => this.normalizeStatusToken(option).includes('cancel')
+    ) ?? 'Cancel·lada';
+    const aliases: Record<string, string> = {
+      programada: 'Programada',
+      confirmada: 'Confirmada',
+      encurs: 'En curs',
+      encurso: 'En curs',
+      inprogress: 'En curs',
+      cancelada: cancelStatus,
+      cancellada: cancelStatus,
+      canceled: cancelStatus,
+      cancelled: cancelStatus,
+      finalitzada: 'Finalitzada',
+      finalizada: 'Finalitzada',
+      finished: 'Finalitzada',
+      faltaconsentiment: 'Falta Consentiment',
+      missingconsent: 'Falta Consentiment',
+    };
+
+    return aliases[token] ?? status;
+  }
+
   isStatusSelectableFromCalendar(currentStatus: string): boolean {
-    return this.appointmentStatusOptions.includes(this.getAppointmentStatusDisplay(currentStatus));
+    return this.appointmentStatusOptions.includes(this.getStatusSelectValue(currentStatus));
   }
 
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
@@ -2037,7 +2149,7 @@ export class AppointmentComponent implements OnInit {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[\s_-]+/g, '');
+      .replace(/[^a-z0-9]+/g, '');
   }
 
   private getAppointmentPatientId(appointment: Appointment): number | null {
@@ -2104,6 +2216,49 @@ export class AppointmentComponent implements OnInit {
 
     const doctorNode = this.asRecord(row['doctor']);
     return this.toNumberOrNull(doctorNode?.['id']);
+  }
+
+  private getAppointmentDoctorKey(appointment: Appointment): string {
+    const doctorId = this.getAppointmentDoctorId(appointment);
+    if (doctorId != null) {
+      return `id:${doctorId}`;
+    }
+
+    const doctorName = String(appointment.doctorName ?? '').trim().toLowerCase();
+    return doctorName ? `name:${doctorName}` : '';
+  }
+
+  private getDoctorOptionKey(doctor: unknown): string {
+    const record = this.asRecord(doctor);
+    const doctorId = this.toNumberOrNull(record?.['id'] ?? record?.['doctorId'] ?? record?.['doctor_id']);
+    if (doctorId != null) {
+      return `id:${doctorId}`;
+    }
+
+    const label = this.getDoctorOptionLabel(doctor).toLowerCase();
+    return label ? `name:${label.replace(/^dr\.\s*/i, '').trim()}` : '';
+  }
+
+  private getDoctorOptionLabel(doctor: unknown): string {
+    const record = this.asRecord(doctor);
+    if (!record) {
+      return String(doctor ?? '').trim();
+    }
+
+    const label = this.pickString(record, ['name', 'fullName', 'full_name', 'displayName', 'display_name']);
+    if (label) {
+      return label;
+    }
+
+    const first = this.pickString(record, ['firstName', 'first_name']) ?? '';
+    const last = this.pickString(record, ['lastName', 'last_name']) ?? '';
+    const fullName = `${first} ${last}`.trim();
+    if (fullName) {
+      return fullName;
+    }
+
+    const doctorId = this.toNumberOrNull(record['id']);
+    return doctorId != null ? `Doctor ${doctorId}` : 'Doctor';
   }
 
   private getAppointmentVisitDate(appointment: Appointment): string {
