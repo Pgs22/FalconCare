@@ -80,7 +80,7 @@
       </div>
 
       <div class="occupancy-card">
-        <h5>OCUAPCIÓ</h5>
+        <h5>OCUPACIÓ</h5>
         <div class="occupancy-bar">
           <span [style.width.%]="(appointments().length / (getDisplayBoxes().length || 1)) * 25"></span>
         </div>
@@ -181,7 +181,7 @@
                     class="card-appointment"
                     [ngClass]="cita.status"
                     [class.compact-card]="isCompactAppointmentCard(cita)"
-                    [style.--appointment-color]="cita.color || '#00bcd4'"
+                    [ngStyle]="{ '--appointment-color': cita.color || '#00bcd4' }"
                   >
                     <div class="info">
                       <div class="patient-row">
@@ -306,7 +306,7 @@
                     <div
                       class="card-appointment"
                       [class.compact-card]="isCompactAppointmentCard(cita)"
-                      [style.--appointment-color]="cita.color || '#00bcd4'"
+                      [ngStyle]="{ '--appointment-color': cita.color || '#00bcd4' }"
                     >
                       <div class="info">
                         <div class="patient-row">
@@ -409,7 +409,7 @@
         </div>
 
         <div *ngIf="getSelectedPatientAllergyText()" class="allergy-warning-banner">
-          iMPORTANT: Pacient amb alergies! Es recomana cita a última hora
+          IMPORTANT: Pacient amb al·lèrgies! Es recomana cita a última hora
         </div>
 
         <div *ngIf="isNewPatientMode" class="quick-patient-box">
@@ -468,7 +468,7 @@
           <div *ngIf="getCreateFieldError('visitHour')" class="form-field-error">{{ getCreateFieldError('visitHour') }}</div>
         </div>
         <div class="form-group col">
-          <label>Duracio</label>
+          <label>Duració</label>
           <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
           <div *ngIf="getCreateFieldError('durationMinutes')" class="form-field-error">{{ getCreateFieldError('durationMinutes') }}</div>
         </div>
