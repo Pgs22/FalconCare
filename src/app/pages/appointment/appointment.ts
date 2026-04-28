@@ -884,7 +884,6 @@ export class AppointmentComponent implements OnInit {
         },
         error: (err: unknown) => {
           const httpError = err as HttpErrorResponse;
-          console.error('Respuesta cruda del servidor:', httpError?.error);
           alert('No s\'ha pogut actualitzar la cita.');
         }
       });
@@ -915,7 +914,6 @@ export class AppointmentComponent implements OnInit {
       },
       error: (err: unknown) => {
         const httpError = err as HttpErrorResponse;
-        console.error('Respuesta cruda del servidor:', httpError?.error);
         const fieldError = this.resolveCreateFieldError(httpError);
         if (fieldError) {
           this.setCreateFieldError(fieldError.field, fieldError.message);
@@ -1860,33 +1858,14 @@ export class AppointmentComponent implements OnInit {
     return this.statusUpdatingIds().includes(appointmentId);
   }
 
-  getStatusSelectValue(currentStatus: string): string {
-    const normalized = this.normalizeStatusToken(currentStatus);
-    if (normalized === 'programada' || normalized === 'programado' || normalized === 'scheduled') {
-      return 'Programada';
-    }
-    if (normalized === 'confirmada' || normalized === 'confirmado' || normalized === 'confirmed') {
-      return 'Confirmada';
-    }
-    if (normalized === 'encurs' || normalized === 'encurso' || normalized === 'inprogress') {
-      return 'En curs';
-    }
-    if (
-      normalized === 'cancelada' ||
-      normalized === 'cancel.lada' ||
-      normalized === 'cancel·lada' ||
-      normalized === 'cancelled' ||
-      normalized === 'canceled'
-    ) {
-      return 'Cancel·lada';
-    }
-    if (normalized === 'finalitzada' || normalized === 'finalizada' || normalized === 'finished') {
-      return 'Finalitzada';
-    }
-    if (normalized === 'faltaconsentiment' || normalized === 'faltaconsentimiento') {
-      return 'Falta Consentiment';
-    }
-    return 'Programada';
+
+  getAppointmentStatusDisplay(currentStatus: string): string {
+    const status = String(currentStatus ?? '').trim();
+    return status || 'Sense estat';
+  }
+
+  isStatusSelectableFromCalendar(currentStatus: string): boolean {
+    return this.appointmentStatusOptions.includes(this.getAppointmentStatusDisplay(currentStatus));
   }
 
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {

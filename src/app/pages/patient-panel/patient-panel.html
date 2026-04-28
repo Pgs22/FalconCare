@@ -22,48 +22,15 @@
   class="patient-panel-shell bg-background-light dark:bg-background-dark font-sans text-text-main dark:text-white transition-colors duration-200 flex-1 flex flex-col min-h-0"
 >
   <div class="flex flex-col flex-1 min-h-0">
-    <header class="patient-topbar">
-      <div class="patient-brand-wrap">
-        <div class="patient-brand" aria-label="Clínica Dental FalconCare">
-          <img
-            alt="Clínica Dental FalconCare"
-            class="patient-brand-logo"
-            src="/assets/branding/logo-fullname.png"
-          />
-        </div>
-      </div>
-      <div class="patient-nav-wrap">
-        <nav class="patient-nav">
-          <a
-            routerLink="/doctor-panel"
-            routerLinkActive="bg-primary/10 text-primary font-bold"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-          >
-            <span class="text-sm">Panel</span>
-          </a>
-          <a
-            routerLink="/appointments"
-            routerLinkActive="bg-primary/10 text-primary font-bold"
-            class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-          >
-            <span class="text-sm">Agenda</span>
-          </a>
-          <a
-            routerLink="/documents"
-            routerLinkActive="bg-primary/10 text-primary font-bold"
-            class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-          >
-            <span class="text-sm">Documentos</span>
-          </a>
-          <a
-            routerLink="/settings"
-            routerLinkActive="bg-primary/10 text-primary font-bold"
-            class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-          >
-            <span class="text-sm">Ajustes</span>
-          </a>
-        </nav>
+    <header
+      class="sticky top-0 z-50 flex items-center whitespace-nowrap border-b border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] px-6 py-3"
+    >
+      <div class="flex items-center gap-3 text-text-main dark:text-white">
+        <img
+          alt="Clínica Dental FalconCare"
+          class="block h-auto w-full max-h-10 object-contain"
+          src="/assets/branding/logo-fullname.png"
+        />
       </div>
     </header>
 
@@ -615,110 +582,29 @@
                 }
               }
             }
-            @if (patientDocumentsUploading()) {
-              <div class="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
-                <div class="flex items-center justify-between gap-3 mb-2">
-                  <p class="text-xs font-semibold text-primary">
-                    Subiendo documentos... {{ patientDocumentsUploadPercent() }}%
-                  </p>
-                  @if (patientDocumentsUploadCurrentName(); as uploadName) {
-                    <p class="text-[11px] text-text-muted truncate max-w-[18rem]">{{ uploadName }}</p>
-                  }
-                </div>
-                <div class="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div
-                    class="h-full bg-primary transition-all duration-150"
-                    [style.width.%]="patientDocumentsUploadPercent()"
-                  ></div>
-                </div>
-              </div>
-            }
             @if (patientDocumentsError()) {
               <p class="text-sm text-red-600 dark:text-red-400 mb-3" role="alert">{{ patientDocumentsError() }}</p>
             }
-            <div class="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 p-3">
-              <div class="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors"
-                  [class.bg-primary]="patientDocumentTypeFilter() === 'all'"
-                  [class.text-white]="patientDocumentTypeFilter() === 'all'"
-                  [class.border-primary]="patientDocumentTypeFilter() === 'all'"
-                  [class.bg-white]="patientDocumentTypeFilter() !== 'all'"
-                  [class.dark:bg-slate-900]="patientDocumentTypeFilter() !== 'all'"
-                  [class.text-slate-700]="patientDocumentTypeFilter() !== 'all'"
-                  [class.dark:text-slate-300]="patientDocumentTypeFilter() !== 'all'"
-                  [class.border-slate-300]="patientDocumentTypeFilter() !== 'all'"
-                  [class.dark:border-slate-600]="patientDocumentTypeFilter() !== 'all'"
-                  (click)="setPatientDocumentTypeFilter('all')"
-                >Todos ({{ patientDocumentCounts().all }})</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors" [class.bg-primary]="patientDocumentTypeFilter() === 'radiology'" [class.text-white]="patientDocumentTypeFilter() === 'radiology'" [class.border-primary]="patientDocumentTypeFilter() === 'radiology'" (click)="setPatientDocumentTypeFilter('radiology')">Radiografías ({{ patientDocumentCounts().radiology }})</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors" [class.bg-primary]="patientDocumentTypeFilter() === 'consent'" [class.text-white]="patientDocumentTypeFilter() === 'consent'" [class.border-primary]="patientDocumentTypeFilter() === 'consent'" (click)="setPatientDocumentTypeFilter('consent')">Consentimientos ({{ patientDocumentCounts().consent }})</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors" [class.bg-primary]="patientDocumentTypeFilter() === 'report'" [class.text-white]="patientDocumentTypeFilter() === 'report'" [class.border-primary]="patientDocumentTypeFilter() === 'report'" (click)="setPatientDocumentTypeFilter('report')">Informes ({{ patientDocumentCounts().report }})</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors" [class.bg-primary]="patientDocumentTypeFilter() === 'analytics'" [class.text-white]="patientDocumentTypeFilter() === 'analytics'" [class.border-primary]="patientDocumentTypeFilter() === 'analytics'" (click)="setPatientDocumentTypeFilter('analytics')">Analíticas ({{ patientDocumentCounts().analytics }})</button>
-              </div>
-              <div class="flex flex-wrap items-end gap-3">
-                <label class="flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Desde
-                  <input
-                    type="date"
-                    class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200"
-                    [value]="patientDocumentDateFrom()"
-                    (change)="onPatientDocumentDateFromChange($any($event.target).value)"
-                    title="Filtrar desde fecha"
-                    aria-label="Filtrar documentos desde fecha"
-                  />
-                </label>
-                <label class="flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Hasta
-                  <input
-                    type="date"
-                    class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200"
-                    [value]="patientDocumentDateTo()"
-                    (change)="onPatientDocumentDateToChange($any($event.target).value)"
-                    title="Filtrar hasta fecha"
-                    aria-label="Filtrar documentos hasta fecha"
-                  />
-                </label>
-                <button
-                  type="button"
-                  class="h-[34px] px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-primary/40 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                  [disabled]="!patientDocumentFiltersActive()"
-                  (click)="clearPatientDocumentFilters()"
-                >
-                  Limpiar filtros
-                </button>
-              </div>
-            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               @if (patientDocumentsLoading() && patientDocuments().length === 0) {
                 <p class="text-sm text-text-muted col-span-full py-4">{{ 'patientPanel.documents.loading' | translate }}</p>
               }
-              @if (!patientDocumentsLoading() && filteredPatientDocuments().length === 0 && !patientDocumentsError()) {
+              @if (!patientDocumentsLoading() && patientDocuments().length === 0 && !patientDocumentsError()) {
                 <p class="text-sm text-text-muted col-span-full py-2">
-                  No hay documentos para el filtro seleccionado.
+                  {{ 'patientPanel.documents.empty' | translate }}
                 </p>
               }
-              @for (doc of filteredPatientDocuments(); track doc.id) {
+              @for (doc of patientDocuments(); track doc.id) {
                 <button
                   type="button"
                   class="group relative text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-primary/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  (click)="onPatientDocumentOpen(doc)"
+                  (click)="onPatientDocumentDownload(doc)"
                   [attr.aria-label]="('patientPanel.documents.downloadAria' | translate) + ' ' + doc.displayName"
                 >
                   <div class="aspect-video bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
                     @switch (doc.iconKind) {
                       @case ('image') {
-                        @if (patientDocumentThumbById()[doc.id]; as thumbSrc) {
-                          <img
-                            [src]="thumbSrc"
-                            alt="Miniatura del documento"
-                            [title]="doc.displayName"
-                            class="h-full w-full object-cover"
-                          />
-                        } @else {
-                          <span class="material-symbols-outlined text-4xl text-slate-400">landscape</span>
-                        }
+                        <span class="material-symbols-outlined text-4xl text-slate-400">landscape</span>
                       }
                       @case ('pdf') {
                         <span class="material-symbols-outlined text-4xl text-red-400">picture_as_pdf</span>
@@ -756,48 +642,6 @@
               </div>
             </div>
           </section>
-
-          @if (previewOpen() && previewUrl(); as url) {
-            <div
-              class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-[1px] flex items-center justify-center p-4"
-              (click)="closePatientDocumentPreview()"
-            >
-              <div
-                class="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-xl border border-white/20 bg-[#101315] shadow-2xl"
-                (click)="$event.stopPropagation()"
-              >
-                <div class="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
-                  <p class="text-sm font-semibold text-white truncate">{{ previewName() }}</p>
-                  <div class="flex items-center gap-2">
-                    @if (previewDocumentId(); as previewDocId) {
-                      <button
-                        type="button"
-                        class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark transition-colors"
-                        (click)="onPatientDocumentDownload({ id: previewDocId, displayName: previewName(), iconKind: previewKind() })"
-                      >
-                        <span class="material-symbols-outlined text-base">download</span>
-                        Descargar
-                      </button>
-                    }
-                    <button
-                      type="button"
-                      class="rounded-lg border border-white/20 px-2 py-1 text-xs font-bold text-white hover:bg-white/10 transition-colors"
-                      (click)="closePatientDocumentPreview()"
-                    >
-                      Cerrar
-                    </button>
-                  </div>
-                </div>
-                <div class="bg-[#0a0d0f] h-[72vh] flex items-center justify-center">
-                  @if (previewKind() === 'image') {
-                    <img [src]="url" alt="Vista previa del documento" class="max-h-full max-w-full object-contain" />
-                  } @else if (previewKind() === 'pdf') {
-                    <iframe [src]="url" class="h-full w-full border-0" title="Vista previa PDF"></iframe>
-                  }
-                </div>
-              </div>
-            </div>
-          }
         </div>
       </main>
     </div>
