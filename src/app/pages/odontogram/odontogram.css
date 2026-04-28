@@ -295,6 +295,32 @@
   background: var(--endodoncia);
 }
 
+.protocol--erase .protocol__icon {
+  position: relative;
+  background: #ffffff;
+}
+
+.protocol--erase .protocol__icon::before,
+.protocol--erase .protocol__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.72rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #c6544b;
+  transform-origin: center;
+}
+
+.protocol--erase .protocol__icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.protocol--erase .protocol__icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
 @media (max-width: 1180px) {
   .odontograma__layout {
     grid-template-columns: 1fr;

@@ -1,46 +1,17 @@
 <div class="agenda-wrapper">
   <header class="appointment-header">
-    <div class="documents-brand-wrap">
-      <div class="documents-brand" aria-label="Clínica Dental FalconCare">
-        <img
-          src="/assets/branding/logo-fullname.png"
-          alt="Clínica Dental FalconCare"
-          class="documents-brand-logo"
-        />
-      </div>
-    </div>
-    <div class="documents-nav-wrap">
-      <nav class="documents-nav">
-        <a
-          routerLink="/doctor-panel"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Panel</span>
-        </a>
-        <a
-          routerLink="/appointments"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Agenda</span>
-        </a>
-        <a
-          routerLink="/documents"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Documentos</span>
-        </a>
-        <a
-          routerLink="/settings"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">Ajustes</span>
-        </a>
+    <div class="top-nav">
+      <nav class="view-selector">
+        <button>Panel</button>
+        <button class="active">Agenda</button>
+        <button>Pacients</button>
+        <button>Documents</button>
       </nav>
+
+      <div class="header-actions">
+        <input class="search-input" type="search" placeholder="Cercar cites...">
+        <button class="avatar-btn" type="button" aria-label="Perfil">👨‍⚕️</button>
+      </div>
     </div>
   </header>
 
@@ -53,15 +24,13 @@
           [ngModel]="newAppointmentData.visitDate"
           (ngModelChange)="onDateChange($event)"
           class="custom-datepicker"
-          aria-label="Seleccionar fecha de agenda"
-          title="Seleccionar fecha de agenda"
         >
       </div>
 
       <div class="filters">
         <div class="filters-header">
-          <h4>{{ isWeekView() ? 'Box setmana' : 'Filtrar boxes' }}</h4>
-          <label class="toggle-all-boxes" *ngIf="isDayView()">
+          <h4>Filtrar boxes</h4>
+          <label class="toggle-all-boxes">
             <input
               type="checkbox"
               [checked]="areAllBoxesSelected()"
@@ -70,46 +39,15 @@
             <span>TOTS</span>
           </label>
         </div>
-
-        <div *ngIf="isDayView()">
-          <div *ngFor="let b of getDisplayBoxes()" class="box-filter-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="isBoxSelected(b)"
-                (change)="toggleBoxSelection(b, $any($event.target).checked)"
-              >
-              <span>{{ getBoxLabel(b) }}</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="week-box-selector" *ngIf="isWeekView() && getWeekBoxOptions().length > 0">
-          <select
-            class="week-box-selector__select"
-            title="Seleccionar box semanal"
-            aria-label="Seleccionar box semanal"
-            [value]="selectedWeekBoxKey() || getWeekBoxOptionKey(getWeekBoxOptions()[0])"
-            (change)="onWeekBoxSelected($any($event.target).value)"
-          >
-            <option *ngFor="let box of getWeekBoxOptions()" [value]="getWeekBoxOptionKey(box)">
-              {{ getBoxLabel(box) }}
-            </option>
-          </select>
-        </div>
-
-        <div class="week-box-selector" *ngIf="isWeekView()">
-          <select
-            class="week-box-selector__select"
-            title="Seleccionar doctor semanal"
-            aria-label="Seleccionar doctor semanal"
-            [value]="selectedWeekDoctorKey()"
-            (change)="onWeekDoctorSelected($any($event.target).value)"
-          >
-            <option *ngFor="let doctor of getWeekDoctorOptions()" [value]="doctor.key">
-              {{ doctor.label }}
-            </option>
-          </select>
+        <div *ngFor="let b of getDisplayBoxes()" class="box-filter-item">
+          <label>
+            <input
+              type="checkbox"
+              [checked]="isBoxSelected(b)"
+              (change)="toggleBoxSelection(b, $any($event.target).checked)"
+            >
+            <span>{{ getBoxLabel(b) }}</span>
+          </label>
         </div>
       </div>
 
@@ -162,7 +100,6 @@
             Setmana: {{ getWeekRangeLabel() }}
           </ng-template>
         </h1>
-        <span class="agenda-sync-indicator" aria-live="polite">{{ realtimeSyncLabel }}</span>
         <div class="header-tools">
           <div class="week-nav" *ngIf="isWeekView()">
             <button type="button" (click)="goToPreviousWeek()">←</button>
@@ -204,9 +141,10 @@
                 [style.top.px]="idx * hourSlotHeightPx"
               ></div>
 
-              <ng-container *ngFor="let cita of getAppointmentsForDay(newAppointmentData.visitDate, b)">
+              <ng-container *ngFor="let cita of appointments()">
                 <div
                   class="appointment-block"
+                  *ngIf="belongsToBox(cita, b)"
                   [class.menu-open]="isQuickActionsOpen(cita.id)"
                   [style.top.px]="getAppointmentTopPx(cita)"
                   [style.height.px]="getAppointmentHeightPx(cita)"
@@ -215,53 +153,35 @@
                     class="card-appointment"
                     [ngClass]="cita.status"
                     [class.compact-card]="isCompactAppointmentCard(cita)"
-                    [class.urgency-card]="cita.isUrgency"
                     [style.--appointment-color]="cita.color || '#00bcd4'"
                   >
                     <div class="info">
                       <div class="patient-row">
                         <span class="patient">
-                          <span class="patient-label">
-                            <span
-                              *ngIf="hasAppointmentAllergy(cita)"
-                              class="allergy-pill"
-                              aria-label="Pacient amb al·lèrgia"
-                              title="Pacient amb al·lèrgia"
-                            >A</span>
-                            <span class="patient-name">{{ cita.patientName }}</span>
-                          </span>
+                          {{ cita.patientName }}
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
                         <select
                           title="Canviar estat"
                           class="status-pill status-pill-btn"
                           [disabled]="isStatusUpdating(cita.id)"
-                          [ngModel]="getAppointmentStatusDisplay(cita.status)"
-                          [ngModelOptions]="{ standalone: true }"
-                          (ngModelChange)="onAppointmentStatusSelected(cita, $event)"
+                          [value]="getStatusSelectValue(cita.status)"
+                          (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                         >
-                          <option
-                            *ngIf="!isStatusSelectableFromCalendar(cita.status)"
-                            [value]="getAppointmentStatusDisplay(cita.status)"
-                            [selected]="true"
-                            disabled
-                            hidden
-                          >
-                            {{ getAppointmentStatusDisplay(cita.status) }}
-                          </option>
                           <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
                             {{ statusOption }}
                           </option>
                         </select>
                       </div>
 
+                      <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
+
                       <div class="meta-row">
                         <span class="meta-icon clock" aria-hidden="true"></span>
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
-                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                       </div>
 
-                      <span class="doctor-tag doctor-under-time">Dr. {{ getAppointmentDoctorDisplay(cita) }}</span>
+                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
 
                       <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
@@ -270,7 +190,7 @@
                     </div>
 
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
-                      <button title="Obrir Odontograma" class="btn-action view" (click)="openOdontogram(cita.id)" type="button">🦷</button>
+                      <button title="Obrir cita" class="btn-action view" (click)="openOdontogram(cita)" type="button">🦷</button>
                       <button title="Finalitzar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
                       <div class="quick-actions-wrap">
                         <button
@@ -295,7 +215,7 @@
 
                 <div
                   class="cleaning-slot"
-                  *ngIf="cita.cleaningTime > 0"
+                  *ngIf="belongsToBox(cita, b) && cita.cleaningTime > 0"
                   [style.top.px]="getCleaningTopPx(cita)"
                   [style.height.px]="getCleaningHeightPx(cita)"
                 >
@@ -306,8 +226,6 @@
                       <select
                         *ngIf="isCleaningSelectorOpen(cita.id)"
                         class="cleaning-select"
-                        title="Seleccionar minutos de limpieza"
-                        aria-label="Seleccionar minutos de limpieza"
                         [value]="cita.cleaningTime + ''"
                         (change)="onCleaningOptionSelected(cita, $any($event.target).value)"
                       >
@@ -339,7 +257,7 @@
           <div class="week-days-columns">
             <article class="week-day-timeline" *ngFor="let day of weekDays()">
               <header class="week-day-header">
-                <h3>{{ day.label }} · {{ getSelectedWeekBoxLabel() }} · {{ getSelectedWeekDoctorLabel() }}</h3>
+                <h3>{{ day.label }}</h3>
                 <small>{{ getTotalAppointmentsForVisibleBoxes(day.date) }} cites</small>
               </header>
 
@@ -354,61 +272,38 @@
                   <div
                     class="appointment-block week-appointment-block"
                     [class.menu-open]="isQuickActionsOpen(cita.id)"
-                    [class.week-overlap]="isWeekAppointmentOverlapping(day.date, cita)"
                     [style.top.px]="getAppointmentTopPx(cita)"
                     [style.height.px]="getAppointmentHeightPx(cita)"
-                    [style.left]="getWeekAppointmentLeft(day.date, cita)"
-                    [style.width]="getWeekAppointmentWidth(day.date, cita)"
                   >
                     <div
                       class="card-appointment"
                       [class.compact-card]="isCompactAppointmentCard(cita)"
-                      [class.urgency-card]="cita.isUrgency"
                       [style.--appointment-color]="cita.color || '#00bcd4'"
                     >
                       <div class="info">
                         <div class="patient-row">
-                          <span class="patient">
-                            <span class="patient-label">
-                              <span
-                                *ngIf="hasAppointmentAllergy(cita)"
-                                class="allergy-pill"
-                                aria-label="Pacient amb al·lèrgia"
-                                title="Pacient amb al·lèrgia"
-                              >A</span>
-                              <span class="patient-name">{{ cita.patientName }}</span>
-                            </span>
-                          </span>
+                          <span class="patient">{{ cita.patientName }}</span>
                           <select
                             title="Canviar estat"
                             class="status-pill status-pill-btn"
                             [disabled]="isStatusUpdating(cita.id)"
-                            [ngModel]="getAppointmentStatusDisplay(cita.status)"
-                            [ngModelOptions]="{ standalone: true }"
-                            (ngModelChange)="onAppointmentStatusSelected(cita, $event)"
+                            [value]="getStatusSelectValue(cita.status)"
+                            (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                           >
-                            <option
-                              *ngIf="!isStatusSelectableFromCalendar(cita.status)"
-                              [value]="getAppointmentStatusDisplay(cita.status)"
-                              [selected]="true"
-                              disabled
-                              hidden
-                            >
-                              {{ getAppointmentStatusDisplay(cita.status) }}
-                            </option>
                             <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
                               {{ statusOption }}
                             </option>
                           </select>
                         </div>
 
+                        <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
+
                         <div class="meta-row">
                           <span class="meta-icon clock" aria-hidden="true"></span>
                           <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
-                          <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                         </div>
 
-                        <span class="doctor-tag doctor-under-time">Dr. {{ getAppointmentDoctorDisplay(cita) }} · {{ getAppointmentBoxLabel(cita) }}</span>
+                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                       </div>
                     </div>
                   </div>
@@ -416,11 +311,8 @@
                   <div
                     class="cleaning-slot week-cleaning-slot"
                     *ngIf="cita.cleaningTime > 0"
-                    [class.week-overlap]="isWeekAppointmentOverlapping(day.date, cita)"
                     [style.top.px]="getCleaningTopPx(cita)"
                     [style.height.px]="getCleaningHeightPx(cita)"
-                    [style.left]="getWeekAppointmentLeft(day.date, cita)"
-                    [style.width]="getWeekAppointmentWidth(day.date, cita)"
                   >
                     <div class="cleaning-block">
                       <span class="cleaning-line">
@@ -429,8 +321,6 @@
                         <select
                           *ngIf="isCleaningSelectorOpen(cita.id)"
                           class="cleaning-select"
-                          title="Seleccionar minutos de limpieza"
-                          aria-label="Seleccionar minutos de limpieza"
                           [value]="cita.cleaningTime + ''"
                           (change)="onCleaningOptionSelected(cita, $any($event.target).value)"
                         >
@@ -454,7 +344,7 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Edita cita' : 'Crear nova cita' }}</h2>
+        <h2>{{ isEditMode ? 'Edita cita' : 'Detall de cita' }}</h2>
         <small>Gestió de cita i pacient</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
@@ -466,6 +356,9 @@
       <div class="form-group">
         <div class="label-header">
           <label>Pacient</label>
+          <button type="button" class="btn-text-link" (click)="openNewPatientRegister()">
+            Nou pacient
+          </button>
         </div>
 
         <select
@@ -473,8 +366,6 @@
           [(ngModel)]="newAppointmentData.patient"
           name="patient"
           class="form-control"
-          title="Seleccionar paciente"
-          aria-label="Seleccionar paciente"
           required
           (ngModelChange)="clearCreateFieldError('patient')"
           (change)="onPatientChange(newAppointmentData.patient)"
@@ -502,7 +393,7 @@
       <div class="form-row">
         <div class="form-group col">
           <label>Data de la cita</label>
-          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" title="Seleccionar fecha de cita" aria-label="Seleccionar fecha de cita" required (ngModelChange)="clearCreateFieldError('visitDate')" (change)="onDateChange()">
+          <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (ngModelChange)="clearCreateFieldError('visitDate')" (change)="onDateChange()">
           <div *ngIf="getCreateFieldError('visitDate')" class="form-field-error">{{ getCreateFieldError('visitDate') }}</div>
         </div>
 
@@ -531,8 +422,6 @@
               (ngModelChange)="onVisitHourChange($event)"
               name="visitHour"
               class="form-control"
-              title="Seleccionar hora"
-              aria-label="Seleccionar hora"
               required
             >
               <option *ngFor="let h of appointmentHourOptions" [ngValue]="h">{{ h }}</option>
@@ -543,8 +432,6 @@
               (ngModelChange)="onVisitMinuteChange($event)"
               name="visitMinute"
               class="form-control"
-              title="Seleccionar minutos"
-              aria-label="Seleccionar minutos"
               required
             >
               <option *ngFor="let m of appointmentMinuteOptions" [ngValue]="m">{{ m }}</option>
@@ -554,7 +441,7 @@
         </div>
         <div class="form-group col">
           <label>Duracio</label>
-          <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" title="Duración en minutos" aria-label="Duración en minutos" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
+          <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
           <div *ngIf="getCreateFieldError('durationMinutes')" class="form-field-error">{{ getCreateFieldError('durationMinutes') }}</div>
         </div>
       </div>
@@ -562,7 +449,7 @@
       <div class="form-row">
         <div class="form-group col">
           <label>Doctor</label>
-          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" title="Seleccionar doctor" aria-label="Seleccionar doctor" required (ngModelChange)="clearCreateFieldError('doctor')">
+          <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required (ngModelChange)="clearCreateFieldError('doctor')">
             <option value="" disabled selected>Doctor...</option>
             <option *ngFor="let d of doctorsList()" [value]="d.id">{{ d.name || d.firstName }}</option>
           </select>
@@ -570,7 +457,7 @@
         </div>
         <div class="form-group col">
           <label>Box</label>
-          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" title="Seleccionar box" aria-label="Seleccionar box" required (ngModelChange)="clearCreateFieldError('box')">
+          <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required (ngModelChange)="clearCreateFieldError('box')">
             <option value="" disabled selected>Box...</option>
             <option *ngFor="let b of boxesList()" [value]="b.id">{{ b.name }}</option>
           </select>
@@ -582,7 +469,7 @@
 
         <div class="mb-3" *ngIf="treatmentsList().length > 0">
           <label class="text-primary text-xs mb-1 d-block font-weight-bold">Continua tractament actiu</label>
-          <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm" title="Seleccionar tratamiento" aria-label="Seleccionar tratamiento">
+          <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm">
             <option value="">Patologia programada</option>
             <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId ?? t.id">
               {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})
@@ -595,7 +482,7 @@
           <label class="text-xs mb-1 d-block">
             {{ treatmentsList().length > 0 ? 'Nova patologia' : 'Selecciona patologia' }}
           </label>
-          <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" title="Seleccionar patología" aria-label="Seleccionar patología" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
+          <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
             <option value="" disabled selected>Tipus de patologia...</option>
             <option *ngFor="let p of pathologiesList()" [value]="p.id">{{ p.name }} ({{ p.duration }} min)</option>
           </select>

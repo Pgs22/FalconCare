@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   OdontogramFace,
   OdontogramFaceStatus,
@@ -34,7 +34,7 @@ type Quadrant = {
 
 type ProtocolItem = {
   id: number | null;
-  key: ToothStatus;
+  key: ToothStatus | 'erase';
   label: string;
 };
 
@@ -49,6 +49,7 @@ export class OdontogramComponent implements OnInit {
   private readonly pathologyTypeService = inject(PathologyTypeService);
   private readonly odontogramService = inject(OdontogramService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   isLoading = true;
   isSaving = false;
@@ -60,11 +61,16 @@ export class OdontogramComponent implements OnInit {
 
   readonly protocolsFallback: ProtocolItem[] = [
     { id: 1, key: 'caries', label: 'Càries' },
-    { id: 2, key: 'neteja', label: 'Neteja' },
     { id: 3, key: 'endodoncia', label: 'Endodòncia' },
+    { id: 2, key: 'neteja', label: 'Neteja' },
   ];
 
   protocols: ProtocolItem[] = this.protocolsFallback;
+  readonly eraseProtocol: ProtocolItem = {
+    id: null,
+    key: 'erase',
+    label: 'Esborrar marca',
+  };
 
   readonly topQuadrants: Quadrant[] = [
     {
@@ -106,7 +112,7 @@ export class OdontogramComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPathologyTypes();
-    this.loadFixedOdontogram();
+    this.loadOdontogramFromRoute();
   }
 
   selectTooth(tooth: ToothItem): void {
@@ -126,6 +132,15 @@ export class OdontogramComponent implements OnInit {
     const key = this.getFaceKey(tooth.id, face);
 
     if (!this.selectedProtocol) {
+      return;
+    }
+
+    if (this.selectedProtocol.key === 'erase') {
+      this.faceStatusMap.delete(key);
+      return;
+    }
+
+    if (this.faceStatusMap.get(key) === this.selectedProtocol.key) {
       return;
     }
 
@@ -176,7 +191,7 @@ export class OdontogramComponent implements OnInit {
     return quadrant.id;
   }
 
-  trackByProtocol(_index: number, protocol: ProtocolItem): ToothStatus {
+  trackByProtocol(_index: number, protocol: ProtocolItem): string {
     return protocol.key;
   }
 
@@ -185,7 +200,8 @@ export class OdontogramComponent implements OnInit {
       next: (pathologyTypes) => {
         const mappedProtocols = pathologyTypes
           .map((pathologyType) => this.mapPathologyTypeToProtocol(pathologyType))
-          .filter((protocol): protocol is ProtocolItem => protocol !== null);
+          .filter((protocol): protocol is ProtocolItem => protocol !== null)
+          .sort((left, right) => this.getProtocolOrder(left.key) - this.getProtocolOrder(right.key));
 
         if (mappedProtocols.length > 0) {
           this.protocols = mappedProtocols;
@@ -197,11 +213,20 @@ export class OdontogramComponent implements OnInit {
     });
   }
 
-  private loadFixedOdontogram(): void {
+  private loadOdontogramFromRoute(): void {
     this.isLoading = true;
     this.loadError = null;
 
-    this.odontogramService.openFixedOdontogram().subscribe({
+    const patientId = Number(this.route.snapshot.queryParamMap.get('patientId'));
+    const visitId = Number(this.route.snapshot.queryParamMap.get('visitId'));
+
+    if (!Number.isFinite(patientId) || patientId < 1 || !Number.isFinite(visitId) || visitId < 1) {
+      this.isLoading = false;
+      this.loadError = 'No s\'ha rebut una cita valida per obrir l\'odontograma.';
+      return;
+    }
+
+    this.odontogramService.openOdontogram(patientId, visitId).subscribe({
       next: ({ odontogram }: OpenOdontogramResponse) => {
         this.applyOdontogramState(odontogram);
         this.isLoading = false;
@@ -212,6 +237,21 @@ export class OdontogramComponent implements OnInit {
         this.loadError = 'No s\'ha pogut carregar l\'odontograma.';
       },
     });
+  }
+
+  private getProtocolOrder(key: ProtocolItem['key']): number {
+    switch (key) {
+      case 'erase':
+        return 0;
+      case 'caries':
+        return 1;
+      case 'endodoncia':
+        return 2;
+      case 'neteja':
+        return 3;
+      default:
+        return 99;
+    }
   }
 
   private applyOdontogramState(odontogram: OdontogramApi): void {
@@ -229,6 +269,10 @@ export class OdontogramComponent implements OnInit {
       for (const face of detail.faces) {
         const faceName = face.face_name.trim().toUpperCase() as OdontogramFace;
         if (!this.isSupportedFace(faceName)) {
+          continue;
+        }
+
+        if (protocol.key === 'erase') {
           continue;
         }
 

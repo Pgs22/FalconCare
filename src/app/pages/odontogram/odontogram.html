@@ -118,6 +118,18 @@
 
       <div class="odontograma__protocol-list">
         <button
+          type="button"
+          class="protocol protocol--erase"
+          [class.protocol--active]="selectedProtocol?.key === eraseProtocol.key"
+          (click)="selectProtocol(eraseProtocol)"
+        >
+          <span class="protocol__icon"></span>
+          <span class="protocol__copy">
+            <strong>{{ eraseProtocol.label }}</strong>
+          </span>
+        </button>
+
+        <button
           *ngFor="let protocol of protocols; trackBy: trackByProtocol"
           type="button"
           class="protocol"
