@@ -83,4 +83,37 @@ describe('AppointmentService', () => {
 
     req.flush({ ok: true });
   });
+
+  it('should update appointments with PUT and propagate doctor occupied conflicts', () => {
+    const received: { status?: number; code?: string } = {};
+
+    service.updateAppointment(12, {
+      doctor: 7,
+      box: 2,
+      visitDate: '2026-04-24',
+      visitTime: '13:45:00',
+      durationMinutes: 30,
+    }).subscribe({
+      error: (err) => {
+        received.status = err.status;
+        received.code = err.error?.code;
+      },
+    });
+
+    const req = httpMock.expectOne('http://localhost:8000/api/appointment/12/update');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.withCredentials).toBeTrue();
+
+    req.flush({
+      ok: false,
+      code: 'DOCTOR_OCCUPIED',
+      error: {
+        messageKey: 'appointment.doctor.occupied',
+        message: 'El doctor ya tiene una cita en ese horario.',
+      },
+    }, { status: 409, statusText: 'Conflict' });
+
+    expect(received.status).toBe(409);
+    expect(received.code).toBe('DOCTOR_OCCUPIED');
+  });
 });

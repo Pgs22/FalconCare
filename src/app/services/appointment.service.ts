@@ -10,6 +10,7 @@ export interface Appointment {
   cleaningTime: number;
   totalBlockTime: number;
   status: string;
+  doctorId?: number | null;
   patientName: string;
   doctorName: string;
   boxId: number | null;
@@ -92,10 +93,7 @@ export class AppointmentService {
   }
 
   updateAppointment(id: number, payload: Record<string, unknown>): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }).pipe(
-      catchError(() => this.http.put(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true })),
-      catchError(() => this.http.post(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true }))
-    );
+    return this.http.put(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true });
   }
 
   deleteAppointment(id: number): Observable<any> {

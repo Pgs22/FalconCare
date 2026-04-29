@@ -193,9 +193,17 @@
                           title="Canviar estat"
                           class="status-pill status-pill-btn"
                           [disabled]="isStatusUpdating(cita.id)"
-                          [value]="getStatusSelectValue(cita.status)"
+                          [value]="getAppointmentStatusDisplay(cita.status)"
                           (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                         >
+                          <option
+                            *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                            [value]="getAppointmentStatusDisplay(cita.status)"
+                            disabled
+                            hidden
+                          >
+                            {{ getAppointmentStatusDisplay(cita.status) }}
+                          </option>
                           <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
                             {{ statusOption }}
                           </option>
@@ -315,9 +323,17 @@
                             title="Canviar estat"
                             class="status-pill status-pill-btn"
                             [disabled]="isStatusUpdating(cita.id)"
-                            [value]="getStatusSelectValue(cita.status)"
+                            [value]="getAppointmentStatusDisplay(cita.status)"
                             (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                           >
+                            <option
+                              *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                              [value]="getAppointmentStatusDisplay(cita.status)"
+                              disabled
+                              hidden
+                            >
+                              {{ getAppointmentStatusDisplay(cita.status) }}
+                            </option>
                             <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
                               {{ statusOption }}
                             </option>

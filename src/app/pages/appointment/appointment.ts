@@ -76,12 +76,9 @@ export class AppointmentComponent implements OnInit {
   selectedWeekDoctorKey = signal<string>('all');
   statusUpdatingIds = signal<number[]>([]);
   readonly appointmentStatusOptions: string[] = [
-    'Programada',
     'Confirmada',
-    'En curs',
-    'Cancel·lada',
-    'Finalitzada',
-    'Falta Consentiment',
+    'Arribada',
+    'Cancelada',
   ];
   quickActionsAppointmentId = signal<number | null>(null);
   cleaningSelectorAppointmentId = signal<number | null>(null);
@@ -122,6 +119,8 @@ export class AppointmentComponent implements OnInit {
     APPOINTMENT_VALIDATION_FAILED: 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
     APPOINTMENT_TIME_CONFLICT: 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
     APPOINTMENT_OVERLAP: 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
+    DOCTOR_OCCUPIED: 'El doctor ja te una cita en aquest horari.',
+    BOX_OCCUPIED: 'El box ja esta ocupat en aquest horari.',
     PATIENT_NOT_FOUND: 'No s\'ha trobat el pacient seleccionat.',
     DOCTOR_NOT_FOUND: 'No s\'ha trobat el doctor seleccionat.',
     BOX_NOT_FOUND: 'No s\'ha trobat el box seleccionat.',
@@ -130,6 +129,8 @@ export class AppointmentComponent implements OnInit {
   private readonly createErrorMessagesByKey: Record<string, string> = {
     'appointment.error.validation': 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
     'appointment.error.time_conflict': 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
+    'appointment.doctor.occupied': 'El doctor ja te una cita en aquest horari.',
+    'appointment.box.occupied': 'El box ja esta ocupat en aquest horari.',
     'appointment.error.patient_not_found': 'No s\'ha trobat el pacient seleccionat.',
     'appointment.error.doctor_not_found': 'No s\'ha trobat el doctor seleccionat.',
     'appointment.error.box_not_found': 'No s\'ha trobat el box seleccionat.',
@@ -880,6 +881,17 @@ export class AppointmentComponent implements OnInit {
       isUrgency: !!this.newAppointmentData.isUrgency
     };
 
+    this.validateScheduleAndPersistAppointment(
+      normalizedVisitDate,
+      normalizedVisitTime,
+      baseDuration,
+      doctorId,
+      boxId,
+      dataToSend
+    );
+  }
+
+  private persistAppointment(dataToSend: Record<string, unknown>): void {
     if (this.isEditMode && this.editingAppointmentId != null) {
       this.appointmentService.updateAppointment(this.editingAppointmentId, dataToSend).subscribe({
         next: () => {
@@ -892,7 +904,11 @@ export class AppointmentComponent implements OnInit {
         },
         error: (err: unknown) => {
           const httpError = err as HttpErrorResponse;
-          alert('No s\'ha pogut actualitzar la cita.');
+          const message = this.resolveCreateErrorMessage(httpError)
+            .replace('crear', 'actualitzar')
+            .replace('creada', 'actualitzada');
+          this.createFormError.set(message);
+          alert(message);
         }
       });
       return;
@@ -934,6 +950,168 @@ export class AppointmentComponent implements OnInit {
         alert(message);
       }
     });
+  }
+
+  private validateScheduleAndPersistAppointment(
+    visitDate: string,
+    visitTime: string,
+    durationMinutes: number,
+    doctorId: number,
+    boxId: number,
+    dataToSend: Record<string, unknown>
+  ): void {
+    const ignoredAppointmentId = this.isEditMode ? this.editingAppointmentId : null;
+    const localConflict = this.findScheduleConflict(
+      this.getLocalAppointmentsForDate(visitDate),
+      visitDate,
+      visitTime,
+      durationMinutes,
+      doctorId,
+      boxId,
+      ignoredAppointmentId
+    );
+    if (localConflict) {
+      this.showScheduleConflict(localConflict);
+      return;
+    }
+
+    this.appointmentService.getAppointments(visitDate).subscribe({
+      next: (rows) => {
+        const freshAppointments = this.extractList(rows).map((row) => this.normalizeIncomingAppointment(row));
+        const freshConflict = this.findScheduleConflict(
+          freshAppointments,
+          visitDate,
+          visitTime,
+          durationMinutes,
+          doctorId,
+          boxId,
+          ignoredAppointmentId
+        );
+        if (freshConflict) {
+          this.appointments.set(freshAppointments);
+          this.showScheduleConflict(freshConflict);
+          return;
+        }
+
+        this.persistAppointment(dataToSend);
+      },
+      error: () => {
+        this.createFormError.set('No s\'ha pogut validar la disponibilitat de la cita. Torna-ho a provar.');
+      },
+    });
+  }
+
+  private showScheduleConflict(message: string): void {
+    this.setCreateFieldError('visitTime', message);
+    this.createFormError.set(message);
+  }
+
+  private findScheduleConflict(
+    appointments: Appointment[],
+    visitDate: string,
+    visitTime: string,
+    durationMinutes: number,
+    doctorId: number,
+    boxId: number,
+    ignoredAppointmentId: number | null
+  ): string | null {
+    const requestStart = this.parseTimeToMinutes(visitTime);
+    const requestEnd = requestStart + this.toPositiveNumberOrDefault(durationMinutes, 30) + BOX_CLEANING_BUFFER_MINUTES;
+    const selectedDoctorLabel = this.getSelectedDoctorLabel(doctorId);
+    const selectedBoxLabel = this.getSelectedBoxLabel(boxId);
+
+    for (const appointment of appointments) {
+      if (ignoredAppointmentId != null && appointment.id === ignoredAppointmentId) {
+        continue;
+      }
+      if (this.getAppointmentVisitDate(appointment) !== visitDate) {
+        continue;
+      }
+
+      const currentStart = this.parseTimeToMinutes(appointment.time);
+      const currentEnd =
+        currentStart +
+        this.toPositiveNumberOrDefault(appointment.duration, 30) +
+        this.toPositiveNumberOrDefault(appointment.cleaningTime, BOX_CLEANING_BUFFER_MINUTES);
+
+      if (!this.timeRangesOverlap(requestStart, requestEnd, currentStart, currentEnd)) {
+        continue;
+      }
+
+      if (this.appointmentMatchesDoctor(appointment, doctorId, selectedDoctorLabel)) {
+        return 'Aquest doctor ja te una cita en aquest horari.';
+      }
+
+      if (this.appointmentMatchesBox(appointment, boxId, selectedBoxLabel)) {
+        return 'Aquest box ja te una cita en aquest horari.';
+      }
+    }
+
+    return null;
+  }
+
+  private getLocalAppointmentsForDate(visitDate: string): Appointment[] {
+    const byId = new Map<number, Appointment>();
+    const collect = (appointments: Appointment[]) => {
+      appointments
+        .filter((appointment) => this.getAppointmentVisitDate(appointment) === visitDate)
+        .forEach((appointment) => byId.set(appointment.id, appointment));
+    };
+
+    collect(this.appointments());
+    const weekAppointments = this.weeklyAppointments()[visitDate];
+    if (weekAppointments) {
+      collect(weekAppointments);
+    }
+
+    return Array.from(byId.values());
+  }
+
+  private timeRangesOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
+    return startA < endB && endA > startB;
+  }
+
+  private appointmentMatchesDoctor(appointment: Appointment, doctorId: number, doctorLabel: string): boolean {
+    const appointmentDoctorId = this.getAppointmentDoctorId(appointment);
+    if (appointmentDoctorId != null && appointmentDoctorId === doctorId) {
+      return true;
+    }
+
+    const normalizedAppointmentDoctor = this.normalizePersonLabel(
+      this.getAppointmentDoctorLabel(appointment) || appointment.doctorName
+    );
+    const normalizedSelectedDoctor = this.normalizePersonLabel(doctorLabel);
+
+    return !!normalizedAppointmentDoctor && !!normalizedSelectedDoctor && normalizedAppointmentDoctor === normalizedSelectedDoctor;
+  }
+
+  private appointmentMatchesBox(appointment: Appointment, boxId: number, boxLabel: string): boolean {
+    const appointmentBoxId = this.getAppointmentBoxId(appointment);
+    if (appointmentBoxId != null) {
+      return appointmentBoxId === boxId;
+    }
+
+    return !!boxLabel && this.getAppointmentBoxLabelNormalized(appointment) === this.normalizeBoxLabel(boxLabel);
+  }
+
+  private getSelectedDoctorLabel(doctorId: number): string {
+    const selectedDoctor = this.doctorsList().find((doctor) => this.toNumberOrNull(doctor?.id) === doctorId);
+    return selectedDoctor ? this.getDoctorOptionLabel(selectedDoctor) : '';
+  }
+
+  private getSelectedBoxLabel(boxId: number): string {
+    const selectedBox = this.boxesList().find((box) => this.toNumberOrNull(box?.id) === boxId);
+    return selectedBox ? this.getBoxLabel(selectedBox) : '';
+  }
+
+  private normalizePersonLabel(value: unknown): string {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/^(dr|dra|doctor|doctora)\.?\s+/i, '')
+      .replace(/\s+/g, ' ');
   }
 
   getVisitHour(): string {
@@ -1383,8 +1561,9 @@ export class AppointmentComponent implements OnInit {
       cleaningTime,
       totalBlockTime: duration + cleaningTime,
       status: String(row['status'] ?? fallback.status ?? 'Programada'),
+      doctorId: this.getDoctorIdFromAppointmentRecord(row),
       patientName: String(row['patientName'] ?? row['patient_name'] ?? fallback.patientName ?? '—'),
-      doctorName: String(row['doctorName'] ?? row['doctor_name'] ?? fallback.doctorName ?? '—'),
+      doctorName: this.getDoctorDisplayFromAppointmentRecord(row, fallback.doctorName),
       boxId: this.toNumberOrNull(row['boxId'] ?? row['box_id'] ?? fallback.boxId),
       box: String(row['box'] ?? row['boxName'] ?? row['box_name'] ?? fallback.box ?? ''),
       reason: String(row['reason'] ?? row['motive'] ?? fallback.reason ?? ''),
@@ -1938,53 +2117,15 @@ export class AppointmentComponent implements OnInit {
     return status || 'Sense estat';
   }
 
-  getStatusSelectValue(currentStatus: string): string {
-    const status = this.getAppointmentStatusDisplay(currentStatus);
-    const directMatch = this.appointmentStatusOptions.find((option) => option === status);
-    if (directMatch) {
-      return directMatch;
-    }
-
-    const token = this.normalizeStatusToken(status);
-    const normalizedMatch = this.appointmentStatusOptions.find(
-      (option) => this.normalizeStatusToken(option) === token
-    );
-    if (normalizedMatch) {
-      return normalizedMatch;
-    }
-
-    const cancelStatus = this.appointmentStatusOptions.find(
-      (option) => this.normalizeStatusToken(option).includes('cancel')
-    ) ?? 'Cancel·lada';
-    const aliases: Record<string, string> = {
-      programada: 'Programada',
-      confirmada: 'Confirmada',
-      encurs: 'En curs',
-      encurso: 'En curs',
-      inprogress: 'En curs',
-      cancelada: cancelStatus,
-      cancellada: cancelStatus,
-      canceled: cancelStatus,
-      cancelled: cancelStatus,
-      finalitzada: 'Finalitzada',
-      finalizada: 'Finalitzada',
-      finished: 'Finalitzada',
-      faltaconsentiment: 'Falta Consentiment',
-      missingconsent: 'Falta Consentiment',
-    };
-
-    return aliases[token] ?? status;
-  }
-
   isStatusSelectableFromCalendar(currentStatus: string): boolean {
-    return this.appointmentStatusOptions.includes(this.getStatusSelectValue(currentStatus));
+    return this.getManualCalendarStatusOption(currentStatus) != null;
   }
 
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
-    const targetStatus = this.getStatusSelectValue(selectedStatus);
-    const currentStatus = this.getStatusSelectValue(appointment.status);
+    const targetStatus = this.getManualCalendarStatusOption(selectedStatus);
+    const currentStatus = this.getAppointmentStatusDisplay(appointment.status);
 
-    if (this.isStatusUpdating(appointment.id) || !targetStatus || targetStatus === currentStatus) {
+    if (this.isStatusUpdating(appointment.id) || targetStatus == null || targetStatus === currentStatus) {
       return;
     }
 
@@ -1996,10 +2137,9 @@ export class AppointmentComponent implements OnInit {
       return;
     }
 
-    const normalizedNextStatus = this.getStatusSelectValue(nextStatus);
     this.markStatusUpdating(appointment.id, true);
 
-    this.appointmentService.updateAppointmentStatus(appointment.id, normalizedNextStatus).subscribe({
+    this.appointmentService.updateAppointmentStatus(appointment.id, nextStatus).subscribe({
       next: () => {
         this.fetchAppointments();
         if (this.isWeekView()) {
@@ -2152,6 +2292,27 @@ export class AppointmentComponent implements OnInit {
       .replace(/[^a-z0-9]+/g, '');
   }
 
+  private getManualCalendarStatusOption(status: string): string | null {
+    const normalized = this.normalizeStatusToken(status);
+    const aliases: Record<string, string> = {
+      confirmada: 'Confirmada',
+      confirmado: 'Confirmada',
+      confirmed: 'Confirmada',
+      arribada: 'Arribada',
+      arribado: 'Arribada',
+      arrived: 'Arribada',
+      arrival: 'Arribada',
+      checkedin: 'Arribada',
+      present: 'Arribada',
+      cancelada: 'Cancelada',
+      cancellada: 'Cancelada',
+      cancelled: 'Cancelada',
+      canceled: 'Cancelada',
+    };
+
+    return aliases[normalized] ?? null;
+  }
+
   private getAppointmentPatientId(appointment: Appointment): number | null {
     const row = appointment as unknown as ApiRecord;
     const direct = this.toNumberOrNull(row['patientId'] ?? row['patient_id']);
@@ -2209,13 +2370,68 @@ export class AppointmentComponent implements OnInit {
 
   private getAppointmentDoctorId(appointment: Appointment): number | null {
     const row = appointment as unknown as ApiRecord;
-    const direct = this.toNumberOrNull(row['doctorId'] ?? row['doctor_id']);
+    return this.getDoctorIdFromAppointmentRecord(row);
+  }
+
+  private getDoctorIdFromAppointmentRecord(record: ApiRecord): number | null {
+    const direct = this.toNumberOrNull(record['doctorId'] ?? record['doctor_id'] ?? record['doctorID']);
     if (direct != null) {
       return direct;
     }
 
-    const doctorNode = this.asRecord(row['doctor']);
-    return this.toNumberOrNull(doctorNode?.['id']);
+    const doctorValue = record['doctor'] ?? record['dentist'] ?? record['professional'] ?? record['practitioner'];
+    const doctorNode = this.asRecord(doctorValue);
+    const nested = this.toNumberOrNull(doctorNode?.['id'] ?? doctorNode?.['doctorId'] ?? doctorNode?.['doctor_id']);
+    if (nested != null) {
+      return nested;
+    }
+
+    const relationNumber = this.toNumberOrNull(doctorValue);
+    if (relationNumber != null) {
+      return relationNumber;
+    }
+
+    if (typeof doctorValue === 'string') {
+      const iriMatch = doctorValue.match(/\/(\d+)\/?$/);
+      if (iriMatch) {
+        return this.toNumberOrNull(iriMatch[1]);
+      }
+    }
+
+    return null;
+  }
+
+  private getAppointmentDoctorLabel(appointment: Appointment): string {
+    return this.getDoctorDisplayFromAppointmentRecord(
+      appointment as unknown as ApiRecord,
+      appointment.doctorName
+    );
+  }
+
+  private getDoctorDisplayFromAppointmentRecord(record: ApiRecord, fallback?: unknown): string {
+    const direct = this.pickString(record, [
+      'doctorName',
+      'doctor_name',
+      'doctorFullName',
+      'doctor_full_name',
+      'dentist',
+      'professional',
+      'practitioner',
+    ]);
+    if (direct) {
+      return direct;
+    }
+
+    const doctorNode = this.asRecord(record['doctor']);
+    if (doctorNode) {
+      const nested = this.getDoctorOptionLabel(doctorNode);
+      if (nested) {
+        return nested;
+      }
+    }
+
+    const fallbackLabel = typeof fallback === 'string' ? fallback.trim() : '';
+    return fallbackLabel || '—';
   }
 
   private getAppointmentDoctorKey(appointment: Appointment): string {
