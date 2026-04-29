@@ -1,3 +1,13 @@
+<main *ngIf="isLoading; else odontogramContent" class="odontograma odontograma--loading-screen">
+  <section class="odontograma__loading-screen" aria-live="polite" aria-busy="true">
+    <div class="odontograma__loading-card">
+      <span class="odontograma__loading-spinner" aria-hidden="true"></span>
+      <p class="odontograma__loading-label">Carregant odontograma...</p>
+    </div>
+  </section>
+</main>
+
+<ng-template #odontogramContent>
 <main class="odontograma">
   <header class="odontograma__topbar">
     <div>
@@ -13,7 +23,7 @@
       <button
         type="button"
         class="odontograma__button odontograma__button--primary"
-        [disabled]="isLoading || isSaving || !odontogramId"
+        [disabled]="isLoading || isSaving || !odontogramId || !visitId"
         (click)="onCloseOdontogram()"
       >
         {{ isSaving ? 'Tancant cita...' : 'Tancar cita' }}
@@ -36,8 +46,6 @@
       </header>
 
       <section class="odontograma__grid" aria-label="Odontograma">
-        <p *ngIf="isLoading" class="odontograma__loading">Carregant estat guardat de l'odontograma...</p>
-
         <div class="odontograma__half odontograma__half--top">
           <section
             *ngFor="let quadrant of topQuadrants; trackBy: trackByQuadrant"
@@ -148,3 +156,4 @@
     </aside>
   </section>
 </main>
+</ng-template>

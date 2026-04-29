@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { switchMap } from 'rxjs';
 import {
   OdontogramFace,
   OdontogramFaceStatus,
   OdontogramToothComponent,
   OdontogramToothState,
 } from '../../shared/odontogram-tooth/odontogram-tooth';
+import { AppointmentService } from '../../services/appointment.service';
 import { PathologyTypeItem, PathologyTypeService } from '../../services/pathology-type.service';
 import {
   OdontogramApi,
@@ -46,10 +48,12 @@ type ProtocolItem = {
   styleUrl: './odontogram.css',
 })
 export class OdontogramComponent implements OnInit {
+  private readonly appointmentService = inject(AppointmentService);
   private readonly pathologyTypeService = inject(PathologyTypeService);
   private readonly odontogramService = inject(OdontogramService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private pendingLoadCount = 0;
 
   isLoading = true;
   isSaving = false;
@@ -148,25 +152,32 @@ export class OdontogramComponent implements OnInit {
   }
 
   onCloseOdontogram(): void {
-    if (!this.odontogramId || this.isSaving) {
+    if (!this.odontogramId || !this.visitId || this.isSaving) {
       return;
     }
 
     this.isSaving = true;
     this.saveFeedback = null;
 
-    this.odontogramService.syncDetails(this.odontogramId, this.buildSyncEntries()).subscribe({
-      next: async ({ odontogram }: SyncOdontogramResponse) => {
-        this.applyOdontogramState(odontogram);
-        this.isSaving = false;
-        await this.router.navigate(['/appointments']);
-      },
-      error: (error: unknown) => {
-        console.error('Failed to synchronize the odontogram.', error);
-        this.isSaving = false;
-        this.saveFeedback = 'No s\'ha pogut guardar l\'odontograma.';
-      },
-    });
+    this.odontogramService
+      .syncDetails(this.odontogramId, this.buildSyncEntries())
+      .pipe(
+        switchMap(({ odontogram }: SyncOdontogramResponse) => {
+          this.applyOdontogramState(odontogram);
+          return this.appointmentService.closeAppointment(this.visitId!);
+        })
+      )
+      .subscribe({
+        next: async () => {
+          this.isSaving = false;
+          await this.router.navigate(['/appointments']);
+        },
+        error: (error: unknown) => {
+          console.error('Failed to synchronize the odontogram or close the appointment.', error);
+          this.isSaving = false;
+          this.saveFeedback = 'No s\'ha pogut guardar l\'odontograma o tancar la cita.';
+        },
+      });
   }
 
   getFaceStatus(tooth: ToothItem, face: OdontogramFace): ToothStatus | null {
@@ -196,6 +207,8 @@ export class OdontogramComponent implements OnInit {
   }
 
   private loadPathologyTypes(): void {
+    this.beginLoading();
+
     this.pathologyTypeService.list().subscribe({
       next: (pathologyTypes) => {
         const mappedProtocols = pathologyTypes
@@ -206,37 +219,50 @@ export class OdontogramComponent implements OnInit {
         if (mappedProtocols.length > 0) {
           this.protocols = mappedProtocols;
         }
+
+        this.finishLoading();
       },
       error: (error) => {
         console.error('Failed to load pathology types for odontogram protocol.', error);
+        this.finishLoading();
       },
     });
   }
 
   private loadOdontogramFromRoute(): void {
-    this.isLoading = true;
+    this.beginLoading();
     this.loadError = null;
 
     const patientId = Number(this.route.snapshot.queryParamMap.get('patientId'));
     const visitId = Number(this.route.snapshot.queryParamMap.get('visitId'));
 
     if (!Number.isFinite(patientId) || patientId < 1 || !Number.isFinite(visitId) || visitId < 1) {
-      this.isLoading = false;
       this.loadError = 'No s\'ha rebut una cita valida per obrir l\'odontograma.';
+      this.finishLoading();
       return;
     }
 
     this.odontogramService.openOdontogram(patientId, visitId).subscribe({
       next: ({ odontogram }: OpenOdontogramResponse) => {
         this.applyOdontogramState(odontogram);
-        this.isLoading = false;
+        this.finishLoading();
       },
       error: (error: unknown) => {
         console.error('Failed to open the fixed odontogram.', error);
-        this.isLoading = false;
         this.loadError = 'No s\'ha pogut carregar l\'odontograma.';
+        this.finishLoading();
       },
     });
+  }
+
+  private beginLoading(): void {
+    this.pendingLoadCount += 1;
+    this.isLoading = true;
+  }
+
+  private finishLoading(): void {
+    this.pendingLoadCount = Math.max(0, this.pendingLoadCount - 1);
+    this.isLoading = this.pendingLoadCount > 0;
   }
 
   private getProtocolOrder(key: ProtocolItem['key']): number {
