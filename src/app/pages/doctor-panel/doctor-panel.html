@@ -31,6 +31,14 @@
           <span class="text-sm">{{ 'doctorPanel.nav.agenda' | translate }}</span>
         </a>
         <a
+          routerLink="/documents"
+          routerLinkActive="bg-primary/10 text-primary font-bold"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
+        >
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">description</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.documents' | translate }}</span>
+        </a>
+        <a
           routerLink="/patients"
           routerLinkActive="bg-primary/10 text-primary font-bold"
           class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
@@ -84,6 +92,7 @@
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
               [attr.aria-label]="'doctorPanel.profile.uploadNewPhoto' | translate"
+              [title]="'doctorPanel.profile.uploadNewPhoto' | translate"
               (change)="onProfileFileSelected($event)"
             />
           </div>
@@ -137,6 +146,7 @@
               id="doctorPatientSearchInput"
               class="block w-[32.4ch] max-w-full p-2.5 pl-10 pr-4 text-sm font-medium text-text-main dark:text-white bg-[#f0f5f5] dark:bg-[#0f2323] border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#162a2a] transition-all placeholder:text-text-muted"
               [placeholder]="'doctorPanel.search.placeholder' | translate"
+              [title]="'doctorPanel.search.label' | translate"
               type="search"
               name="doctorPatientSearch"
               autocomplete="off"
@@ -158,7 +168,7 @@
                 class="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg py-1 z-30"
                 role="listbox"
                 [attr.aria-label]="'doctorPanel.search.resultsAria' | translate"
-                [title]="'doctorPanel.search.resultsAria' | translate"
+                title="Resultados de busqueda"
               >
                 @if (searchPatientsLoading) {
                   <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.searching' | translate }}</li>
