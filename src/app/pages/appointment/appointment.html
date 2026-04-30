@@ -179,7 +179,7 @@
                 >
                   <div
                     class="card-appointment"
-                    [ngClass]="cita.status"
+                    [ngClass]="getAppointmentStatusClass(cita.status)"
                     [class.compact-card]="isCompactAppointmentCard(cita)"
                     [ngStyle]="{ '--appointment-color': cita.color || '#00bcd4' }"
                   >
@@ -196,25 +196,29 @@
                           </span>
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
-                        <select
-                          title="Canviar estat"
-                          class="status-pill status-pill-btn"
-                          [disabled]="isStatusUpdating(cita.id)"
-                          [value]="getAppointmentStatusDisplay(cita.status)"
-                          (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
-                        >
-                          <option
-                            *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                        <div class="status-stack">
+                          <select
+                            title="Canviar estat"
+                            class="status-pill status-pill-btn"
+                            [ngClass]="getAppointmentStatusClass(cita.status)"
+                            [disabled]="isStatusUpdating(cita.id) || isAppointmentStatusLocked(cita.status)"
                             [value]="getAppointmentStatusDisplay(cita.status)"
-                            disabled
-                            hidden
+                            (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                           >
-                            {{ getAppointmentStatusDisplay(cita.status) }}
-                          </option>
-                          <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
-                            {{ statusOption }}
-                          </option>
-                        </select>
+                            <option
+                              *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                              [value]="getAppointmentStatusDisplay(cita.status)"
+                              [disabled]="!isAppointmentStatusLocked(cita.status)"
+                              hidden
+                            >
+                              {{ getAppointmentStatusDisplay(cita.status) }}
+                            </option>
+                            <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
+                              {{ statusOption }}
+                            </option>
+                          </select>
+                          <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                        </div>
                       </div>
 
                       <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
@@ -223,8 +227,6 @@
                         <span class="meta-icon clock" aria-hidden="true"></span>
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                       </div>
-
-                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
 
                       <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
@@ -320,6 +322,7 @@
                   >
                     <div
                       class="card-appointment"
+                      [ngClass]="getAppointmentStatusClass(cita.status)"
                       [class.compact-card]="isCompactAppointmentCard(cita)"
                       [ngStyle]="{ '--appointment-color': cita.color || '#00bcd4' }"
                     >
@@ -335,25 +338,29 @@
                               >A</span>
                             </span>
                           </span>
-                          <select
-                            title="Canviar estat"
-                            class="status-pill status-pill-btn"
-                            [disabled]="isStatusUpdating(cita.id)"
-                            [value]="getAppointmentStatusDisplay(cita.status)"
-                            (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
-                          >
-                            <option
-                              *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                          <div class="status-stack">
+                            <select
+                              title="Canviar estat"
+                              class="status-pill status-pill-btn"
+                              [ngClass]="getAppointmentStatusClass(cita.status)"
+                              [disabled]="isStatusUpdating(cita.id) || isAppointmentStatusLocked(cita.status)"
                               [value]="getAppointmentStatusDisplay(cita.status)"
-                              disabled
-                              hidden
+                              (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
                             >
-                              {{ getAppointmentStatusDisplay(cita.status) }}
-                            </option>
-                            <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
-                              {{ statusOption }}
-                            </option>
-                          </select>
+                              <option
+                                *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                                [value]="getAppointmentStatusDisplay(cita.status)"
+                                [disabled]="!isAppointmentStatusLocked(cita.status)"
+                                hidden
+                              >
+                                {{ getAppointmentStatusDisplay(cita.status) }}
+                              </option>
+                              <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
+                                {{ statusOption }}
+                              </option>
+                            </select>
+                            <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                          </div>
                         </div>
 
                         <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
@@ -363,7 +370,6 @@
                           <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                         </div>
 
-                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                       </div>
                     </div>
                   </div>

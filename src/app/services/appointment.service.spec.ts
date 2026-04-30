@@ -28,26 +28,31 @@ describe('AppointmentService', () => {
     let responseBody = '';
 
     service.updateAppointmentStatus(63, 'Confirmada').subscribe((response) => {
-      responseBody = response;
+      responseBody = String(response.status);
     });
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/63/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toBe('Confirmada');
+    expect(req.request.body).toEqual({ status: 'Confirmada' });
     expect(req.request.withCredentials).toBeTrue();
 
-    req.flush('ok');
-    expect(responseBody).toBe('ok');
+    req.flush(JSON.stringify({ ok: true, status: 'Confirmada' }));
+    expect(responseBody).toBe('Confirmada');
   });
 
   it('should send arrived canonical status for Arribada', () => {
-    service.updateAppointmentStatus(66, 'Arribada').subscribe();
+    let responseBody = '';
+
+    service.updateAppointmentStatus(66, 'Arribada').subscribe((response) => {
+      responseBody = String(response.status);
+    });
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/66/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toBe('Arribada');
+    expect(req.request.body).toEqual({ status: 'Arribada' });
 
     req.flush('ok');
+    expect(responseBody).toBe('Arribada');
   });
 
   it('should send cancelled canonical status for Cancelada', () => {
@@ -55,9 +60,9 @@ describe('AppointmentService', () => {
 
     const req = httpMock.expectOne('http://localhost:8000/api/appointment/64/status');
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toBe('Cancelada');
+    expect(req.request.body).toEqual({ status: 'Cancelada' });
 
-    req.flush('ok');
+    req.flush(JSON.stringify({ ok: true, status: 'Cancelada' }));
   });
 
   it('should fallback from PATCH to PUT with the same status body', () => {
@@ -65,13 +70,45 @@ describe('AppointmentService', () => {
 
     const firstReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
     expect(firstReq.request.method).toBe('PATCH');
-    expect(firstReq.request.body).toBe('Confirmada');
+    expect(firstReq.request.body).toEqual({ status: 'Confirmada' });
     firstReq.flush('boom', { status: 500, statusText: 'Server Error' });
 
     const secondReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
     expect(secondReq.request.method).toBe('PUT');
-    expect(secondReq.request.body).toBe('Confirmada');
-    secondReq.flush('ok');
+    expect(secondReq.request.body).toEqual({ status: 'Confirmada' });
+    secondReq.flush(JSON.stringify({ ok: true, status: 'Confirmada' }));
+  });
+
+  it('should not fallback to PUT when backend rejects an invalid status', () => {
+    let receivedCode = '';
+
+    service.updateAppointmentStatus(65, 'En curs').subscribe({
+      error: (err) => {
+        receivedCode = String(err.error?.code);
+      },
+    });
+
+    const req = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ status: 'En curs' });
+
+    req.flush({ ok: false, code: 'INVALID_STATUS' }, { status: 400, statusText: 'Bad Request' });
+    httpMock.expectNone('http://localhost:8000/api/appointment/65/status');
+    expect(receivedCode).toBe('INVALID_STATUS');
+  });
+
+  it('should load official appointment statuses', () => {
+    service.getAppointmentStatuses().subscribe((response) => {
+      expect(response.manualStatuses).toEqual(['Confirmada', 'Arribada', 'Cancelada']);
+    });
+
+    const req = httpMock.expectOne('http://localhost:8000/api/appointment/statuses');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.withCredentials).toBeTrue();
+    req.flush({
+      statuses: ['Programada', 'Confirmada', 'En curs', 'Arribada', 'Cancelada', 'Finalitzada', 'Falta consentiment'],
+      manualStatuses: ['Confirmada', 'Arribada', 'Cancelada'],
+    });
   });
 
   it('should use GET for openAppointment', () => {

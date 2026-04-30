@@ -2,13 +2,18 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppointmentService, Appointment } from '../../services/appointment.service';
+import {
+  AppointmentService,
+  Appointment,
+  MANUAL_APPOINTMENT_STATUSES,
+  ManualAppointmentStatus,
+} from '../../services/appointment.service';
 import { FormsModule } from '@angular/forms';
 import {
   pickAppointmentPatientId,
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
-import { catchError, of } from 'rxjs';
+import { catchError, finalize, of } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
 const BOX_CLEANING_BUFFER_MINUTES = 5;
@@ -73,11 +78,7 @@ export class AppointmentComponent implements OnInit {
   selectedWeekBoxKey = signal<string>('');
   selectedWeekDoctorKey = signal<string>('all');
   statusUpdatingIds = signal<number[]>([]);
-  readonly appointmentStatusOptions: string[] = [
-    'Confirmada',
-    'Arribada',
-    'Cancelada',
-  ];
+  readonly appointmentStatusOptions: ManualAppointmentStatus[] = [...MANUAL_APPOINTMENT_STATUSES];
   quickActionsAppointmentId = signal<number | null>(null);
   cleaningSelectorAppointmentId = signal<number | null>(null);
   pathologiesList = signal<any[]>([]);
@@ -1498,7 +1499,7 @@ export class AppointmentComponent implements OnInit {
       duration,
       cleaningTime,
       totalBlockTime: duration + cleaningTime,
-      status: String(row['status'] ?? fallback.status ?? 'Programada'),
+      status: this.pickAppointmentStatus(row) ?? this.canonicalizeAppointmentStatus(fallback.status) ?? 'Programada',
       doctorId: this.getDoctorIdFromAppointmentRecord(row),
       patientId,
       patientName: String(row['patientName'] ?? row['patient_name'] ?? fallback.patientName ?? '—'),
@@ -2053,38 +2054,51 @@ export class AppointmentComponent implements OnInit {
 
 
   getAppointmentStatusDisplay(currentStatus: string): string {
-    const status = String(currentStatus ?? '').trim();
+    const status = this.canonicalizeAppointmentStatus(currentStatus);
     return status || 'Sense estat';
+  }
+
+  getAppointmentStatusClass(currentStatus: string): string {
+    const normalized = this.normalizeStatusToken(this.getAppointmentStatusDisplay(currentStatus));
+    return normalized ? `status-${normalized}` : 'status-senseestat';
   }
 
   isStatusSelectableFromCalendar(currentStatus: string): boolean {
     return this.getManualCalendarStatusOption(currentStatus) != null;
   }
 
+  isAppointmentStatusLocked(currentStatus: string): boolean {
+    return this.normalizeStatusToken(currentStatus) === 'finalitzada';
+  }
+
   onAppointmentStatusSelected(appointment: Appointment, selectedStatus: string): void {
     const targetStatus = this.getManualCalendarStatusOption(selectedStatus);
     const currentStatus = this.getAppointmentStatusDisplay(appointment.status);
 
-    if (this.isStatusUpdating(appointment.id) || targetStatus == null || targetStatus === currentStatus) {
+    if (
+      this.isStatusUpdating(appointment.id) ||
+      this.isAppointmentStatusLocked(appointment.status) ||
+      targetStatus == null ||
+      targetStatus === currentStatus
+    ) {
       return;
     }
 
     this.changeAppointmentStatus(appointment, targetStatus);
   }
 
-  changeAppointmentStatus(appointment: Appointment, nextStatus: string): void {
+  changeAppointmentStatus(appointment: Appointment, nextStatus: ManualAppointmentStatus): void {
     if (this.isStatusUpdating(appointment.id)) {
       return;
     }
 
     this.markStatusUpdating(appointment.id, true);
 
-    this.appointmentService.updateAppointmentStatus(appointment.id, nextStatus).subscribe({
-      next: () => {
-        this.fetchAppointments();
-        if (this.isWeekView()) {
-          this.fetchWeekAppointments();
-        }
+    this.appointmentService.updateAppointmentStatus(appointment.id, nextStatus).pipe(
+      finalize(() => this.markStatusUpdating(appointment.id, false))
+    ).subscribe({
+      next: (response) => {
+        this.applyAppointmentStatus(appointment.id, this.pickAppointmentStatusFromResponse(response, nextStatus));
       },
       error: (err: unknown) => {
         const httpErr = err as HttpErrorResponse;
@@ -2092,12 +2106,38 @@ export class AppointmentComponent implements OnInit {
           alert('Sessio caducada o sense permisos per canviar l\'estat de la cita.');
           return;
         }
+        if (httpErr?.status === 400 && this.asRecord(httpErr.error)?.['code'] === 'INVALID_STATUS') {
+          alert('Estat no permes. Opcions valides: Confirmada, Arribada o Cancelada.');
+          return;
+        }
         alert('No s\'ha pogut canviar l\'estat de la cita.');
       },
-      complete: () => {
-        this.markStatusUpdating(appointment.id, false);
-      },
     });
+  }
+
+  private applyAppointmentStatus(appointmentId: number, status: string): void {
+    const nextStatus = this.canonicalizeAppointmentStatus(status) || 'Programada';
+    const updateRows = (rows: Appointment[]) =>
+      rows.map((appointment) =>
+        appointment.id === appointmentId
+          ? { ...appointment, status: nextStatus }
+          : appointment
+      );
+
+    this.appointments.set(updateRows(this.appointments()));
+
+    const weekly = this.weeklyAppointments();
+    const nextWeekly = Object.fromEntries(
+      Object.entries(weekly).map(([date, rows]) => [date, updateRows(rows)])
+    );
+    this.weeklyAppointments.set(nextWeekly);
+  }
+
+  private pickAppointmentStatusFromResponse(response: unknown, fallbackStatus: string): string {
+    const payload = this.asRecord(response);
+    const appointment = this.asRecord(payload?.['appointment']);
+
+    return this.pickAppointmentStatus(appointment) ?? this.pickAppointmentStatus(payload) ?? fallbackStatus;
   }
 
   isQuickActionsOpen(appointmentId: number): boolean {
@@ -2241,9 +2281,83 @@ export class AppointmentComponent implements OnInit {
       .replace(/[^a-z0-9]+/g, '');
   }
 
-  private getManualCalendarStatusOption(status: string): string | null {
-    const normalized = this.normalizeStatusToken(status);
+  private canonicalizeAppointmentStatus(status: unknown): string | null {
+    const raw = String(status ?? '').trim();
+    if (!raw) {
+      return null;
+    }
+
+    const normalized = this.normalizeStatusToken(raw);
     const aliases: Record<string, string> = {
+      programada: 'Programada',
+      programado: 'Programada',
+      scheduled: 'Programada',
+      pending: 'Programada',
+      confirmada: 'Confirmada',
+      confirmado: 'Confirmada',
+      confirmed: 'Confirmada',
+      encurs: 'En curs',
+      encurso: 'En curs',
+      inprogress: 'En curs',
+      progress: 'En curs',
+      arribada: 'Arribada',
+      arribado: 'Arribada',
+      arrived: 'Arribada',
+      arrival: 'Arribada',
+      checkedin: 'Arribada',
+      present: 'Arribada',
+      cancelada: 'Cancelada',
+      cancellada: 'Cancelada',
+      cancelado: 'Cancelada',
+      cancelled: 'Cancelada',
+      canceled: 'Cancelada',
+      finalitzada: 'Finalitzada',
+      finalizada: 'Finalitzada',
+      finalizado: 'Finalitzada',
+      finished: 'Finalitzada',
+      closed: 'Finalitzada',
+      completed: 'Finalitzada',
+      faltaconsentiment: 'Falta consentiment',
+      faltaconsentimiento: 'Falta consentiment',
+      missingconsent: 'Falta consentiment',
+      consentmissing: 'Falta consentiment',
+    };
+
+    return aliases[normalized] ?? raw;
+  }
+
+  private pickAppointmentStatus(source: ApiRecord | null): string | null {
+    if (!source) {
+      return null;
+    }
+
+    const directStatus = this.pickString(source, [
+      'status',
+      'stateName',
+      'state_name',
+      'appointmentStatus',
+      'appointment_status',
+      'bookingStatus',
+      'booking_status',
+    ]);
+    if (directStatus) {
+      return this.canonicalizeAppointmentStatus(directStatus);
+    }
+
+    for (const key of ['appointment', 'state', 'status']) {
+      const nested = this.asRecord(source[key]);
+      const nestedStatus = this.pickString(nested, ['status', 'name', 'stateName', 'state_name']);
+      if (nestedStatus) {
+        return this.canonicalizeAppointmentStatus(nestedStatus);
+      }
+    }
+
+    return null;
+  }
+
+  private getManualCalendarStatusOption(status: string): ManualAppointmentStatus | null {
+    const normalized = this.normalizeStatusToken(status);
+    const aliases: Record<string, ManualAppointmentStatus> = {
       confirmada: 'Confirmada',
       confirmado: 'Confirmada',
       confirmed: 'Confirmada',
@@ -2500,11 +2614,11 @@ export class AppointmentComponent implements OnInit {
   finishAppointment(appointmentId: number): void {
     if (confirm('Estàs segur que vols finalitzar aquesta cita?')) {
       this.appointmentService.closeAppointment(appointmentId).subscribe({
-        next: () => {
-          this.fetchAppointments();
-          if (this.isWeekView()) {
-            this.fetchWeekAppointments();
-          }
+        next: (response: unknown) => {
+          this.applyAppointmentStatus(
+            appointmentId,
+            this.pickAppointmentStatusFromResponse(response, 'Finalitzada')
+          );
         },
         error: () => alert('Error al tancar la cita')
       });

@@ -3,6 +3,41 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { extractApiCollection } from '../models/appointment-api.util';
 
+export const APPOINTMENT_STATUSES = [
+  'Programada',
+  'Confirmada',
+  'En curs',
+  'Arribada',
+  'Cancelada',
+  'Finalitzada',
+  'Falta consentiment',
+] as const;
+
+export const MANUAL_APPOINTMENT_STATUSES = [
+  'Confirmada',
+  'Arribada',
+  'Cancelada',
+] as const;
+
+export type AppointmentStatus = typeof APPOINTMENT_STATUSES[number];
+export type ManualAppointmentStatus = typeof MANUAL_APPOINTMENT_STATUSES[number];
+
+export interface AppointmentStatusesResponse {
+  statuses: AppointmentStatus[];
+  manualStatuses: ManualAppointmentStatus[];
+}
+
+export interface AppointmentStatusUpdateResponse {
+  ok?: boolean;
+  code?: string;
+  id?: number;
+  status?: AppointmentStatus | string;
+  appointment?: {
+    id?: number;
+    status?: AppointmentStatus | string;
+  };
+}
+
 export interface Appointment {
   id: number;
   time: string;
@@ -74,20 +109,32 @@ export class AppointmentService {
     return this.http.post(`${this.apiUrl}/${id}/close`, {}, { withCredentials: true });
   }
 
-  updateAppointmentStatus(id: number, nextStatus: string): Observable<string> {
+  updateAppointmentStatus(id: number, nextStatus: ManualAppointmentStatus | string): Observable<AppointmentStatusUpdateResponse> {
     const canonicalStatus = this.normalizeAppointmentStatus(nextStatus);
-
     const requestOptions = {
       withCredentials: true,
       responseType: 'text' as const,
     };
 
     const url = `${this.apiUrl}/${id}/status`;
-    const stringBody = canonicalStatus;
+    const body = { status: canonicalStatus };
 
-    return this.http.patch(url, stringBody, requestOptions).pipe(
-      catchError(() => this.http.put(url, stringBody, requestOptions)),
+    return this.http.patch(url, body, requestOptions).pipe(
+      map((response) => this.parseStatusUpdateResponse(response, canonicalStatus)),
+      catchError((err) => {
+        const status = (err as { status?: number } | null)?.status;
+        if (status === 400 || status === 401 || status === 403) {
+          return throwError(() => err);
+        }
+        return this.http.put(url, body, requestOptions).pipe(
+          map((response) => this.parseStatusUpdateResponse(response, canonicalStatus))
+        );
+      }),
     );
+  }
+
+  getAppointmentStatuses(): Observable<AppointmentStatusesResponse> {
+    return this.http.get<AppointmentStatusesResponse>(`${this.apiUrl}/statuses`, { withCredentials: true });
   }
 
   openAppointment(id: number): Observable<any> {
@@ -147,6 +194,26 @@ export class AppointmentService {
     }
 
     return String(nextStatus ?? '').trim();
+  }
+
+  private parseStatusUpdateResponse(response: string, fallbackStatus: string): AppointmentStatusUpdateResponse {
+    const trimmed = String(response ?? '').trim();
+    if (!trimmed) {
+      return { status: fallbackStatus };
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed) as AppointmentStatusUpdateResponse | string;
+      if (typeof parsed === 'string') {
+        return { status: parsed || fallbackStatus };
+      }
+      return {
+        ...parsed,
+        status: parsed.status ?? parsed.appointment?.status ?? fallbackStatus,
+      };
+    } catch {
+      return { status: fallbackStatus };
+    }
   }
 
   /**
