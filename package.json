@@ -10,6 +10,7 @@
     "i18n:check": "node scripts/check-i18n.mjs",
     "i18n:check:strict": "node scripts/check-i18n.mjs --strict",
     "validate": "npm run i18n:check:strict && npx ng build --configuration=development && npx ng test --no-watch --browsers=ChromeHeadless",
+    "api:documents:runtime": "node scripts/documents-runtime-check.mjs",
     "api:smoke": "node scripts/smoke-api.mjs",
     "validate:full": "npm run validate && npm run api:smoke"
   },
