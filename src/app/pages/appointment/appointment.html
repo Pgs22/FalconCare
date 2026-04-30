@@ -404,7 +404,7 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Edita cita' : 'Detall de cita' }}</h2>
+        <h2>{{ isEditMode ? 'Edita cita' : 'Nova cita' }}</h2>
         <small>Gestió de cita i pacient</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
@@ -416,9 +416,6 @@
       <div class="form-group">
         <div class="label-header">
           <label>Pacient</label>
-          <button type="button" class="btn-text-link" (click)="openNewPatientRegister()">
-            Nou pacient
-          </button>
         </div>
 
         <select

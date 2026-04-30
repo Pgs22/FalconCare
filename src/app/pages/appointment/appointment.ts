@@ -5,8 +5,6 @@ import { Router } from '@angular/router';
 import { AppointmentService, Appointment } from '../../services/appointment.service';
 import { FormsModule } from '@angular/forms';
 import {
-  parseMedicationAllergiesDbString,
-  pickMedicationAllergiesFromPatientApiPayload,
   pickAppointmentPatientId,
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
@@ -424,24 +422,12 @@ export class AppointmentComponent implements OnInit {
 
   private getAllergyTextFromPatient(patient: ApiRecord): string {
     const selectedAllergies = this.extractSelectedAllergies(patient);
-    if (selectedAllergies.length > 0) {
-      return selectedAllergies
-        .map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`)
-        .join(', ');
-    }
-
-    const rawAllergies = pickMedicationAllergiesFromPatientApiPayload(patient);
-    return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(rawAllergies)).join(', ');
+    return selectedAllergies
+      .map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`)
+      .join(', ');
   }
 
   private extractSelectedAllergies(patient: ApiRecord): number[] {
-    const rawSelected = patient['selectedAllergies'] ?? patient['selected_allergies'];
-    if (Array.isArray(rawSelected)) {
-      return rawSelected
-        .map((item) => this.toNumberOrNull(item))
-        .filter((item): item is number => item != null && item > 0);
-    }
-
     const rawBitmask = this.toNumberOrNull(patient['allergiesBitmask'] ?? patient['allergies_bitmask']);
     if (rawBitmask != null && rawBitmask > 0) {
       return selectedAllergiesFromBitmask(rawBitmask);
@@ -586,27 +572,14 @@ export class AppointmentComponent implements OnInit {
       if (fromPatient.length > 0) {
         return fromPatient;
       }
-
-      const embedded = pickMedicationAllergiesFromPatientApiPayload(patientNode);
-      if (embedded.trim()) {
-        return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(embedded));
-      }
     }
 
-    const patientId = pickAppointmentPatientId(record);
-    if (patientId != null) {
-      const patientRecord = this.findPatientRecordById(patientId);
-      if (patientRecord) {
-        const fromLoadedPatient = this.extractAllergyLabelsFromRecord(patientRecord);
-        if (fromLoadedPatient.length > 0) {
-          return fromLoadedPatient;
-        }
+    const patientRecord = this.findPatientRecordForAppointment(record);
+    if (patientRecord) {
+      const fromLoadedPatient = this.extractAllergyLabelsFromRecord(patientRecord);
+      if (fromLoadedPatient.length > 0) {
+        return fromLoadedPatient;
       }
-    }
-
-    const raw = pickMedicationAllergiesFromPatientApiPayload(record);
-    if (raw.trim()) {
-      return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(raw));
     }
 
     return [];
@@ -614,34 +587,10 @@ export class AppointmentComponent implements OnInit {
 
   private extractAllergyLabelsFromRecord(record: ApiRecord): string[] {
     const selectedAllergies = this.extractSelectedAllergyFlags(record);
-    if (selectedAllergies.length > 0) {
-      return selectedAllergies.map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`);
-    }
-
-    const directItems = new Set<string>();
-    for (const key of ['allergyLabels', 'allergy_labels', 'allergies', 'allergySummary', 'allergy_summary']) {
-      this.collectAllergyItems(record[key], directItems);
-    }
-    if (directItems.size > 0) {
-      return Array.from(directItems);
-    }
-
-    const raw = pickMedicationAllergiesFromPatientApiPayload(record);
-    if (raw.trim()) {
-      return this.sanitizeAllergyItems(parseMedicationAllergiesDbString(raw));
-    }
-
-    return [];
+    return selectedAllergies.map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`);
   }
 
   private extractSelectedAllergyFlags(record: ApiRecord): number[] {
-    const rawSelected = record['selectedAllergies'] ?? record['selected_allergies'];
-    if (Array.isArray(rawSelected)) {
-      return rawSelected
-        .map((item) => this.toNumberOrNull(item))
-        .filter((item): item is number => item != null && item > 0);
-    }
-
     const bitmask = this.toNumberOrNull(record['allergiesBitmask'] ?? record['allergies_bitmask']);
     if (bitmask != null && bitmask > 0) {
       return selectedAllergiesFromBitmask(bitmask);
@@ -663,6 +612,71 @@ export class AppointmentComponent implements OnInit {
       return null;
     }
     return found as ApiRecord;
+  }
+
+  private findPatientRecordForAppointment(record: ApiRecord): ApiRecord | null {
+    const patientId =
+      this.getAppointmentPatientId(record as unknown as Appointment) ??
+      pickAppointmentPatientId(record);
+
+    if (patientId != null) {
+      const byId = this.findPatientRecordById(patientId);
+      if (byId) {
+        return byId;
+      }
+    }
+
+    const patientName = this.getPatientNameFromAppointmentRecord(record);
+    return this.findPatientRecordByName(patientName);
+  }
+
+  private getPatientNameFromAppointmentRecord(record: ApiRecord): string {
+    const direct = this.pickString(record, [
+      'patientName',
+      'patient_name',
+      'patientFullName',
+      'patient_full_name',
+    ]);
+    if (direct) {
+      return direct;
+    }
+
+    const patientNode = this.asRecord(record['patient']);
+    if (!patientNode) {
+      return '';
+    }
+
+    const nested = this.pickString(patientNode, ['fullName', 'full_name', 'name', 'displayName', 'display_name']);
+    if (nested) {
+      return nested;
+    }
+
+    const first = this.pickString(patientNode, ['firstName', 'first_name']) ?? '';
+    const last = this.pickString(patientNode, ['lastName', 'last_name']) ?? '';
+    return `${first} ${last}`.trim();
+  }
+
+  private findPatientRecordByName(patientName: string): ApiRecord | null {
+    const normalizedTarget = this.normalizeComparableText(patientName);
+    if (!normalizedTarget) {
+      return null;
+    }
+
+    const found = this.patientsList().find((patient) => {
+      if (!patient || typeof patient !== 'object') {
+        return false;
+      }
+
+      const record = patient as ApiRecord;
+      const direct = this.pickString(record, ['fullName', 'full_name', 'name', 'displayName', 'display_name']);
+      const first = this.pickString(record, ['firstName', 'first_name']) ?? '';
+      const last = this.pickString(record, ['lastName', 'last_name']) ?? '';
+      const fullName = direct || `${first} ${last}`.trim();
+
+      return this.normalizeComparableText(fullName) === normalizedTarget;
+    });
+
+    return found && typeof found === 'object' ? found as ApiRecord : null;
   }
 
   loadPatients(afterLoad?: () => void): void {
@@ -1366,46 +1380,12 @@ export class AppointmentComponent implements OnInit {
     return aliases[normalized] ?? normalized;
   }
 
-  private resolveAllergyAlertHeader(payload: ApiRecord | null): string {
-    const alerts = this.extractAlertRecords(payload);
-    for (const alertEntry of alerts) {
-      const code = this.pickString(alertEntry, ['code'])?.toUpperCase();
-      const messageKey = this.pickString(alertEntry, ['messageKey']);
-      if (code === 'PATIENT_MEDICATION_ALLERGIES' || messageKey === 'appointment.alerts.patientMedicationAllergies') {
-        return 'Atenció: el pacient té al·lèrgies registrades.';
-      }
-    }
+  private resolveAllergyAlertHeader(_payload: ApiRecord | null): string {
     return 'Atenció: el pacient té al·lèrgies registrades.';
   }
 
   private extractAllergyItemsFromCreateResponse(payload: ApiRecord | null): string[] {
-    const fromAlerts = this.extractAllergyItemsFromAlerts(payload);
-    if (fromAlerts.length > 0) {
-      return fromAlerts;
-    }
     return this.extractAllergyItemsFromSelectedPatient();
-  }
-
-  private extractAllergyItemsFromAlerts(payload: ApiRecord | null): string[] {
-    const items = new Set<string>();
-    const alerts = this.extractAlertRecords(payload);
-
-    for (const alertEntry of alerts) {
-      const code = this.pickString(alertEntry, ['code'])?.toUpperCase();
-      const messageKey = this.pickString(alertEntry, ['messageKey']);
-      const isMedicationAllergyAlert =
-        code === 'PATIENT_MEDICATION_ALLERGIES' ||
-        messageKey === 'appointment.alerts.patientMedicationAllergies';
-
-      if (!isMedicationAllergyAlert) {
-        continue;
-      }
-
-      this.collectAllergyItems(alertEntry, items);
-      this.collectAllergyItems(alertEntry['details'], items);
-    }
-
-    return Array.from(items);
   }
 
   private extractAllergyItemsFromSelectedPatient(): string[] {
@@ -1426,72 +1406,6 @@ export class AppointmentComponent implements OnInit {
     return allergyText
       ? allergyText.split(',').map((item) => item.trim()).filter(Boolean)
       : [];
-  }
-
-  private extractAlertRecords(payload: ApiRecord | null): ApiRecord[] {
-    if (!payload) {
-      return [];
-    }
-    const alertsRaw = payload['alerts'];
-    if (!Array.isArray(alertsRaw)) {
-      return [];
-    }
-    return alertsRaw.filter((entry): entry is ApiRecord => !!entry && typeof entry === 'object');
-  }
-
-  private collectAllergyItems(value: unknown, bag: Set<string>): void {
-    if (!value) {
-      return;
-    }
-
-    if (typeof value === 'string') {
-      for (const item of this.sanitizeAllergyItems(parseMedicationAllergiesDbString(value))) {
-        bag.add(item);
-      }
-      return;
-    }
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        this.collectAllergyItems(item, bag);
-      }
-      return;
-    }
-
-    if (typeof value !== 'object') {
-      return;
-    }
-
-    const record = value as ApiRecord;
-    const candidateKeys = [
-      'allergies',
-      'medicationAllergies',
-      'medication_allergies',
-      'allergySummary',
-      'summary',
-      'list',
-      'items',
-    ];
-
-    for (const key of candidateKeys) {
-      this.collectAllergyItems(record[key], bag);
-    }
-  }
-
-  private sanitizeAllergyItems(items: string[]): string[] {
-    const ignored = new Set(['CAP CONEGUDA', 'NO KNOWN', 'NO KNOWN ALLERGIES', 'NINGUNA', 'NINGUNA CONOCIDA']);
-    const seen = new Set<string>();
-    const out: string[] = [];
-
-    for (const item of items) {
-      const normalized = item.trim().toLocaleUpperCase('es-ES');
-      if (!normalized || ignored.has(normalized) || seen.has(normalized)) {
-        continue;
-      }
-      seen.add(normalized);
-      out.push(normalized);
-    }
-    return out;
   }
 
   private asRecord(value: unknown): ApiRecord | null {
@@ -1561,7 +1475,10 @@ export class AppointmentComponent implements OnInit {
     );
 
     const id = this.toNumberOrNull(row['id'] ?? fallback.id) ?? 0;
-    const patientId = pickAppointmentPatientId(row) ?? this.toNumberOrNull((fallback as { patientId?: unknown }).patientId);
+    const patientId =
+      this.getAppointmentPatientId(row as unknown as Appointment) ??
+      pickAppointmentPatientId(row) ??
+      this.toNumberOrNull((fallback as { patientId?: unknown }).patientId);
     const allergyLabels = this.extractAllergyLabelsFromAppointmentRecord(row);
     const time =
       this.pickString(row, ['time', 'visitTime', 'visit_time', 'slotTime', 'slot_time']) ??
@@ -2304,6 +2221,15 @@ export class AppointmentComponent implements OnInit {
       current.delete(appointmentId);
     }
     this.statusUpdatingIds.set(Array.from(current));
+  }
+
+  private normalizeComparableText(value: unknown): string {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
   }
 
   private normalizeStatusToken(status: string): string {
