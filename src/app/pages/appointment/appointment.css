@@ -227,11 +227,23 @@
 }
 
 .day-allergy-summary {
-  margin-bottom: 1rem;
+  margin: 1rem 0 0;
   border: 1px solid #f4b6bd;
   border-radius: 14px;
   background: #fff6f7;
   overflow: hidden;
+}
+
+.sidebar-allergy-summary {
+  width: 100%;
+}
+
+.sidebar-allergy-summary .day-allergy-summary__header {
+  padding: 0.7rem 0.8rem;
+}
+
+.sidebar-allergy-summary .day-allergy-summary__table {
+  min-width: 0;
 }
 
 .day-allergy-summary__header {
