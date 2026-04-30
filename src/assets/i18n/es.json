@@ -208,6 +208,7 @@
       "main": "Navegación principal",
       "dashboard": "Panel de control",
       "agenda": "Agenda",
+      "documents": "Documentos",
       "patients": "Pacientes",
       "settings": "Configuración"
     },
@@ -445,6 +446,118 @@
       "noSessionOrPermission": "No tienes sesión o permiso para ver este paciente. Vuelve a iniciar sesión.",
       "serverLoadPatient": "Ocurrió un error al cargar el paciente. Inténtalo de nuevo.",
       "loadPatientGeneric": "No se pudo cargar el paciente. Verifica que exista o vuelve al panel del doctor."
+    }
+  },
+  "documents": {
+    "brand": { "aria": "Clínica Dental FalconCare" },
+    "nav": { "panel": "Panel", "agenda": "Agenda", "documents": "Documentos", "settings": "Ajustes" },
+    "header": { "collectionTitle": "Colección de Archivos", "registrationDate": "Alta" },
+    "actions": {
+      "uploading": "Subiendo...",
+      "uploadNew": "Subir Nuevo Documento",
+      "selectFilesAria": "Seleccionar documentos para subir",
+      "delete": "Eliminar documento activo",
+      "deleteConfirm": "¿Eliminar el documento \"{{name}}\"? Esta acción no se puede deshacer.",
+      "downloadFile": "Descargar archivo"
+    },
+    "tabs": { "aria": "Tipos de radiografía", "all": "Todo", "pan": "Panorámica", "pa": "Periapical" },
+    "states": {
+      "loadingDocuments": "Cargando documentos...",
+      "noDocuments": "No hay documentos para este paciente.",
+      "loadingPreview": "Cargando vista previa...",
+      "previewAlt": "Vista previa del documento seleccionado",
+      "pdfPreview": "Vista previa PDF",
+      "pdfPreviewUnavailable": "Vista previa PDF no disponible en este navegador.",
+      "previewUnavailableType": "Vista previa no disponible para este formato.",
+      "selectDocument": "Selecciona un documento para visualizarlo."
+    },
+    "patient": {
+      "noneAvailable": "No hay pacientes disponibles.",
+      "resizeAria": "Ajustar altura del listado de pacientes",
+      "defaultName": "Paciente",
+      "fallbackWithId": "Paciente #{{id}}"
+    },
+    "toolbar": {
+      "zoomOut": "Alejar",
+      "zoomIn": "Acercar",
+      "measure": "Medir en cm",
+      "calibration": "Calibración guiada (2 clics)",
+      "lockCalibration": "Bloquear calibración para este paciente/documento",
+      "snap": "Snap magnético a bordes",
+      "snapLabel": "snap",
+      "snapSensitivity": "Sensibilidad del snap anatómico",
+      "refCm": "ref cm",
+      "referenceLength": "Longitud real de referencia en centímetros"
+    },
+    "viewer": {
+      "measure": { "pending": "Medición pendiente" },
+      "calibration": {
+        "stepStart": "Calibración: clic en punto inicial",
+        "stepEnd": "Calibración: clic en punto final",
+        "reference": "Referencia: {{value}} cm"
+      },
+      "snap": {
+        "unavailable": "Snap no disponible para este formato",
+        "on": "Snap ON",
+        "off": "Snap OFF",
+        "auto": "Auto",
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto"
+      }
+    },
+    "sync": {
+      "error": "Error de sincronización",
+      "syncing": "Sincronizando...",
+      "waitingPatient": "Esperando paciente",
+      "pending": "Pendiente de sincronización",
+      "realtimePrefix": "Sincronizado en tiempo real"
+    },
+    "footer": {
+      "imageId": "ID Imagen",
+      "type": "Tipo",
+      "date": "Fecha",
+      "measure": "Medición",
+      "measureAvailableImages": "Medición disponible para imágenes"
+    },
+    "notes": {
+      "title": "Notas Clínicas",
+      "subtitle": "Registro clínico del documento seleccionado",
+      "editorTitle": "Nota clínica del documento",
+      "editorSubtitle": "Escribe y guarda observaciones clínicas asociadas al documento seleccionado.",
+      "placeholderActive": "Escribir nota clínica...",
+      "placeholderInactive": "Selecciona un documento para escribir una nota...",
+      "inputTitle": "Nota clínica del documento seleccionado",
+      "send": "Enviar nota",
+      "saving": "Guardando...",
+      "selectDocument": "Selecciona un documento para sincronizar notas.",
+      "syncedPrefix": "Notas sincronizadas"
+    },
+    "feedback": {
+      "noteSaved": "Nota clínica guardada y verificada correctamente en base de datos.",
+      "deleted": "Documento eliminado correctamente.",
+      "uploadOne": "Documento subido correctamente.",
+      "uploadMany": "{{count}} documentos subidos.",
+      "filesEmpty": "Los archivos seleccionados están vacíos.",
+      "selectAtLeastOne": "Selecciona al menos un archivo para subir.",
+      "fileTooLarge": "El archivo {{name}} supera el máximo permitido ({{maxMb}} MB)."
+    },
+    "errors": {
+      "sessionExpired": "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+      "forbidden": "No tienes permisos clínicos para esta operación.",
+      "notFound": "El recurso solicitado ya no existe o no está disponible.",
+      "deleteConflict": "No se pudo borrar el documento por un conflicto de almacenamiento.",
+      "conflict": "Se detectó un conflicto al procesar el documento. Inténtalo de nuevo.",
+      "serverMaxFile": "El archivo supera el límite del servidor ({{maxMb}} MB).",
+      "serverFileTooLarge": "El archivo supera el tamaño máximo permitido por el servidor.",
+      "uploadBadRequest": "Solicitud de subida inválida. Revisa archivo, paciente y metadatos.",
+      "listBadRequest": "El backend requiere filtrar documentos por paciente. Recarga seleccionando un paciente.",
+      "badRequest": "Solicitud inválida. Revisa los datos e inténtalo de nuevo.",
+      "offline": "No se pudo conectar con el servidor.",
+      "noteUpdate": "No se pudo guardar la nota clínica.",
+      "uploadGeneric": "No se pudieron subir uno o más documentos.",
+      "download": "No se pudo descargar o previsualizar el documento seleccionado.",
+      "list": "No se pudieron cargar los documentos del paciente seleccionado."
     }
   }
 }
