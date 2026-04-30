@@ -86,38 +86,28 @@
         </div>
         <small>{{ appointments().length }} cites guardades avui</small>
       </div>
+
+      <section class="day-allergy-summary sidebar-allergy-summary" *ngIf="getDayAllergySummary().length > 0">
+        <div class="day-allergy-summary__header">
+          <h2>Al·lèrgies</h2>
+        </div>
+
+        <div class="day-allergy-summary__table-wrap">
+          <table class="day-allergy-summary__table">
+            <tbody>
+              <tr *ngFor="let allergy of getDayAllergySummary()">
+                <td class="day-allergy-summary__label">{{ allergy.label }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </aside>
 
     <main class="appointment-main">
       <div class="agenda-alert">
         Important: Es reserven 5 minuts automàticament entre pacients per a neteja i desinfecció del box. Permet només ajustar a 5/10/15 minuts.
       </div>
-
-      <section class="day-allergy-summary" *ngIf="getDayAllergySummary().length > 0">
-        <div class="day-allergy-summary__header">
-          <h2>Al·lèrgies del dia</h2>
-          <span>{{ getDayAllergySummary().length }} al·lèrgies úniques</span>
-        </div>
-
-        <div class="day-allergy-summary__table-wrap">
-          <table class="day-allergy-summary__table">
-            <thead>
-              <tr>
-                <th>Al·lèrgia</th>
-                <th>Pacients</th>
-                <th>Llista de pacients</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let allergy of getDayAllergySummary()">
-                <td class="day-allergy-summary__label">{{ allergy.label }}</td>
-                <td>{{ allergy.patientCount }}</td>
-                <td>{{ allergy.patientNames.join(' · ') }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       <div class="header-main">
         <h1>
@@ -179,27 +169,46 @@
                 >
                   <div
                     class="card-appointment"
-                    [ngClass]="cita.status"
+                    [ngClass]="getAppointmentStatusClass(cita.status)"
                     [class.compact-card]="isCompactAppointmentCard(cita)"
                     [ngStyle]="{ '--appointment-color': cita.color || '#00bcd4' }"
                   >
                     <div class="info">
                       <div class="patient-row">
-                        <span class="patient">
-                          {{ cita.patientName }}
+                        <span class="patient" [title]="getAppointmentAllergyText(cita) || cita.patientName">
+                          <span class="patient-label">
+                            <span class="patient-name">{{ cita.patientName }}</span>
+                            <span
+                              *ngIf="hasAppointmentAllergies(cita)"
+                              class="allergy-pill"
+                              aria-label="Pacient amb al·lèrgies"
+                            >A</span>
+                          </span>
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
-                        <select
-                          title="Canviar estat"
-                          class="status-pill status-pill-btn"
-                          [disabled]="isStatusUpdating(cita.id)"
-                          [value]="getStatusSelectValue(cita.status)"
-                          (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
-                        >
-                          <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
-                            {{ statusOption }}
-                          </option>
-                        </select>
+                        <div class="status-stack">
+                          <select
+                            title="Canviar estat"
+                            class="status-pill status-pill-btn"
+                            [ngClass]="getAppointmentStatusClass(cita.status)"
+                            [disabled]="isStatusUpdating(cita.id) || isAppointmentStatusLocked(cita.status)"
+                            [value]="getAppointmentStatusDisplay(cita.status)"
+                            (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
+                          >
+                            <option
+                              *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                              [value]="getAppointmentStatusDisplay(cita.status)"
+                              [disabled]="!isAppointmentStatusLocked(cita.status)"
+                              hidden
+                            >
+                              {{ getAppointmentStatusDisplay(cita.status) }}
+                            </option>
+                            <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
+                              {{ statusOption }}
+                            </option>
+                          </select>
+                          <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                        </div>
                       </div>
 
                       <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
@@ -208,8 +217,6 @@
                         <span class="meta-icon clock" aria-hidden="true"></span>
                         <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                       </div>
-
-                      <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
 
                       <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
@@ -305,23 +312,45 @@
                   >
                     <div
                       class="card-appointment"
+                      [ngClass]="getAppointmentStatusClass(cita.status)"
                       [class.compact-card]="isCompactAppointmentCard(cita)"
                       [ngStyle]="{ '--appointment-color': cita.color || '#00bcd4' }"
                     >
                       <div class="info">
                         <div class="patient-row">
-                          <span class="patient">{{ cita.patientName }}</span>
-                          <select
-                            title="Canviar estat"
-                            class="status-pill status-pill-btn"
-                            [disabled]="isStatusUpdating(cita.id)"
-                            [value]="getStatusSelectValue(cita.status)"
-                            (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
-                          >
-                            <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
-                              {{ statusOption }}
-                            </option>
-                          </select>
+                          <span class="patient" [title]="getAppointmentAllergyText(cita) || cita.patientName">
+                            <span class="patient-label">
+                              <span class="patient-name">{{ cita.patientName }}</span>
+                              <span
+                                *ngIf="hasAppointmentAllergies(cita)"
+                                class="allergy-pill"
+                                aria-label="Pacient amb al·lèrgies"
+                              >A</span>
+                            </span>
+                          </span>
+                          <div class="status-stack">
+                            <select
+                              title="Canviar estat"
+                              class="status-pill status-pill-btn"
+                              [ngClass]="getAppointmentStatusClass(cita.status)"
+                              [disabled]="isStatusUpdating(cita.id) || isAppointmentStatusLocked(cita.status)"
+                              [value]="getAppointmentStatusDisplay(cita.status)"
+                              (change)="onAppointmentStatusSelected(cita, $any($event.target).value)"
+                            >
+                              <option
+                                *ngIf="!isStatusSelectableFromCalendar(cita.status)"
+                                [value]="getAppointmentStatusDisplay(cita.status)"
+                                [disabled]="!isAppointmentStatusLocked(cita.status)"
+                                hidden
+                              >
+                                {{ getAppointmentStatusDisplay(cita.status) }}
+                              </option>
+                              <option *ngFor="let statusOption of appointmentStatusOptions" [value]="statusOption">
+                                {{ statusOption }}
+                              </option>
+                            </select>
+                            <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                          </div>
                         </div>
 
                         <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
@@ -331,7 +360,6 @@
                           <span class="time">{{ getAppointmentTimeRange(cita) }}</span>
                         </div>
 
-                        <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
                       </div>
                     </div>
                   </div>
@@ -372,7 +400,7 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Edita cita' : 'Detall de cita' }}</h2>
+        <h2>{{ isEditMode ? 'Edita cita' : 'Nova cita' }}</h2>
         <small>Gestió de cita i pacient</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
@@ -384,9 +412,6 @@
       <div class="form-group">
         <div class="label-header">
           <label>Pacient</label>
-          <button type="button" class="btn-text-link" (click)="openNewPatientRegister()">
-            Nou pacient
-          </button>
         </div>
 
         <select

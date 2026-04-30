@@ -227,11 +227,23 @@
 }
 
 .day-allergy-summary {
-  margin-bottom: 1rem;
+  margin: 1rem 0 0;
   border: 1px solid #f4b6bd;
   border-radius: 14px;
   background: #fff6f7;
   overflow: hidden;
+}
+
+.sidebar-allergy-summary {
+  width: 100%;
+}
+
+.sidebar-allergy-summary .day-allergy-summary__header {
+  padding: 0.7rem 0.8rem;
+}
+
+.sidebar-allergy-summary .day-allergy-summary__table {
+  min-width: 0;
 }
 
 .day-allergy-summary__header {
@@ -633,10 +645,32 @@
   top: 1.8rem;
 }
 
-.card-appointment.Finalizada {
+.card-appointment.status-finalitzada {
   border-color: #9ea9b7;
   background: #f8fafc;
   opacity: 0.82;
+}
+
+.card-appointment.status-confirmada {
+  border-color: #1aa65b;
+}
+
+.card-appointment.status-arribada {
+  border-color: #0ea5e9;
+}
+
+.card-appointment.status-cancelada {
+  border-color: #9ea9b7;
+  background: #f8fafc;
+  opacity: 0.82;
+}
+
+.card-appointment.status-encurs {
+  border-color: #f59e0b;
+}
+
+.card-appointment.status-faltaconsentiment {
+  border-color: #d97706;
 }
 
 .card-tag {
@@ -661,7 +695,7 @@
 
 .patient-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
 }
@@ -728,6 +762,41 @@
   white-space: nowrap;
 }
 
+.status-pill.status-arribada {
+  background: #e0f2fe;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+.status-pill.status-cancelada,
+.status-pill.status-finalitzada {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.status-pill.status-encurs {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.status-pill.status-programada,
+.status-pill.status-faltaconsentiment {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.status-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.18rem;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
 .status-pill-btn {
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
@@ -740,6 +809,10 @@
 .status-pill-btn:disabled {
   opacity: 0.65;
   cursor: wait;
+}
+
+.status-pill-btn.status-finalitzada:disabled {
+  cursor: default;
 }
 
 .first-visit-badge {
@@ -793,7 +866,6 @@
 .urgency-note {
   display: inline-flex;
   align-items: center;
-  margin-left: auto;
   font-size: 0.58rem;
   line-height: 1;
   font-weight: 800;
