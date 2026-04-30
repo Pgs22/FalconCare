@@ -185,8 +185,15 @@
                   >
                     <div class="info">
                       <div class="patient-row">
-                        <span class="patient">
-                          {{ cita.patientName }}
+                        <span class="patient" [title]="getAppointmentAllergyText(cita) || cita.patientName">
+                          <span class="patient-label">
+                            <span class="patient-name">{{ cita.patientName }}</span>
+                            <span
+                              *ngIf="hasAppointmentAllergies(cita)"
+                              class="allergy-pill"
+                              aria-label="Pacient amb al·lèrgies"
+                            >A</span>
+                          </span>
                           <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
                         </span>
                         <select
@@ -318,7 +325,16 @@
                     >
                       <div class="info">
                         <div class="patient-row">
-                          <span class="patient">{{ cita.patientName }}</span>
+                          <span class="patient" [title]="getAppointmentAllergyText(cita) || cita.patientName">
+                            <span class="patient-label">
+                              <span class="patient-name">{{ cita.patientName }}</span>
+                              <span
+                                *ngIf="hasAppointmentAllergies(cita)"
+                                class="allergy-pill"
+                                aria-label="Pacient amb al·lèrgies"
+                              >A</span>
+                            </span>
+                          </span>
                           <select
                             title="Canviar estat"
                             class="status-pill status-pill-btn"

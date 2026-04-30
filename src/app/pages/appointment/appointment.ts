@@ -389,6 +389,17 @@ export class AppointmentComponent implements OnInit {
     return this.selectedPatientAllergyText;
   }
 
+  hasAppointmentAllergies(appointment: Appointment): boolean {
+    return this.extractAllergyLabelsFromAppointmentRecord(appointment as unknown as ApiRecord).length > 0;
+  }
+
+  getAppointmentAllergyText(appointment: Appointment): string {
+    const labels = this.extractAllergyLabelsFromAppointmentRecord(appointment as unknown as ApiRecord);
+    return labels.length > 0
+      ? `Al·lèrgies: ${labels.join(', ')}`
+      : '';
+  }
+
   private setSelectedPatientAllergies(patientId: any): void {
     const selectedPatientId = this.toNumberOrNull(patientId);
     if (selectedPatientId == null) {
@@ -605,6 +616,14 @@ export class AppointmentComponent implements OnInit {
     const selectedAllergies = this.extractSelectedAllergyFlags(record);
     if (selectedAllergies.length > 0) {
       return selectedAllergies.map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`);
+    }
+
+    const directItems = new Set<string>();
+    for (const key of ['allergyLabels', 'allergy_labels', 'allergies', 'allergySummary', 'allergy_summary']) {
+      this.collectAllergyItems(record[key], directItems);
+    }
+    if (directItems.size > 0) {
+      return Array.from(directItems);
     }
 
     const raw = pickMedicationAllergiesFromPatientApiPayload(record);
@@ -1542,6 +1561,8 @@ export class AppointmentComponent implements OnInit {
     );
 
     const id = this.toNumberOrNull(row['id'] ?? fallback.id) ?? 0;
+    const patientId = pickAppointmentPatientId(row) ?? this.toNumberOrNull((fallback as { patientId?: unknown }).patientId);
+    const allergyLabels = this.extractAllergyLabelsFromAppointmentRecord(row);
     const time =
       this.pickString(row, ['time', 'visitTime', 'visit_time', 'slotTime', 'slot_time']) ??
       String(fallback.time ?? '08:00');
@@ -1562,6 +1583,7 @@ export class AppointmentComponent implements OnInit {
       totalBlockTime: duration + cleaningTime,
       status: String(row['status'] ?? fallback.status ?? 'Programada'),
       doctorId: this.getDoctorIdFromAppointmentRecord(row),
+      patientId,
       patientName: String(row['patientName'] ?? row['patient_name'] ?? fallback.patientName ?? '—'),
       doctorName: this.getDoctorDisplayFromAppointmentRecord(row, fallback.doctorName),
       boxId: this.toNumberOrNull(row['boxId'] ?? row['box_id'] ?? fallback.boxId),
@@ -1571,6 +1593,7 @@ export class AppointmentComponent implements OnInit {
       visitDate: visitDate || undefined,
       isUrgency: Boolean(row['isUrgency'] ?? row['is_urgency'] ?? fallback.isUrgency),
       isFirstVisit: Boolean(row['isFirstVisit'] ?? row['is_first_visit'] ?? fallback.isFirstVisit),
+      allergyLabels,
     };
   }
 

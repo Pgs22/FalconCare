@@ -11,6 +11,7 @@ export interface Appointment {
   totalBlockTime: number;
   status: string;
   doctorId?: number | null;
+  patientId?: number | null;
   patientName: string;
   doctorName: string;
   boxId: number | null;
@@ -19,7 +20,8 @@ export interface Appointment {
   color: string;
   visitDate?: string;
   isUrgency?: boolean;
-  isFirstVisit?: boolean; 
+  isFirstVisit?: boolean;
+  allergyLabels?: string[];
 }
 
 @Injectable({
