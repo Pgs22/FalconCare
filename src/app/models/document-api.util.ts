@@ -3,6 +3,8 @@ export type PatientDocumentView = {
   id: number;
   displayName: string;
   iconKind: 'image' | 'pdf' | 'other';
+  typeLabel?: string;
+  capturedAtIso?: string;
 };
 
 function pickString(r: Record<string, unknown>, keys: string[]): string {
@@ -84,5 +86,13 @@ export function mapUnknownToPatientDocumentView(raw: unknown): PatientDocumentVi
     iconKind = 'pdf';
   }
 
-  return { id, displayName, iconKind };
+  const typeLabel = pickString(r, ['type', 'mimeType', 'mime_type', 'mime', 'contentType', 'content_type']);
+  const capturedAtIso = pickString(r, ['captureDate', 'capture_date', 'createdAt', 'created_at']);
+  return {
+    id,
+    displayName,
+    iconKind,
+    typeLabel: typeLabel || undefined,
+    capturedAtIso: capturedAtIso || undefined,
+  };
 }

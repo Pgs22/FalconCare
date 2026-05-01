@@ -173,6 +173,7 @@
       "main": "Navegació principal",
       "dashboard": "Panell de control",
       "agenda": "Agenda",
+      "documents": "Documents",
       "patients": "Pacients",
       "settings": "Configuració"
     },
@@ -382,6 +383,118 @@
       "noSessionOrPermission": "No tens sessió o permís per veure aquest pacient. Torna a iniciar sessió.",
       "serverLoadPatient": "Hi ha hagut un error en carregar el pacient. Torna-ho a provar.",
       "loadPatientGeneric": "No s'ha pogut carregar el pacient. Verifica que existeixi o torna al panell del doctor."
+    }
+  },
+  "documents": {
+    "brand": { "aria": "Clínica Dental FalconCare" },
+    "nav": { "panel": "Panell", "agenda": "Agenda", "documents": "Documents", "settings": "Ajustos" },
+    "header": { "collectionTitle": "Col·lecció d'Arxius", "registrationDate": "Alta" },
+    "actions": {
+      "uploading": "Pujant...",
+      "uploadNew": "Pujar Nou Document",
+      "selectFilesAria": "Seleccionar documents per pujar",
+      "delete": "Eliminar document actiu",
+      "deleteConfirm": "Eliminar el document \"{{name}}\"? Aquesta acció no es pot desfer.",
+      "downloadFile": "Descarregar arxiu"
+    },
+    "tabs": { "aria": "Tipus de radiografia", "all": "Tot", "pan": "Panoràmica", "pa": "Periapical" },
+    "states": {
+      "loadingDocuments": "Carregant documents...",
+      "noDocuments": "No hi ha documents per a aquest pacient.",
+      "loadingPreview": "Carregant vista prèvia...",
+      "previewAlt": "Vista prèvia del document seleccionat",
+      "pdfPreview": "Vista prèvia PDF",
+      "pdfPreviewUnavailable": "La vista prèvia PDF no està disponible en aquest navegador.",
+      "previewUnavailableType": "Vista prèvia no disponible per a aquest format.",
+      "selectDocument": "Selecciona un document per visualitzar-lo."
+    },
+    "patient": {
+      "noneAvailable": "No hi ha pacients disponibles.",
+      "resizeAria": "Ajustar l'alçada del llistat de pacients",
+      "defaultName": "Pacient",
+      "fallbackWithId": "Pacient #{{id}}"
+    },
+    "toolbar": {
+      "zoomOut": "Allunyar",
+      "zoomIn": "Apropar",
+      "measure": "Mesurar en cm",
+      "calibration": "Calibració guiada (2 clics)",
+      "lockCalibration": "Bloquejar calibració per a aquest pacient/document",
+      "snap": "Snap magnètic a vores",
+      "snapLabel": "snap",
+      "snapSensitivity": "Sensibilitat del snap anatòmic",
+      "refCm": "ref cm",
+      "referenceLength": "Longitud real de referència en centímetres"
+    },
+    "viewer": {
+      "measure": { "pending": "Mesura pendent" },
+      "calibration": {
+        "stepStart": "Calibració: clic al punt inicial",
+        "stepEnd": "Calibració: clic al punt final",
+        "reference": "Referència: {{value}} cm"
+      },
+      "snap": {
+        "unavailable": "Snap no disponible per a aquest format",
+        "on": "Snap ON",
+        "off": "Snap OFF",
+        "auto": "Auto",
+        "low": "Baix",
+        "medium": "Mitjà",
+        "high": "Alt"
+      }
+    },
+    "sync": {
+      "error": "Error de sincronització",
+      "syncing": "Sincronitzant...",
+      "waitingPatient": "Esperant pacient",
+      "pending": "Pendent de sincronització",
+      "realtimePrefix": "Sincronitzat en temps real"
+    },
+    "footer": {
+      "imageId": "ID Imatge",
+      "type": "Tipus",
+      "date": "Data",
+      "measure": "Mesura",
+      "measureAvailableImages": "Mesura disponible per a imatges"
+    },
+    "notes": {
+      "title": "Notes Clíniques",
+      "subtitle": "Registre clínic del document seleccionat",
+      "editorTitle": "Nota clínica del document",
+      "editorSubtitle": "Escriu i desa observacions clíniques associades al document seleccionat.",
+      "placeholderActive": "Escriure nota clínica...",
+      "placeholderInactive": "Selecciona un document per escriure una nota...",
+      "inputTitle": "Nota clínica del document seleccionat",
+      "send": "Enviar nota",
+      "saving": "Desant...",
+      "selectDocument": "Selecciona un document per sincronitzar notes.",
+      "syncedPrefix": "Notes sincronitzades"
+    },
+    "feedback": {
+      "noteSaved": "Nota clínica desada i verificada correctament a base de dades.",
+      "deleted": "Document eliminat correctament.",
+      "uploadOne": "Document pujat correctament.",
+      "uploadMany": "{{count}} documents pujats.",
+      "filesEmpty": "Els arxius seleccionats estan buits.",
+      "selectAtLeastOne": "Selecciona almenys un arxiu per pujar.",
+      "fileTooLarge": "L'arxiu {{name}} supera el màxim permès ({{maxMb}} MB)."
+    },
+    "errors": {
+      "sessionExpired": "La teva sessió ha caducat. Torna a iniciar sessió.",
+      "forbidden": "No tens permisos clínics per aquesta operació.",
+      "notFound": "El recurs sol·licitat ja no existeix o no està disponible.",
+      "deleteConflict": "No s'ha pogut eliminar el document per un conflicte d'emmagatzematge.",
+      "conflict": "S'ha detectat un conflicte en processar el document. Torna-ho a provar.",
+      "serverMaxFile": "L'arxiu supera el límit del servidor ({{maxMb}} MB).",
+      "serverFileTooLarge": "L'arxiu supera la mida màxima permesa pel servidor.",
+      "uploadBadRequest": "Petició de pujada invàlida. Revisa arxiu, pacient i metadades.",
+      "listBadRequest": "El backend requereix filtrar documents per pacient. Recarrega seleccionant un pacient.",
+      "badRequest": "Petició invàlida. Revisa les dades i torna-ho a provar.",
+      "offline": "No s'ha pogut connectar amb el servidor.",
+      "noteUpdate": "No s'ha pogut desar la nota clínica.",
+      "uploadGeneric": "No s'han pogut pujar un o més documents.",
+      "download": "No s'ha pogut descarregar o previsualitzar el document seleccionat.",
+      "list": "No s'han pogut carregar els documents del pacient seleccionat."
     }
   }
 }
