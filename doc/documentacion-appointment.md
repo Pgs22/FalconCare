@@ -97,3 +97,5 @@ En el formulario de alta de paciente:
 - `src/app/services/appointment.service.ts`
 - `src/app/models/appointment-api.util.ts`
 - `src/app/interceptors/auth.interceptor.ts`
+
+## 6) Test frontend
