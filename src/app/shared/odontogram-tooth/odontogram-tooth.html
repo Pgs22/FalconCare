@@ -24,12 +24,14 @@
     <rect
       *ngFor="let face of faces"
       class="odontogram-tooth__zone"
-      [ngClass]="getFaceClass(face)"
+      [ngStyle]="getFaceStyle(face)"
       [attr.x]="face === 'M' ? 6 : face === 'O' ? 13.5 : face === 'D' ? 30 : 14"
       [attr.y]="face === 'L' ? 6 : face === 'O' ? 13.5 : face === 'V' ? 30 : 14"
       [attr.width]="face === 'M' || face === 'D' ? 8 : 16"
       [attr.height]="face === 'L' || face === 'V' ? 8 : 16"
       [attr.aria-label]="face"
+      (pointerdown)="onFacePointerDown(face, $event)"
+      (pointerenter)="onFacePointerEnter(face, $event)"
       (click)="onFaceClick(face, $event)"
     />
   </svg>

@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs';
 import {
   OdontogramFace,
+  OdontogramFaceInteraction,
   OdontogramFaceStatus,
   OdontogramToothComponent,
   OdontogramToothState,
@@ -16,7 +17,6 @@ import {
   OdontogramService,
   OpenOdontogramResponse,
   SyncOdontogramEntry,
-  SyncOdontogramResponse,
 } from '../../services/odontogram.service';
 
 type ToothStatus = OdontogramFaceStatus;
@@ -35,9 +35,24 @@ type Quadrant = {
 };
 
 type ProtocolItem = {
-  id: number | null;
-  key: ToothStatus | 'erase';
+  id: number;
   label: string;
+  accentColor: string;
+};
+
+type FaceMark = {
+  pathologyTypeId: number;
+  pathologyId: number | null;
+  pathologyLabel: string;
+  color: string;
+  visualType: string | null;
+};
+
+type ColorMode = {
+  id: 'pending' | 'done';
+  label: string;
+  color: string;
+  visualType: string;
 };
 
 @Component({
@@ -54,27 +69,37 @@ export class OdontogramComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private pendingLoadCount = 0;
+  private readonly protocolCatalog = new Map<number, ProtocolItem>();
+  private readonly manuallyAddedProtocolIds = new Set<number>();
+  private readonly faceMarkMap = new Map<string, FaceMark>();
+  private readonly batchSelection = new Set<string>();
 
   isLoading = true;
   isSaving = false;
+  isProtocolPickerOpen = false;
+  isEraseMode = false;
+  isBatchSelectionMode = false;
+  isBatchSelecting = false;
   loadError: string | null = null;
   saveFeedback: string | null = null;
   odontogramId: number | null = null;
   patientId: number | null = null;
   visitId: number | null = null;
+  selectedProtocolId: number | null = null;
+  selectedColorModeId: ColorMode['id'] = 'pending';
 
   readonly protocolsFallback: ProtocolItem[] = [
-    { id: 1, key: 'caries', label: 'Càries' },
-    { id: 3, key: 'endodoncia', label: 'Endodòncia' },
-    { id: 2, key: 'neteja', label: 'Neteja' },
+    { id: 1, label: 'Càries', accentColor: '#FF0000' },
+    { id: 3, label: 'Endodòncia', accentColor: '#9B8CFF' },
+    { id: 2, label: 'Neteja', accentColor: '#62D5E2' },
   ];
 
-  protocols: ProtocolItem[] = this.protocolsFallback;
-  readonly eraseProtocol: ProtocolItem = {
-    id: null,
-    key: 'erase',
-    label: 'Esborrar marca',
-  };
+  protocols: ProtocolItem[] = [];
+
+  readonly colorModes: ColorMode[] = [
+    { id: 'pending', label: 'Pendent', color: '#FF0000', visualType: 'Pendent' },
+    { id: 'done', label: 'Fet', color: '#6EC6E8', visualType: 'Fet' },
+  ];
 
   readonly topQuadrants: Quadrant[] = [
     {
@@ -111,12 +136,16 @@ export class OdontogramComponent implements OnInit {
   ];
 
   selectedTooth = this.topQuadrants[0].permanent[0];
-  selectedProtocol: ProtocolItem | null = null;
-  private readonly faceStatusMap = new Map<string, ToothStatus>();
 
   ngOnInit(): void {
     this.loadPathologyTypes();
     this.loadOdontogramFromRoute();
+  }
+
+  @HostListener('window:pointerup')
+  onPointerUp(): void {
+    this.isBatchSelecting = false;
+    this.batchSelection.clear();
   }
 
   selectTooth(tooth: ToothItem): void {
@@ -124,7 +153,53 @@ export class OdontogramComponent implements OnInit {
   }
 
   selectProtocol(protocol: ProtocolItem): void {
-    this.selectedProtocol = protocol;
+    if (this.selectedProtocolId === protocol.id) {
+      this.selectedProtocolId = null;
+      this.isEraseMode = false;
+      this.isProtocolPickerOpen = false;
+      this.saveFeedback = null;
+      this.rebuildVisibleProtocols();
+      return;
+    }
+
+    this.selectedProtocolId = protocol.id;
+    this.isEraseMode = false;
+    this.isProtocolPickerOpen = false;
+    this.saveFeedback = null;
+  }
+
+  toggleProtocolPicker(): void {
+    this.isProtocolPickerOpen = !this.isProtocolPickerOpen;
+  }
+
+  addProtocol(protocol: ProtocolItem): void {
+    this.manuallyAddedProtocolIds.add(protocol.id);
+    this.rebuildVisibleProtocols();
+    this.selectProtocol(protocol);
+  }
+
+  toggleEraseMode(): void {
+    if (!this.selectedProtocolId) {
+      return;
+    }
+
+    this.isEraseMode = !this.isEraseMode;
+    this.saveFeedback = null;
+  }
+
+  toggleBatchSelectionMode(): void {
+    this.isBatchSelectionMode = !this.isBatchSelectionMode;
+    this.clearBatchSelection();
+  }
+
+  clearBatchSelection(): void {
+    this.batchSelection.clear();
+    this.isBatchSelecting = false;
+  }
+
+  selectColorMode(mode: ColorMode): void {
+    this.selectedColorModeId = mode.id;
+    this.isEraseMode = false;
     this.saveFeedback = null;
   }
 
@@ -133,22 +208,69 @@ export class OdontogramComponent implements OnInit {
     this.selectedTooth = tooth;
     this.saveFeedback = null;
 
-    const key = this.getFaceKey(tooth.id, face);
-
-    if (!this.selectedProtocol) {
+    if (this.isBatchSelectionMode) {
       return;
     }
 
-    if (this.selectedProtocol.key === 'erase') {
-      this.faceStatusMap.delete(key);
+    if (!this.selectedProtocolId) {
       return;
     }
 
-    if (this.faceStatusMap.get(key) === this.selectedProtocol.key) {
+    const faceKey = this.getStoredFaceKey(tooth.id, face, this.selectedProtocolId);
+
+    if (this.isEraseMode) {
+      this.faceMarkMap.delete(faceKey);
+      this.rebuildVisibleProtocols();
       return;
     }
 
-    this.faceStatusMap.set(key, this.selectedProtocol.key);
+    const protocol = this.getProtocolById(this.selectedProtocolId);
+    const colorMode = this.getSelectedColorMode();
+    if (!protocol || !colorMode) {
+      return;
+    }
+
+    const existingMark = this.faceMarkMap.get(faceKey);
+    if (existingMark && existingMark.color === colorMode.color) {
+      return;
+    }
+
+    this.faceMarkMap.set(faceKey, {
+      pathologyTypeId: protocol.id,
+      pathologyId: existingMark?.color === colorMode.color ? existingMark.pathologyId : null,
+      pathologyLabel: protocol.label,
+      color: colorMode.color,
+      visualType: colorMode.visualType,
+    });
+
+    this.rebuildVisibleProtocols();
+  }
+
+  handleFaceInteraction(tooth: ToothItem, interaction: OdontogramFaceInteraction): void {
+    if (!this.isBatchSelectionMode || !this.selectedProtocolId) {
+      return;
+    }
+
+    this.selectedTooth = tooth;
+    const selectionKey = this.getSelectionKey(tooth.id, interaction.face);
+
+    if (interaction.phase === 'start') {
+      this.isBatchSelecting = true;
+      this.batchSelection.add(selectionKey);
+      this.applyFaceChange(tooth.id, interaction.face);
+      return;
+    }
+
+    if (!this.isBatchSelecting) {
+      return;
+    }
+
+    if (this.batchSelection.has(selectionKey)) {
+      return;
+    }
+
+    this.batchSelection.add(selectionKey);
+    this.applyFaceChange(tooth.id, interaction.face);
   }
 
   onCloseOdontogram(): void {
@@ -162,7 +284,8 @@ export class OdontogramComponent implements OnInit {
     this.odontogramService
       .syncDetails(this.odontogramId, this.buildSyncEntries())
       .pipe(
-        switchMap(({ odontogram }: SyncOdontogramResponse) => {
+        switchMap(() => this.odontogramService.getOdontogram(this.odontogramId!)),
+        switchMap((odontogram: OdontogramApi) => {
           this.applyOdontogramState(odontogram);
           return this.appointmentService.closeAppointment(this.visitId!);
         })
@@ -181,7 +304,11 @@ export class OdontogramComponent implements OnInit {
   }
 
   getFaceStatus(tooth: ToothItem, face: OdontogramFace): ToothStatus | null {
-    return this.faceStatusMap.get(this.getFaceKey(tooth.id, face)) ?? null;
+    if (!this.selectedProtocolId) {
+      return null;
+    }
+
+    return this.faceMarkMap.get(this.getStoredFaceKey(tooth.id, face, this.selectedProtocolId))?.color ?? null;
   }
 
   getToothState(tooth: ToothItem): OdontogramToothState {
@@ -194,6 +321,26 @@ export class OdontogramComponent implements OnInit {
     };
   }
 
+  getSelectedProtocol(): ProtocolItem | null {
+    return this.selectedProtocolId ? this.getProtocolById(this.selectedProtocolId) : null;
+  }
+
+  getSelectedColorMode(): ColorMode | null {
+    return this.colorModes.find((mode) => mode.id === this.selectedColorModeId) ?? null;
+  }
+
+  getAvailableProtocolsToAdd(): ProtocolItem[] {
+    const visibleProtocolIds = new Set(this.protocols.map((protocol) => protocol.id));
+
+    return Array.from(this.protocolCatalog.values())
+      .filter((protocol) => !visibleProtocolIds.has(protocol.id))
+      .sort((left, right) => this.getProtocolOrder(left.label) - this.getProtocolOrder(right.label));
+  }
+
+  hasVisibleProtocols(): boolean {
+    return this.protocols.length > 0;
+  }
+
   trackByTooth(_index: number, tooth: ToothItem): string {
     return tooth.id;
   }
@@ -202,8 +349,12 @@ export class OdontogramComponent implements OnInit {
     return quadrant.id;
   }
 
-  trackByProtocol(_index: number, protocol: ProtocolItem): string {
-    return protocol.key;
+  trackByProtocol(_index: number, protocol: ProtocolItem): number {
+    return protocol.id;
+  }
+
+  trackByColorMode(_index: number, colorMode: ColorMode): string {
+    return colorMode.id;
   }
 
   private loadPathologyTypes(): void {
@@ -211,19 +362,29 @@ export class OdontogramComponent implements OnInit {
 
     this.pathologyTypeService.list().subscribe({
       next: (pathologyTypes) => {
+        this.protocolCatalog.clear();
+
         const mappedProtocols = pathologyTypes
           .map((pathologyType) => this.mapPathologyTypeToProtocol(pathologyType))
-          .filter((protocol): protocol is ProtocolItem => protocol !== null)
-          .sort((left, right) => this.getProtocolOrder(left.key) - this.getProtocolOrder(right.key));
+          .filter((protocol): protocol is ProtocolItem => protocol !== null);
 
-        if (mappedProtocols.length > 0) {
-          this.protocols = mappedProtocols;
+        const sourceProtocols = mappedProtocols.length > 0 ? mappedProtocols : this.protocolsFallback;
+        for (const protocol of sourceProtocols) {
+          this.protocolCatalog.set(protocol.id, protocol);
         }
 
+        this.rebuildVisibleProtocols();
         this.finishLoading();
       },
       error: (error) => {
         console.error('Failed to load pathology types for odontogram protocol.', error);
+
+        this.protocolCatalog.clear();
+        for (const protocol of this.protocolsFallback) {
+          this.protocolCatalog.set(protocol.id, protocol);
+        }
+
+        this.rebuildVisibleProtocols();
         this.finishLoading();
       },
     });
@@ -265,12 +426,14 @@ export class OdontogramComponent implements OnInit {
     this.isLoading = this.pendingLoadCount > 0;
   }
 
-  private getProtocolOrder(key: ProtocolItem['key']): number {
-    switch (key) {
-      case 'erase':
-        return 0;
+  private getProtocolOrder(label: string): number {
+    const normalizedLabel = label.trim().toLowerCase();
+
+    switch (normalizedLabel) {
+      case 'càries':
       case 'caries':
         return 1;
+      case 'endodòncia':
       case 'endodoncia':
         return 2;
       case 'neteja':
@@ -284,26 +447,55 @@ export class OdontogramComponent implements OnInit {
     this.odontogramId = odontogram.id;
     this.patientId = odontogram.patient_id;
     this.visitId = odontogram.visit_id;
-    this.faceStatusMap.clear();
+    this.faceMarkMap.clear();
 
     for (const detail of odontogram.details) {
-      const protocol = this.mapDetailToProtocol(detail);
-      if (!protocol) {
+      this.applyDetail(detail);
+    }
+
+    this.rebuildVisibleProtocols();
+  }
+
+  private applyDetail(detail: OdontogramDetailApi): void {
+    const pathologyType = detail.pathology?.pathology_type;
+    if (!pathologyType?.id || !pathologyType.name) {
+      return;
+    }
+
+    const protocol = this.mapPathologyTypeToProtocol({
+      id: pathologyType.id,
+      name: pathologyType.name,
+      defaultDuration: 0,
+    });
+
+    if (!protocol) {
+      return;
+    }
+
+    const color = this.normalizeColor(detail.pathology?.protocol_color) ?? protocol.accentColor;
+    const pathologyId = detail.pathology?.id ?? null;
+    const visualType = detail.pathology?.visual_type ?? null;
+
+    if (!this.protocolCatalog.has(protocol.id)) {
+      this.protocolCatalog.set(protocol.id, {
+        ...protocol,
+        accentColor: color,
+      });
+    }
+
+    for (const face of detail.faces) {
+      const faceName = face.face_name.trim().toUpperCase() as OdontogramFace;
+      if (!this.isSupportedFace(faceName)) {
         continue;
       }
 
-      for (const face of detail.faces) {
-        const faceName = face.face_name.trim().toUpperCase() as OdontogramFace;
-        if (!this.isSupportedFace(faceName)) {
-          continue;
-        }
-
-        if (protocol.key === 'erase') {
-          continue;
-        }
-
-        this.faceStatusMap.set(this.getFaceKey(String(detail.tooth_number), faceName), protocol.key);
-      }
+      this.faceMarkMap.set(this.getStoredFaceKey(String(detail.tooth_number), faceName, protocol.id), {
+        pathologyTypeId: protocol.id,
+        pathologyId,
+        pathologyLabel: protocol.label,
+        color,
+        visualType,
+      });
     }
   }
 
@@ -311,16 +503,17 @@ export class OdontogramComponent implements OnInit {
     const groupedEntries = new Map<string, SyncOdontogramEntry>();
     const faceOrder: Record<OdontogramFace, number> = { M: 0, O: 1, D: 2, V: 3, L: 4 };
 
-    for (const [faceKey, status] of this.faceStatusMap.entries()) {
-      const protocol = this.protocols.find((candidate) => candidate.key === status);
-      if (!protocol?.id) {
-        continue;
-      }
+    for (const [faceKey, mark] of this.faceMarkMap.entries()) {
+      const [toothNumber, faceName, pathologyTypeId] = faceKey.split(':') as [string, OdontogramFace, string];
+      const entryKey = [
+        toothNumber,
+        pathologyTypeId,
+        mark.pathologyId ?? 'new',
+        mark.color,
+        mark.visualType ?? '',
+      ].join(':');
 
-      const [toothNumber, faceName] = faceKey.split(':') as [string, OdontogramFace];
-      const entryKey = `${toothNumber}:${protocol.id}`;
       const existingEntry = groupedEntries.get(entryKey);
-
       if (existingEntry) {
         if (!existingEntry.faces.includes(faceName)) {
           existingEntry.faces.push(faceName);
@@ -330,7 +523,10 @@ export class OdontogramComponent implements OnInit {
 
       groupedEntries.set(entryKey, {
         tooth_number: Number(toothNumber),
-        pathology_type_id: protocol.id,
+        pathology_type_id: Number(pathologyTypeId),
+        pathology_id: mark.pathologyId,
+        protocol_color: mark.color,
+        visual_type: mark.visualType,
         faces: [faceName],
       });
     }
@@ -341,17 +537,46 @@ export class OdontogramComponent implements OnInit {
     }));
   }
 
-  private mapDetailToProtocol(detail: OdontogramDetailApi): ProtocolItem | null {
-    const pathologyType = detail.pathology?.pathology_type;
-    if (!pathologyType?.name) {
-      return null;
+  private rebuildVisibleProtocols(): void {
+    const protocolsById = new Map<number, ProtocolItem>();
+
+    for (const protocolId of this.manuallyAddedProtocolIds) {
+      const protocol = this.getProtocolById(protocolId);
+      if (protocol) {
+        protocolsById.set(protocol.id, protocol);
+      }
     }
 
-    return this.mapPathologyTypeToProtocol({
-      id: pathologyType.id ?? 0,
-      name: pathologyType.name,
-      defaultDuration: 0,
-    });
+    for (const mark of this.faceMarkMap.values()) {
+      if (protocolsById.has(mark.pathologyTypeId)) {
+        continue;
+      }
+
+      const knownProtocol = this.getProtocolById(mark.pathologyTypeId);
+      protocolsById.set(mark.pathologyTypeId, {
+        id: mark.pathologyTypeId,
+        label: knownProtocol?.label ?? mark.pathologyLabel,
+        accentColor: mark.color,
+      });
+    }
+
+    if (this.selectedProtocolId !== null && !protocolsById.has(this.selectedProtocolId)) {
+      const selectedProtocol = this.getProtocolById(this.selectedProtocolId);
+      if (selectedProtocol) {
+        protocolsById.set(selectedProtocol.id, selectedProtocol);
+      }
+    }
+
+    this.protocols = Array.from(protocolsById.values()).sort(
+      (left, right) => this.getProtocolOrder(left.label) - this.getProtocolOrder(right.label)
+    );
+
+    if (this.selectedProtocolId && !protocolsById.has(this.selectedProtocolId)) {
+      this.selectedProtocolId = null;
+      this.isEraseMode = false;
+      this.clearBatchSelection();
+      this.isBatchSelectionMode = false;
+    }
   }
 
   private createTeeth(labels: string[]): ToothItem[] {
@@ -361,8 +586,51 @@ export class OdontogramComponent implements OnInit {
     }));
   }
 
-  private getFaceKey(toothId: string, face: OdontogramFace): string {
+  private getStoredFaceKey(toothId: string, face: OdontogramFace, pathologyTypeId: number): string {
+    return `${toothId}:${face}:${pathologyTypeId}`;
+  }
+
+  private getSelectionKey(toothId: string, face: OdontogramFace): string {
     return `${toothId}:${face}`;
+  }
+
+  private applyFaceChange(toothId: string, face: OdontogramFace): void {
+    if (!this.selectedProtocolId) {
+      return;
+    }
+
+    const faceKey = this.getStoredFaceKey(toothId, face, this.selectedProtocolId);
+
+    if (this.isEraseMode) {
+      this.faceMarkMap.delete(faceKey);
+      this.rebuildVisibleProtocols();
+      return;
+    }
+
+    const protocol = this.getProtocolById(this.selectedProtocolId);
+    const colorMode = this.getSelectedColorMode();
+    if (!protocol || !colorMode) {
+      return;
+    }
+
+    const existingMark = this.faceMarkMap.get(faceKey);
+    if (existingMark && existingMark.color === colorMode.color) {
+      return;
+    }
+
+    this.faceMarkMap.set(faceKey, {
+      pathologyTypeId: protocol.id,
+      pathologyId: existingMark?.color === colorMode.color ? existingMark.pathologyId : null,
+      pathologyLabel: protocol.label,
+      color: colorMode.color,
+      visualType: colorMode.visualType,
+    });
+
+    this.rebuildVisibleProtocols();
+  }
+
+  private getProtocolById(protocolId: number): ProtocolItem | null {
+    return this.protocolCatalog.get(protocolId) ?? this.protocols.find((protocol) => protocol.id === protocolId) ?? null;
   }
 
   private isSupportedFace(face: string): face is OdontogramFace {
@@ -375,27 +643,40 @@ export class OdontogramComponent implements OnInit {
     if (normalizedName === 'càries' || normalizedName === 'caries') {
       return {
         id: pathologyType.id,
-        key: 'caries',
         label: pathologyType.name,
+        accentColor: '#FF0000',
       };
     }
 
     if (normalizedName === 'neteja') {
       return {
         id: pathologyType.id,
-        key: 'neteja',
         label: pathologyType.name,
+        accentColor: '#62D5E2',
       };
     }
 
     if (normalizedName === 'endodòncia' || normalizedName === 'endodoncia') {
       return {
         id: pathologyType.id,
-        key: 'endodoncia',
         label: pathologyType.name,
+        accentColor: '#9B8CFF',
       };
     }
 
-    return null;
+    return {
+      id: pathologyType.id,
+      label: pathologyType.name,
+      accentColor: '#9AA7B2',
+    };
+  }
+
+  private normalizeColor(color: string | null | undefined): string | null {
+    if (typeof color !== 'string') {
+      return null;
+    }
+
+    const normalizedColor = color.trim().toUpperCase();
+    return /^#[0-9A-F]{6}$/.test(normalizedColor) ? normalizedColor : null;
   }
 }

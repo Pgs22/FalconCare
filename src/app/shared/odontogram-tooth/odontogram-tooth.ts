@@ -2,8 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 export type OdontogramFace = 'M' | 'O' | 'D' | 'V' | 'L';
-export type OdontogramFaceStatus = 'caries' | 'neteja' | 'endodoncia';
+export type OdontogramFaceStatus = string;
 export type OdontogramToothState = Partial<Record<OdontogramFace, OdontogramFaceStatus | null>>;
+export type OdontogramFaceInteraction = {
+  face: OdontogramFace;
+  phase: 'start' | 'enter';
+};
 
 @Component({
   selector: 'app-odontogram-tooth',
@@ -20,6 +24,7 @@ export class OdontogramToothComponent {
 
   @Output() toothClick = new EventEmitter<string>();
   @Output() faceToggle = new EventEmitter<OdontogramFace>();
+  @Output() faceInteraction = new EventEmitter<OdontogramFaceInteraction>();
 
   readonly faces: OdontogramFace[] = ['M', 'O', 'D', 'V', 'L'];
 
@@ -32,14 +37,26 @@ export class OdontogramToothComponent {
     this.faceToggle.emit(face);
   }
 
-  getFaceClass(face: OdontogramFace): string[] {
-    const classes = [`odontogram-tooth__zone--${face}`];
-    const status = this.state[face];
+  onFacePointerDown(face: OdontogramFace, event: PointerEvent): void {
+    event.stopPropagation();
+    this.faceInteraction.emit({ face, phase: 'start' });
+  }
 
-    if (status) {
-      classes.push(`odontogram-tooth__zone--${status}`);
+  onFacePointerEnter(face: OdontogramFace, event: PointerEvent): void {
+    event.stopPropagation();
+    this.faceInteraction.emit({ face, phase: 'enter' });
+  }
+
+  getFaceStyle(face: OdontogramFace): Record<string, string> {
+    const color = this.state[face];
+    const style: Record<string, string> = {};
+
+    if (color) {
+      style['--odontogram-face-fill'] = color;
+      style['--odontogram-face-stroke'] = color;
+      style['--odontogram-face-hover'] = color;
     }
 
-    return classes;
+    return style;
   }
 }

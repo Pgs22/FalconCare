@@ -13,8 +13,8 @@
     <div>
       <h1>Explorador d'odontograma</h1>
       <div class="odontograma__meta">
-        <span>Pacient fix: #{{ patientId ?? 1 }}</span>
-        <span>Visita fixa: #{{ visitId ?? 1 }}</span>
+        <span>Pacient: #{{ patientId ?? 1 }}</span>
+        <span>Visita: #{{ visitId ?? 1 }}</span>
         <span *ngIf="odontogramId">Odontograma: #{{ odontogramId }}</span>
       </div>
     </div>
@@ -43,6 +43,16 @@
           <p class="odontograma__eyebrow">Dentició completa (FDI)</p>
           <h2>Vista general de totes les peces</h2>
         </div>
+
+        <label class="odontograma__switch">
+          <input
+            type="checkbox"
+            [checked]="isBatchSelectionMode"
+            (change)="toggleBatchSelectionMode()"
+          />
+          <span class="odontograma__switch-track" aria-hidden="true"></span>
+          <span class="odontograma__switch-label">Selecció múltiple</span>
+        </label>
       </header>
 
       <section class="odontograma__grid" aria-label="Odontograma">
@@ -62,6 +72,7 @@
                 [selected]="selectedTooth.id === tooth.id"
                 (toothClick)="selectTooth(tooth)"
                 (faceToggle)="toggleFace(tooth, $event)"
+                (faceInteraction)="handleFaceInteraction(tooth, $event)"
               />
             </div>
 
@@ -74,6 +85,7 @@
                 [compact]="true"
                 (toothClick)="selectTooth(tooth)"
                 (faceToggle)="toggleFace(tooth, $event)"
+                (faceInteraction)="handleFaceInteraction(tooth, $event)"
               />
             </div>
           </section>
@@ -98,6 +110,7 @@
                 [compact]="true"
                 (toothClick)="selectTooth(tooth)"
                 (faceToggle)="toggleFace(tooth, $event)"
+                (faceInteraction)="handleFaceInteraction(tooth, $event)"
               />
             </div>
 
@@ -109,9 +122,26 @@
                 [selected]="selectedTooth.id === tooth.id"
                 (toothClick)="selectTooth(tooth)"
                 (faceToggle)="toggleFace(tooth, $event)"
+                (faceInteraction)="handleFaceInteraction(tooth, $event)"
               />
             </div>
           </section>
+        </div>
+      </section>
+
+      <section class="odontograma__legend" aria-label="Llegenda de colors">
+        <p class="odontograma__legend-title">Llegenda de colors</p>
+
+        <div class="odontograma__legend-list">
+          <div class="odontograma__legend-item">
+            <span class="odontograma__legend-swatch odontograma__legend-swatch--pending" aria-hidden="true"></span>
+            <span>Vermell: tractament pendent</span>
+          </div>
+
+          <div class="odontograma__legend-item">
+            <span class="odontograma__legend-swatch odontograma__legend-swatch--done" aria-hidden="true"></span>
+            <span>Blau: tractament fet</span>
+          </div>
         </div>
       </section>
     </article>
@@ -122,37 +152,93 @@
           <p class="odontograma__eyebrow">Protocol</p>
           <h2>Protocol de patologia</h2>
         </div>
-      </header>
-
-      <div class="odontograma__protocol-list">
         <button
           type="button"
-          class="protocol protocol--erase"
-          [class.protocol--active]="selectedProtocol?.key === eraseProtocol.key"
-          (click)="selectProtocol(eraseProtocol)"
+          class="odontograma__add-button"
+          [attr.aria-expanded]="isProtocolPickerOpen"
+          (click)="toggleProtocolPicker()"
         >
-          <span class="protocol__icon"></span>
-          <span class="protocol__copy">
-            <strong>{{ eraseProtocol.label }}</strong>
-          </span>
+          +
         </button>
+      </header>
 
+      <div *ngIf="isProtocolPickerOpen" class="odontograma__picker" role="dialog" aria-label="Afegir patologia">
+        <p class="odontograma__picker-label">Afegir patologia des de la base de dades</p>
+
+        <div *ngIf="getAvailableProtocolsToAdd().length > 0; else noProtocolsToAdd" class="odontograma__picker-list">
+          <button
+            *ngFor="let protocol of getAvailableProtocolsToAdd(); trackBy: trackByProtocol"
+            type="button"
+            class="odontograma__picker-option"
+            (click)="addProtocol(protocol)"
+          >
+            {{ protocol.label }}
+          </button>
+        </div>
+      </div>
+
+      <ng-template #noProtocolsToAdd>
+        <p class="odontograma__picker-empty">No hi ha mes patologies disponibles per afegir.</p>
+      </ng-template>
+
+      <div *ngIf="getSelectedProtocol() as selectedProtocol" class="odontograma__filter-card">
+        <div class="odontograma__filter-copy">
+          <strong>{{ selectedProtocol.label }}</strong>
+          <span>Selecciona l'estat abans de pintar o esborrar.</span>
+        </div>
+
+        <div class="odontograma__color-modes">
+          <button
+            *ngFor="let colorMode of colorModes; trackBy: trackByColorMode"
+            type="button"
+            class="odontograma__color-mode"
+            [class.odontograma__color-mode--active]="selectedColorModeId === colorMode.id && !isEraseMode"
+            [style.--state-color]="colorMode.color"
+            (click)="selectColorMode(colorMode)"
+          >
+            {{ colorMode.label }}
+          </button>
+
+          <button
+            type="button"
+            class="odontograma__color-mode odontograma__color-mode--erase"
+            [class.odontograma__color-mode--active]="isEraseMode"
+            (click)="toggleEraseMode()"
+          >
+            Esborrar marca
+          </button>
+        </div>
+
+      </div>
+
+      <div class="odontograma__protocol-list">
         <button
           *ngFor="let protocol of protocols; trackBy: trackByProtocol"
           type="button"
           class="protocol"
-          [class.protocol--active]="selectedProtocol?.key === protocol.key"
-          [class.protocol--caries]="protocol.key === 'caries'"
-          [class.protocol--neteja]="protocol.key === 'neteja'"
-          [class.protocol--endodoncia]="protocol.key === 'endodoncia'"
+          [class.protocol--active]="selectedProtocolId === protocol.id"
+          [style.--protocol-accent]="protocol.accentColor"
           (click)="selectProtocol(protocol)"
         >
-          <span class="protocol__icon"></span>
           <span class="protocol__copy">
             <strong>{{ protocol.label }}</strong>
           </span>
         </button>
+
+        <p *ngIf="!hasVisibleProtocols()" class="odontograma__empty-state">
+          Encara no hi ha patologies afegides en aquest odontograma. Fes servir el botó <strong>+</strong> per començar.
+        </p>
       </div>
+
+      <p *ngIf="!selectedProtocolId" class="odontograma__selection-hint">
+        Selecciona una patologia de la dreta per veure les marques guardades.
+      </p>
+      <p *ngIf="selectedProtocolId && isEraseMode" class="odontograma__selection-hint">
+        Mode esborrar actiu: fes clic sobre una cara per eliminar la marca d'aquesta patologia.
+      </p>
+      <p *ngIf="selectedProtocolId && isBatchSelectionMode" class="odontograma__selection-hint">
+        Selecció múltiple activa: arrossega per diverses cares i s'aplicarà directament.
+      </p>
     </aside>
   </section>
 </main>

@@ -177,11 +177,109 @@
   font-size: 1.35rem;
 }
 
+.odontograma__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.odontograma__switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.odontograma__switch-track {
+  position: relative;
+  width: 3rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  background: #d7e5eb;
+  transition: background-color 160ms ease;
+}
+
+.odontograma__switch-track::after {
+  content: '';
+  position: absolute;
+  top: 0.15rem;
+  left: 0.18rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(25, 36, 44, 0.16);
+  transition: transform 160ms ease;
+}
+
+.odontograma__switch input:checked + .odontograma__switch-track {
+  background: #67c9d7;
+}
+
+.odontograma__switch input:checked + .odontograma__switch-track::after {
+  transform: translateX(1.3rem);
+}
+
+.odontograma__switch-label {
+  color: #516572;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .odontograma__grid {
   margin-top: 1.25rem;
   padding: 1.4rem 1.6rem;
   border: 1px solid var(--border);
   border-radius: 1.4rem;
+}
+
+.odontograma__legend {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #fbfdff 0%, #f6fafc 100%);
+}
+
+.odontograma__legend-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.odontograma__legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.odontograma__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #516572;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.odontograma__legend-swatch {
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 1px solid rgba(25, 36, 44, 0.1);
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.odontograma__legend-swatch--pending {
+  background: #ff0000;
+}
+
+.odontograma__legend-swatch--done {
+  background: #6ec6e8;
 }
 
 .odontograma__loading {
@@ -272,13 +370,113 @@
   margin-top: 1rem;
 }
 
+.odontograma__add-button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 1px solid #d8e4ea;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #37505d;
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.odontograma__picker {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #e8eef3;
+  border-radius: 1rem;
+  background: #f8fbfd;
+}
+
+.odontograma__picker-label,
+.odontograma__picker-empty,
+.odontograma__selection-hint,
+.odontograma__empty-state {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.odontograma__picker-list {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.odontograma__picker-option {
+  border: 1px solid #dce6ec;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.odontograma__filter-card {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #e8eef3;
+  border-radius: 1rem;
+  background: #f8fbfd;
+}
+
+.odontograma__filter-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.odontograma__filter-copy strong {
+  font-size: 0.96rem;
+}
+
+.odontograma__filter-copy span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.odontograma__color-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.odontograma__color-mode {
+  border: 1px solid #dce6ec;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  padding: 0.8rem 0.7rem;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.odontograma__color-mode--active {
+  border-color: var(--state-color, #ff7d72);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--state-color, #ff7d72) 24%, transparent);
+  background: #ffffff;
+}
+
+.odontograma__color-mode--erase {
+  color: #c6544b;
+}
+
 .protocol {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
   min-height: 4.1rem;
   padding: 1rem 1rem;
-  border: 1px solid transparent;
+  border: 1px solid rgba(0, 0, 0, 0.22);
   border-radius: 1rem;
   background: #f8fbfd;
   text-align: left;
@@ -297,15 +495,6 @@
   transform: translateY(-1px) scale(1.01);
 }
 
-.protocol__icon {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  flex: 0 0 auto;
-  border: 1px solid #e3e8ec;
-  background: #ffffff;
-}
-
 .protocol__copy {
   display: flex;
   flex-direction: column;
@@ -320,49 +509,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.protocol__copy small {
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
-.protocol--caries .protocol__icon {
-  background: var(--caries);
-}
-
-.protocol--neteja .protocol__icon {
-  background: var(--neteja);
-}
-
-.protocol--endodoncia .protocol__icon {
-  background: var(--endodoncia);
-}
-
-.protocol--erase .protocol__icon {
-  position: relative;
-  background: #ffffff;
-}
-
-.protocol--erase .protocol__icon::before,
-.protocol--erase .protocol__icon::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0.72rem;
-  height: 2px;
-  border-radius: 999px;
-  background: #c6544b;
-  transform-origin: center;
-}
-
-.protocol--erase .protocol__icon::before {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.protocol--erase .protocol__icon::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 @media (max-width: 1180px) {
@@ -388,6 +534,10 @@
 @media (max-width: 640px) {
   .odontograma__topbar {
     gap: 1.2rem;
+  }
+
+  .odontograma__color-modes {
+    grid-template-columns: 1fr;
   }
 
   .odontograma__actions {
