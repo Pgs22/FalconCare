@@ -2,10 +2,10 @@
   <header class="appointment-header">
     <div class="top-nav">
       <nav class="view-selector">
-        <button>Panel</button>
-        <button class="active">Agenda</button>
-        <button>Pacients</button>
-        <button>Documents</button>
+        <button type="button" [class.active]="isMainSectionActive('panel')" (click)="navigateToMainSection('panel')">Panel</button>
+        <button type="button" [class.active]="isMainSectionActive('agenda')" (click)="navigateToMainSection('agenda')">Agenda</button>
+        <button type="button" [class.active]="isMainSectionActive('patients')" (click)="navigateToMainSection('patients')">Pacients</button>
+        <button type="button" [class.active]="isMainSectionActive('documents')" (click)="navigateToMainSection('documents')">Documents</button>
       </nav>
 
       <div class="header-actions">
