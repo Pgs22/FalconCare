@@ -45,6 +45,9 @@ export type OpenOdontogramResponse = {
 export type SyncOdontogramEntry = {
   tooth_number: number;
   pathology_type_id: number;
+  pathology_id?: number | null;
+  protocol_color?: string | null;
+  visual_type?: string | null;
   faces: string[];
 };
 
@@ -63,6 +66,10 @@ export class OdontogramService {
       patient_id: patientId,
       visit_id: visitId,
     });
+  }
+
+  getOdontogram(odontogramId: number): Observable<OdontogramApi> {
+    return this.http.get<OdontogramApi>(`${this.odontogramsUrl}/${odontogramId}`);
   }
 
   syncDetails(odontogramId: number, entries: SyncOdontogramEntry[]): Observable<SyncOdontogramResponse> {
