@@ -1,20 +1,43 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  LOCALE_ID,
+  importProvidersFrom,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
-import { importProvidersFrom } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
+import { readInitialFalconcareLang } from './constants/falconcare-lang';
 import { authInterceptor } from './interceptors/auth.interceptor';
-import { LOCALE_ID } from '@angular/core';
+import { localeInterceptor } from './interceptors/locale.interceptor';
+import { LanguageService } from './services/language.service';
+
+function initApplicationLanguage(languageService: LanguageService): () => void {
+  return () => {
+    languageService.init();
+  };
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    { provide: LOCALE_ID, useValue: 'ca' },
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      useFactory: initApplicationLanguage,
+      deps: [LanguageService],
+    },
+    {
+      provide: LOCALE_ID,
+      useFactory: (): string => readInitialFalconcareLang(),
+    },
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([localeInterceptor, authInterceptor])),
     provideRouter(
       routes,
       withInMemoryScrolling({

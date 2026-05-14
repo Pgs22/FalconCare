@@ -1,13 +1,25 @@
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-export type SupportedLanguage = 'es' | 'ca' | 'en' | 'fr';
+import {
+  FALCONCARE_FALLBACK_LANG,
+  FALCONCARE_LANG_STORAGE_KEY,
+  FALCONCARE_SUPPORTED_LANGS,
+  normalizeFalconcareLang,
+  readInitialFalconcareLang,
+  type FalconcareUiLanguage,
+} from '../constants/falconcare-lang';
 
+export type SupportedLanguage = FalconcareUiLanguage;
+
+/**
+ * Idioma activo de la UI (ngx-translate). El interceptor HTTP `localeInterceptor` envía
+ * el mismo código en `Accept-Language` hacia Symfony (`ApiLocaleSubscriber`).
+ */
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  private static readonly storageKey = 'falconcare_lang';
-  readonly supportedLanguages: readonly SupportedLanguage[] = ['es', 'ca', 'en', 'fr'];
-  readonly fallbackLanguage: SupportedLanguage = 'es';
+  readonly supportedLanguages = FALCONCARE_SUPPORTED_LANGS;
+  readonly fallbackLanguage = FALCONCARE_FALLBACK_LANG;
 
   constructor(private readonly translate: TranslateService) {
     this.translate.addLangs([...this.supportedLanguages]);
@@ -15,32 +27,19 @@ export class LanguageService {
   }
 
   init(): SupportedLanguage {
-    const resolved = this.resolveInitialLanguage();
+    const resolved = readInitialFalconcareLang();
     this.use(resolved);
     return resolved;
   }
 
   use(language: SupportedLanguage): void {
     this.translate.use(language);
-    localStorage.setItem(LanguageService.storageKey, language);
+    localStorage.setItem(FALCONCARE_LANG_STORAGE_KEY, language);
     document.documentElement.lang = language;
   }
 
   current(): SupportedLanguage {
     const current = this.translate.currentLang || this.translate.getDefaultLang() || this.fallbackLanguage;
-    return this.normalizeLanguage(current);
-  }
-
-  private resolveInitialLanguage(): SupportedLanguage {
-    const saved = localStorage.getItem(LanguageService.storageKey);
-    if (saved) {
-      return this.normalizeLanguage(saved);
-    }
-    return this.normalizeLanguage(navigator.language);
-  }
-
-  private normalizeLanguage(input: string): SupportedLanguage {
-    const base = input.toLowerCase().split('-')[0] as SupportedLanguage;
-    return this.supportedLanguages.includes(base) ? base : this.fallbackLanguage;
+    return normalizeFalconcareLang(current);
   }
 }
