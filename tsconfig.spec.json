@@ -5,6 +5,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./out-tsc/spec",
+    "resolveJsonModule": true,
     "types": [
       "jasmine"
     ]

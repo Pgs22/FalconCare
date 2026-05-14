@@ -1,11 +1,11 @@
 <main class="documents-shell">
   <header class="documents-topbar">
     <div class="documents-brand-wrap">
-      <div class="documents-brand" aria-label="FalconCare brand" [attr.aria-label]="'documents.brand.aria' | translate">
+      <div class="documents-brand">
         <img
           src="/assets/branding/logo-fullname.png"
           [alt]="'documents.brand.aria' | translate"
-          title="FalconCare brand"
+          [attr.title]="'documents.actions.brandImgTitle' | translate"
           class="documents-brand-logo"
         />
       </div>
@@ -59,7 +59,7 @@
         <p>
           {{ selectedPatientName }}
           @if (selectedPatient?.registrationDate) {
-            <span>{{ 'documents.header.registrationDate' | translate }}: {{ selectedPatient?.registrationDate | date: 'dd/MM/yyyy' }}</span>
+            <span>{{ 'documents.header.registrationDate' | translate }}: {{ selectedPatient?.registrationDate | date: 'dd/MM/yyyy' : undefined : dateLocaleId() }}</span>
           }
         </p>
         <p class="documents-sync-indicator" aria-live="polite">{{ realtimeSyncLabel }}</p>
@@ -73,7 +73,7 @@
           type="file"
           multiple
           class="hidden-input"
-          title="Select files"
+          [attr.title]="'documents.actions.selectFilesTitle' | translate"
           [attr.aria-label]="'documents.actions.selectFilesAria' | translate"
           [disabled]="selectedPatientId == null || uploadingFiles"
           (change)="onFilesSelected($event)"
@@ -181,8 +181,8 @@
             [ngModel]="pxPerCm"
             (ngModelChange)="onPxPerCmChange($event)"
             [disabled]="!canMeasureOnCurrentDocument"
-            title="Calibración píxeles por centímetro"
-            aria-label="Calibración píxeles por centímetro"
+            [attr.title]="'documents.actions.calibrationPxCmTitle' | translate"
+            [attr.aria-label]="'documents.actions.calibrationPxCmTitle' | translate"
           />
         </label>
         <label class="documents-calibration" [class.is-active]="calibrationMode">
@@ -230,7 +230,7 @@
                 (mousemove)="onViewerCanvasMouseMove($event)"
                 (mouseleave)="onViewerCanvasMouseLeave()"
               >
-                <img [src]="viewerImageUrl" [alt]="'documents.states.previewAlt' | translate" title="Document preview" class="documents-main-image-el" />
+                <img [src]="viewerImageUrl" [alt]="'documents.states.previewAlt' | translate" [attr.title]="'documents.actions.previewImageTitle' | translate" class="documents-main-image-el" />
                 @if (measureMode || calibrationMode) {
                   <div class="documents-measure-layer">
                     @if (calibrationMode && calibrationPointA; as calPointA) {
@@ -329,7 +329,7 @@
         }
         <div class="documents-editor-wrap">
           <textarea
-            title="Clinical note"
+            [attr.title]="'documents.actions.clinicalNoteTitle' | translate"
             [placeholder]="activeDocument ? ('documents.notes.placeholderActive' | translate) : ('documents.notes.placeholderInactive' | translate)"
             [attr.aria-label]="'documents.notes.inputTitle' | translate"
             [(ngModel)]="noteDraft"
@@ -338,7 +338,7 @@
           <button
             type="button"
             [attr.aria-label]="'documents.notes.send' | translate"
-            title="Send note"
+            [attr.title]="'documents.actions.sendNoteTitle' | translate"
             [disabled]="noteSaving || !activeDocument || !noteDraft.trim()"
             (click)="saveClinicalNote()"
           >

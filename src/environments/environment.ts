@@ -1,6 +1,7 @@
 /**
- * Base de la API Symfony (sin barra final). Debe coincidir con `API_BASE_URL` del backend
- * (mismo host/puerto que las IRI que devuelve el servidor, p. ej. `http://127.0.0.1:8000`).
+ * Base de la API Symfony (`DocumentApiController`, `PatientApiController`).
+ * Debe coincidir con `API_BASE_URL` del `.env` (mismo host/puerto que las IRI `patient` en POST).
+ * El `DocumentService` normaliza barra final al construir URLs.
  */
 const apiUrl = 'http://127.0.0.1:8000';
 

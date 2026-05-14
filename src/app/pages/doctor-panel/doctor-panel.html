@@ -7,7 +7,7 @@
     >
       <div class="px-6 py-5 flex items-center justify-center shrink-0">
         <img
-          alt="Clínica Dental FalconCare"
+          [attr.alt]="'app.clinicDentalAlt' | translate"
           class="block h-auto w-full max-h-16 object-contain"
           src="/assets/branding/logo-fullname.png"
         />
@@ -58,7 +58,7 @@
       <div class="mt-auto shrink-0 border-t border-[#e5e7eb] dark:border-[#1f3636] p-4">
         <div class="flex items-center gap-3 px-2 py-2">
           <img
-            alt="Foto de perfil del usuario"
+            [attr.alt]="'app.profilePhotoUserAlt' | translate"
             class="rounded-full size-10 object-cover border border-primary/30 dark:border-primary/30 shrink-0"
             [src]="profileImageUrl"
           />
@@ -168,7 +168,7 @@
                 class="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg py-1 z-30"
                 role="listbox"
                 [attr.aria-label]="'doctorPanel.search.resultsAria' | translate"
-                title="Resultados de busqueda"
+                [attr.title]="'doctorPanel.search.resultsAria' | translate"
               >
                 @if (searchPatientsLoading) {
                   <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.searching' | translate }}</li>

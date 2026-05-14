@@ -1,7 +1,10 @@
 {
   "app": {
     "language": "Idioma",
-    "brandLogoAlt": "Logotip FalconCare"
+    "brandLogoAlt": "Logotip FalconCare",
+    "clinicDentalAlt": "Clínica Dental FalconCare",
+    "profilePhotoUserAlt": "Foto de perfil de l'usuari",
+    "profilePhotoPatientAlt": "Foto de perfil del pacient"
   },
   "common": {
     "save": "Desar",
@@ -50,7 +53,9 @@
   "doctorRegister": {
     "title": "Registre de doctor",
     "subtitle": "Crea el teu compte professional per accedir al teu panell i gestionar els teus pacients.",
-    "validation": { "reviewRequired": "Revisa els camps obligatoris (*) abans de registrar-te." },
+    "validation": {
+      "reviewRequired": "Revisa els camps obligatoris (*) abans de registrar-te."
+    },
     "fields": {
       "fullNameLabel": "Nom i cognoms",
       "fullNamePlaceholder": "El teu nom complet",
@@ -59,9 +64,17 @@
       "passwordLabel": "Contrasenya",
       "passwordPlaceholder": "Mínim 8 caràcters"
     },
-    "actions": { "registering": "Registrant doctor...", "register": "Registrar-me" },
-    "footer": { "hasAccount": "Ja tens un compte?", "signIn": "Iniciar sessió" },
-    "messages": { "registerOkRedirecting": "Registre completat correctament. Redirigint al panell del doctor..." },
+    "actions": {
+      "registering": "Registrant doctor...",
+      "register": "Registrar-me"
+    },
+    "footer": {
+      "hasAccount": "Ja tens un compte?",
+      "signIn": "Iniciar sessió"
+    },
+    "messages": {
+      "registerOkRedirecting": "Registre completat correctament. Redirigint al panell del doctor..."
+    },
     "errors": {
       "required": "Aquest camp és obligatori.",
       "fullNameIncomplete": "Introdueix nom i cognoms complets.",
@@ -77,7 +90,9 @@
   "patientRegister": {
     "title": "Crea el seu compte",
     "subtitle": "Cuidem cada detall amb la precisió de qui mira més amunt.",
-    "validation": { "reviewRequired": "Revisa els camps obligatoris (*) abans de registrar-te." },
+    "validation": {
+      "reviewRequired": "Revisa els camps obligatoris (*) abans de registrar-te."
+    },
     "fields": {
       "identityLabel": "Número d'identitat",
       "identityPlaceholder": "DNI, NIE o Passaport",
@@ -91,9 +106,17 @@
       "addressPlaceholder": "Carrer, número, ciutat",
       "optional": "Opcional"
     },
-    "actions": { "registering": "Registrant pacient...", "register": "Registrar pacient", "backToPanel": "Tornar al panell" },
-    "defaults": { "noInitialInfo": "Sense informació inicial" },
-    "messages": { "registerOkOpeningRecord": "Pacient registrat correctament. Obrint l'expedient del pacient..." },
+    "actions": {
+      "registering": "Registrant pacient...",
+      "register": "Registrar pacient",
+      "backToPanel": "Tornar al panell"
+    },
+    "defaults": {
+      "noInitialInfo": "Sense informació inicial"
+    },
+    "messages": {
+      "registerOkOpeningRecord": "Pacient registrat correctament. Obrint l'expedient del pacient..."
+    },
     "errors": {
       "required": "Aquest camp és obligatori.",
       "identityInvalid": "Format d'identitat invàlid. Usa DNI (12345678A), NIE (X1234567A) o passaport (5-9 caràcters).",
@@ -111,7 +134,9 @@
   "settings": {
     "title": "Configuració del compte",
     "subtitle": "Actualitza el teu correu electrònic i la contrasenya d'accés.",
-    "validation": { "reviewFields": "Revisa els camps marcats abans de desar els canvis." },
+    "validation": {
+      "reviewFields": "Revisa els camps marcats abans de desar els canvis."
+    },
     "fields": {
       "emailLabel": "Correu electrònic",
       "emailPlaceholder": "nom@exemple.com",
@@ -127,8 +152,13 @@
     "image": {
       "title": "Imatge de perfil",
       "profilePhotoAlt": "Foto de perfil del doctor",
-      "actions": { "uploading": "Pujant...", "changeImage": "Canviar imatge" },
-      "messages": { "updatedOk": "Imatge de perfil actualitzada correctament." },
+      "actions": {
+        "uploading": "Pujant...",
+        "changeImage": "Canviar imatge"
+      },
+      "messages": {
+        "updatedOk": "Imatge de perfil actualitzada correctament."
+      },
       "errors": {
         "onlyImages": "Només es permeten arxius d'imatge.",
         "invalidOrTooLarge": "La imatge és massa gran o invàlida.",
@@ -136,12 +166,20 @@
         "updateGeneric": "No s'ha pogut actualitzar la imatge. Torna-ho a provar."
       }
     },
-    "footer": { "backQuestion": "Vols tornar al panell?", "backToPanel": "Tornar al panell" },
+    "footer": {
+      "backQuestion": "Vols tornar al panell?",
+      "backToPanel": "Tornar al panell"
+    },
     "delete": {
       "confirmPrompt": "Aquesta acció eliminarà permanentment el teu compte de doctor. Vols continuar?",
-      "errors": { "noPermission": "No tens permisos per eliminar aquest compte.", "generic": "No s'ha pogut eliminar el compte. Torna-ho a provar." }
+      "errors": {
+        "noPermission": "No tens permisos per eliminar aquest compte.",
+        "generic": "No s'ha pogut eliminar el compte. Torna-ho a provar."
+      }
     },
-    "messages": { "updatedOk": "Dades actualitzades correctament." },
+    "messages": {
+      "updatedOk": "Dades actualitzades correctament."
+    },
     "errors": {
       "required": "Aquest camp és obligatori.",
       "invalidEmail": "Correu electrònic invàlid. Usa un format com: correu@exemple.com",
@@ -253,7 +291,10 @@
   "patientPanel": {
     "title": "Fitxa del pacient",
     "loadingRecord": "Carregant expedient del pacient...",
-    "defaults": { "patient": "Pacient", "noInitialInfo": "Sense informació inicial" },
+    "defaults": {
+      "patient": "Pacient",
+      "noInitialInfo": "Sense informació inicial"
+    },
     "actions": {
       "backToDoctorPanel": "Tornar al panell del doctor",
       "backToMyPanel": "Tornar al meu panell",
@@ -261,9 +302,19 @@
       "edit": "Editar",
       "saving": "Desant..."
     },
-    "header": { "recordOf": "Expedient integral de {{name}}", "subtitle": "Informació clínica centralitzada i gestió documental." },
-    "profile": { "changePhoto": "Canviar foto", "removePhoto": "Eliminar foto", "activeTreatment": "Tractament actiu" },
-    "nav": { "fullRecord": "Expedient integral", "odontograms": "Odontogrames" },
+    "header": {
+      "recordOf": "Expedient integral de {{name}}",
+      "subtitle": "Informació clínica centralitzada i gestió documental."
+    },
+    "profile": {
+      "changePhoto": "Canviar foto",
+      "removePhoto": "Eliminar foto",
+      "activeTreatment": "Tractament actiu"
+    },
+    "nav": {
+      "fullRecord": "Expedient integral",
+      "odontograms": "Odontogrames"
+    },
     "allergies": {
       "title": "Al·lèrgies crítiques",
       "subtitle": "Reaccions que condicionen medicació i materials clínics.",
@@ -272,7 +323,9 @@
       "newPlaceholder": "Nom de l'al·lèrgia",
       "empty": "No hi ha al·lèrgies crítiques registrades. Prem + per afegir-ne.",
       "removeAria": "Treure al·lèrgia",
-      "messages": { "updatedOk": "Les al·lèrgies crítiques s'han actualitzat correctament." },
+      "messages": {
+        "updatedOk": "Les al·lèrgies crítiques s'han actualitzat correctament."
+      },
       "errors": {
         "enterAllergyName": "Escriu el nom de l'al·lèrgia.",
         "alreadyRegistered": "Aquesta al·lèrgia ja està registrada.",
@@ -289,7 +342,9 @@
       "lifestyleAria": "Hàbits de vida del pacient",
       "placeholder": "Sense informació registrada",
       "savingAuto": "Desant canvis automàticament…",
-      "messages": { "savedAuto": "Estat de salut i hàbits desats automàticament." },
+      "messages": {
+        "savedAuto": "Estat de salut i hàbits desats automàticament."
+      },
       "errors": {
         "serverConnection": "No s'han pogut desar els canvis en aquest moment.",
         "noPermission": "No tens permís per actualitzar aquests camps.",
@@ -306,7 +361,9 @@
       "addressLabel": "Adreça",
       "addressAria": "Adreça",
       "confirmData": "Confirmar informació",
-      "messages": { "savedOk": "La informació de contacte del pacient s'ha desat correctament." },
+      "messages": {
+        "savedOk": "La informació de contacte del pacient s'ha desat correctament."
+      },
       "errors": {
         "pressEditFirst": "Prem «Editar» per modificar la informació de contacte.",
         "reviewData": "Revisa la informació de contacte.",
@@ -326,7 +383,11 @@
       "empty": "Encara no hi ha visites registrades.",
       "noClinicalNotes": "Sense notes clíniques registrades.",
       "refreshTitle": "Actualitzar historial i veure el bloc",
-      "actions": { "viewAll": "Veure tot l'historial", "scheduleFirstVisit": "Programar primera visita", "scheduleVisit": "Programar visita" },
+      "actions": {
+        "viewAll": "Veure tot l'historial",
+        "scheduleFirstVisit": "Programar primera visita",
+        "scheduleVisit": "Programar visita"
+      },
       "errors": {
         "sessionExpired": "Sessió caducada o no vàlida. Torna a iniciar sessió.",
         "forbidden": "No tens permís per veure aquestes cites (comprova rol o assignació com a doctor).",
@@ -349,8 +410,13 @@
       "anyFormatMax": "Qualsevol format (màx. 15 MB per arxiu)",
       "uploading": "Pujant…",
       "selectFilesAria": "Seleccionar arxius clínics per pujar a l'expedient d'aquest pacient",
-      "defaults": { "fileName": "document" },
-      "messages": { "savedOne": "Document desat correctament.", "savedMany": "{{count}} documents desats correctament." },
+      "defaults": {
+        "fileName": "document"
+      },
+      "messages": {
+        "savedOne": "Document desat correctament.",
+        "savedMany": "{{count}} documents desats correctament."
+      },
       "errors": {
         "invalidPatientContext": "No hi ha un expedient de pacient vàlid o no coincideix amb la URL. Recarrega la pàgina.",
         "emptyFiles": "No es poden pujar arxius buits (0 bytes).",
@@ -386,18 +452,39 @@
     }
   },
   "documents": {
-    "brand": { "aria": "Clínica Dental FalconCare" },
-    "nav": { "panel": "Panell", "agenda": "Agenda", "documents": "Documents", "settings": "Ajustos" },
-    "header": { "collectionTitle": "Col·lecció d'Arxius", "registrationDate": "Alta" },
+    "brand": {
+      "aria": "Clínica Dental FalconCare"
+    },
+    "nav": {
+      "panel": "Panell",
+      "agenda": "Agenda",
+      "documents": "Documents",
+      "settings": "Ajustos"
+    },
+    "header": {
+      "collectionTitle": "Col·lecció d'Arxius",
+      "registrationDate": "Alta"
+    },
     "actions": {
       "uploading": "Pujant...",
       "uploadNew": "Pujar Nou Document",
       "selectFilesAria": "Seleccionar documents per pujar",
+      "brandImgTitle": "Marca FalconCare",
+      "selectFilesTitle": "Seleccionar arxius",
+      "calibrationPxCmTitle": "Calibració píxels per centímetre",
+      "previewImageTitle": "Vista prèvia del document",
+      "clinicalNoteTitle": "Nota clínica",
+      "sendNoteTitle": "Enviar nota",
       "delete": "Eliminar document actiu",
       "deleteConfirm": "Eliminar el document \"{{name}}\"? Aquesta acció no es pot desfer.",
       "downloadFile": "Descarregar arxiu"
     },
-    "tabs": { "aria": "Tipus de radiografia", "all": "Tot", "pan": "Panoràmica", "pa": "Periapical" },
+    "tabs": {
+      "aria": "Tipus de radiografia",
+      "all": "Tot",
+      "pan": "Panoràmica",
+      "pa": "Periapical"
+    },
     "states": {
       "loadingDocuments": "Carregant documents...",
       "noDocuments": "No hi ha documents per a aquest pacient.",
@@ -427,7 +514,9 @@
       "referenceLength": "Longitud real de referència en centímetres"
     },
     "viewer": {
-      "measure": { "pending": "Mesura pendent" },
+      "measure": {
+        "pending": "Mesura pendent"
+      },
       "calibration": {
         "stepStart": "Calibració: clic al punt inicial",
         "stepEnd": "Calibració: clic al punt final",
@@ -495,6 +584,180 @@
       "uploadGeneric": "No s'han pogut pujar un o més documents.",
       "download": "No s'ha pogut descarregar o previsualitzar el document seleccionat.",
       "list": "No s'han pogut carregar els documents del pacient seleccionat."
+    }
+  },
+  "appointment": {
+    "nav": {
+      "panel": "Panel",
+      "agenda": "Agenda",
+      "patients": "Pacients",
+      "documents": "Documents"
+    },
+    "searchPlaceholder": "Cercar cites...",
+    "profileAria": "Perfil",
+    "filterBoxes": "Filtrar boxes",
+    "allBoxes": "TOTS",
+    "occupancy": "OCUPACIÓ",
+    "savedToday": "{{count}} cites guardades avui",
+    "allergiesTitle": "Al·lèrgies",
+    "alertCleaning": "Important: es reserven 5 minuts automàticament entre pacients per a neteja i desinfecció del box. Permet només ajustar a 5/10/15 minuts.",
+    "weekPrefix": "Setmana:",
+    "viewDay": "Dia",
+    "viewWeek": "Setmana",
+    "newAppointment": "Nova cita",
+    "boxTreatmentRoom": "Sala d'atenció",
+    "allergyPillAria": "Pacient amb al·lèrgies",
+    "firstVisit": "Primera visita",
+    "changeStatusTitle": "Canviar estat",
+    "urgency": "Urgència",
+    "doctorPrefix": "Dr.",
+    "pathologyPrefix": "Patologia:",
+    "openAppointmentTitle": "Obrir cita",
+    "finishAppointmentTitle": "Finalitzar cita",
+    "moreActionsTitle": "Més accions",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "cleaningBox": "Neteja de box ({{minutes}} min)",
+    "cleaningWeek": "Neteja ({{minutes}} min)",
+    "adjust": "Ajusta",
+    "minOption": "{{n}} min",
+    "weekAppointmentsCount": "{{count}} cites",
+    "panelTitleNew": "Nova cita",
+    "panelTitleEdit": "Edita cita",
+    "panelSubtitle": "Gestió de cita i pacient",
+    "formPatient": "Pacient",
+    "selectPatient": "Selecciona pacient...",
+    "allergiesLabel": "Al·lèrgies:",
+    "allergyBanner": "IMPORTANT: Pacient amb al·lèrgies! Es recomana cita a última hora",
+    "placeholderFullName": "Nom complet",
+    "placeholderDni": "DNI / NIE",
+    "visitDate": "Data de la cita",
+    "options": "Opcions",
+    "startTime": "Hora d'inici",
+    "duration": "Duració",
+    "doctor": "Doctor",
+    "doctorPlaceholder": "Doctor...",
+    "box": "Box",
+    "boxPlaceholder": "Box...",
+    "continueTreatment": "Continua tractament actiu",
+    "pathologyScheduled": "Patologia programada",
+    "pathologyFallback": "Patologia",
+    "treatmentFallback": "Tractament",
+    "newPathology": "Nova patologia",
+    "selectPathology": "Selecciona patologia",
+    "pathologyFieldHasTreatments": "Nova patologia",
+    "pathologyFieldNoTreatments": "Selecciona patologia",
+    "pathologyTypePlaceholder": "Tipus de patologia...",
+    "reason": "Motiu",
+    "reasonPlaceholder": "Notes clíniques",
+    "cancel": "Cancel·lar",
+    "save": "Desar cita",
+    "update": "Actualitzar cita",
+    "confirmDeleteAppointment": "Segur que vols eliminar aquesta cita?",
+    "confirmFinishAppointment": "Estàs segur que vols finalitzar aquesta cita?",
+    "allergies": {
+      "penicillin": "Penicil·lina",
+      "latex": "Làtex",
+      "anesthesia": "Anestèsia",
+      "nsaids": "AINEs",
+      "unknown": "Al·lèrgia {{flag}}"
+    },
+    "messages": {
+      "created": "Cita creada correctament.",
+      "updated": "Cita actualitzada correctament.",
+      "reviewForm": "Revisa els camps marcats del formulari.",
+      "serverDateFormat": "El servidor no accepta el format de data.",
+      "newPatientFailed": "Error en crear el pacient nou",
+      "allergyAlertHeader": "Atenció: el pacient té al·lèrgies registrades."
+    },
+    "errors": {
+      "validation": "No s'ha pogut crear la cita. Revisa les dades del formulari.",
+      "timeConflict": "Ja existeix una cita en aquest horari. Selecciona una altra hora.",
+      "doctorOccupied": "El doctor ja té una cita en aquest horari.",
+      "boxOccupied": "El box ja està ocupat en aquest horari.",
+      "patientNotFound": "No s'ha trobat el pacient seleccionat.",
+      "doctorNotFound": "No s'ha trobat el doctor seleccionat.",
+      "boxNotFound": "No s'ha trobat el box seleccionat.",
+      "fieldPatient": "Selecciona un pacient vàlid.",
+      "fieldDoctor": "Selecciona un doctor vàlid.",
+      "fieldBox": "Selecciona un box vàlid.",
+      "fieldVisitDate": "La data de la cita no és vàlida.",
+      "fieldVisitTime": "L'hora de la cita no és vàlida.",
+      "fieldDuration": "La durada de la cita no és vàlida.",
+      "fieldPathology": "La patologia seleccionada no és vàlida.",
+      "fieldTreatment": "El tractament seleccionat no és vàlid.",
+      "fieldConsultationReason": "El motiu de la consulta no és vàlid.",
+      "offline": "No s'ha pogut connectar amb el servidor en aquest moment. Torna-ho a provar.",
+      "notFoundResources": "No s'ha trobat algun dels recursos de la cita (pacient, doctor o box).",
+      "genericCreate": "No s'ha pogut crear la cita en aquest moment.",
+      "fieldInvalid": "El camp {{field}} no és vàlid.",
+      "validateAvailability": "No s'ha pogut validar la disponibilitat de la cita. Torna-ho a provar.",
+      "weekLoadFailed": "No s'han pogut carregar les cites de la setmana.",
+      "localDoctorOverlap": "Aquest doctor ja té una cita en aquest horari.",
+      "localBoxOverlap": "Aquest box ja té una cita en aquest horari."
+    },
+    "alerts": {
+      "updatedOk": "Cita actualitzada correctament.",
+      "sessionExpiredStatus": "Sessió caducada o sense permisos per canviar l'estat de la cita.",
+      "invalidStatusOptions": "Estat no permès. Opcions vàlides: Confirmada, Arribada o Cancel·lada.",
+      "statusChangeFailed": "No s'ha pogut canviar l'estat de la cita.",
+      "sessionExpiredDelete": "Sessió caducada o sense permisos per eliminar la cita.",
+      "deleteFailed": "No s'ha pogut eliminar la cita.",
+      "cleaningOnly5810": "La neteja del box només pot ser de 5, 10 o 15 minuts.",
+      "cleaningInvalid": "Valor de neteja invàlid. Només es permet 5, 10 o 15 minuts.",
+      "sessionExpiredCleaning": "Sessió caducada o sense permisos per actualitzar la neteja.",
+      "cleaningUpdateFailed": "No s'ha pogut actualitzar el temps de neteja del box.",
+      "odontogramOpenFailed": "No s'ha pogut obrir l'odontograma del pacient.",
+      "appointmentOpenFailed": "No s'ha pogut obrir la cita.",
+      "closeFailed": "Error en tancar la cita"
+    }
+  },
+  "odontogram": {
+    "loading": "Carregant odontograma...",
+    "title": "Explorador d'odontograma",
+    "metaPatient": "Pacient:",
+    "metaVisit": "Visita:",
+    "metaOdontogram": "Odontograma:",
+    "closing": "Tancant cita...",
+    "closeVisit": "Tancar cita",
+    "boardEyebrow": "Dentició completa (FDI)",
+    "boardTitle": "Vista general de totes les peces",
+    "batchMode": "Selecció múltiple",
+    "gridAria": "Odontograma",
+    "legendAria": "Llegenda de colors",
+    "legendTitle": "Llegenda de colors",
+    "legendPending": "Vermell: tractament pendent",
+    "legendDone": "Blau: tractament fet",
+    "protocolEyebrow": "Protocol",
+    "protocolTitle": "Protocol de patologia",
+    "pickerAria": "Afegir patologia",
+    "pickerLabel": "Afegir patologia des de la base de dades",
+    "pickerEmpty": "No hi ha més patologies disponibles per afegir.",
+    "filterHint": "Selecciona l'estat abans de pintar o esborrar.",
+    "eraseMode": "Esborrar marca",
+    "emptyProtocols": "Encara no hi ha patologies afegides en aquest odontograma. Fes servir el botó + per començar.",
+    "hintSelectProtocol": "Selecciona una patologia de la dreta per veure les marques guardades.",
+    "hintErase": "Mode esborrar actiu: fes clic sobre una cara per eliminar la marca d'aquesta patologia.",
+    "hintBatch": "Selecció múltiple activa: arrossega per diverses cares i s'aplicarà directament.",
+    "quadrants": {
+      "q1": "Quadrant superior dret",
+      "q2": "Quadrant superior esquerre",
+      "q3": "Quadrant inferior esquerre",
+      "q4": "Quadrant inferior dret"
+    },
+    "protocolTypes": {
+      "caries": "Càries",
+      "endodontics": "Endodòncia",
+      "cleaning": "Neteja"
+    },
+    "colorModes": {
+      "pending": "Pendent",
+      "done": "Fet"
+    },
+    "errors": {
+      "saveFailed": "No s'ha pogut guardar l'odontograma o tancar la cita.",
+      "invalidAppointment": "No s'ha rebut una cita vàlida per obrir l'odontograma.",
+      "loadFailed": "No s'ha pogut carregar l'odontograma."
     }
   }
 }

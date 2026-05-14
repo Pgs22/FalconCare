@@ -7,6 +7,7 @@ import {
   buildAllergiesBitmask,
   Patient,
 } from '../models/patient.model';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 
 export type RegisterPatientPayload = {
   identityDocument: string;
@@ -29,7 +30,7 @@ export type RegisterPatientPayload = {
 
 @Injectable({ providedIn: 'root' })
 export class PatientService {
-  private readonly baseUrl = `${environment.apiBaseUrl}/api/patients`;
+  private readonly baseUrl = `${normalizeApiBaseUrl(environment.apiBaseUrl)}/api/patients`;
 
   constructor(private readonly http: HttpClient) {}
 

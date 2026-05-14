@@ -1,9 +1,12 @@
+import '../../../test-locale-setup';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService, type TranslationObject } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AppointmentComponent } from './appointment';
 import { Appointment, AppointmentService } from '../../services/appointment.service';
+import caI18n from '../../../assets/i18n/ca.json';
 
 describe('AppointmentComponent', () => {
   let component: AppointmentComponent;
@@ -98,12 +101,17 @@ describe('AppointmentComponent', () => {
     }));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentComponent],
+      imports: [AppointmentComponent, TranslateModule.forRoot()],
       providers: [
         { provide: AppointmentService, useValue: appointmentService },
         { provide: Router, useValue: router },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('ca', caI18n as TranslationObject, true);
+    translate.setDefaultLang('ca');
+    translate.use('ca');
 
     fixture = TestBed.createComponent(AppointmentComponent);
     component = fixture.componentInstance;
@@ -327,7 +335,7 @@ describe('AppointmentComponent', () => {
     component.saveAppointment();
 
     expect(appointmentService.createAppointment).not.toHaveBeenCalled();
-    expect(component.getCreateFieldError('visitTime')).toBe('Aquest doctor ja te una cita en aquest horari.');
+    expect(component.getCreateFieldError('visitTime')).toBe('Aquest doctor ja té una cita en aquest horari.');
   });
 
   it('should block overlapping appointments for the same box', () => {
@@ -344,7 +352,7 @@ describe('AppointmentComponent', () => {
     component.saveAppointment();
 
     expect(appointmentService.createAppointment).not.toHaveBeenCalled();
-    expect(component.getCreateFieldError('visitTime')).toBe('Aquest box ja te una cita en aquest horari.');
+    expect(component.getCreateFieldError('visitTime')).toBe('Aquest box ja té una cita en aquest horari.');
   });
 
   it('should surface backend field errors when create fails', () => {
@@ -439,7 +447,7 @@ describe('AppointmentComponent', () => {
 
     component.setAppointmentCleaningBuffer(baseAppointments[0], 20);
 
-    expect(window.alert).toHaveBeenCalledWith('La neteja del box nomes pot ser de 5, 10 o 15 minuts.');
+    expect(window.alert).toHaveBeenCalledWith('La neteja del box només pot ser de 5, 10 o 15 minuts.');
   });
 
   it('should open the odontogram for the appointment patient', () => {

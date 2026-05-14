@@ -31,7 +31,7 @@ describe('AppointmentService', () => {
       responseBody = String(response.status);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/63/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/63/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'Confirmada' });
     expect(req.request.withCredentials).toBeTrue();
@@ -47,7 +47,7 @@ describe('AppointmentService', () => {
       responseBody = String(response.status);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/66/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/66/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'Arribada' });
 
@@ -58,7 +58,7 @@ describe('AppointmentService', () => {
   it('should send cancelled canonical status for Cancelada', () => {
     service.updateAppointmentStatus(64, 'Cancelada').subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/64/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/64/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'Cancelada' });
 
@@ -68,12 +68,12 @@ describe('AppointmentService', () => {
   it('should fallback from PATCH to PUT with the same status body', () => {
     service.updateAppointmentStatus(65, 'Confirmada').subscribe();
 
-    const firstReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    const firstReq = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/65/status');
     expect(firstReq.request.method).toBe('PATCH');
     expect(firstReq.request.body).toEqual({ status: 'Confirmada' });
     firstReq.flush('boom', { status: 500, statusText: 'Server Error' });
 
-    const secondReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    const secondReq = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/65/status');
     expect(secondReq.request.method).toBe('PUT');
     expect(secondReq.request.body).toEqual({ status: 'Confirmada' });
     secondReq.flush(JSON.stringify({ ok: true, status: 'Confirmada' }));
@@ -88,12 +88,12 @@ describe('AppointmentService', () => {
       },
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/65/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'En curs' });
 
     req.flush({ ok: false, code: 'INVALID_STATUS' }, { status: 400, statusText: 'Bad Request' });
-    httpMock.expectNone('http://localhost:8000/api/appointment/65/status');
+    httpMock.expectNone('http://127.0.0.1:8000/api/appointment/65/status');
     expect(receivedCode).toBe('INVALID_STATUS');
   });
 
@@ -102,7 +102,7 @@ describe('AppointmentService', () => {
       expect(response.manualStatuses).toEqual(['Confirmada', 'Arribada', 'Cancelada']);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/statuses');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/statuses');
     expect(req.request.method).toBe('GET');
     expect(req.request.withCredentials).toBeTrue();
     req.flush({
@@ -114,7 +114,7 @@ describe('AppointmentService', () => {
   it('should use GET for openAppointment', () => {
     service.openAppointment(77).subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/77/open');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/77/open');
     expect(req.request.method).toBe('GET');
     expect(req.request.withCredentials).toBeTrue();
 
@@ -137,7 +137,7 @@ describe('AppointmentService', () => {
       },
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/12/update');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/12/update');
     expect(req.request.method).toBe('PUT');
     expect(req.request.withCredentials).toBeTrue();
 

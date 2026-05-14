@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 
 export type OdontogramPathologyTypeApi = {
   id: number | null;
@@ -59,7 +60,7 @@ export type SyncOdontogramResponse = {
 @Injectable({ providedIn: 'root' })
 export class OdontogramService {
   private readonly http = inject(HttpClient);
-  private readonly odontogramsUrl = `${environment.apiBaseUrl}/api/odontograms`;
+  private readonly odontogramsUrl = `${normalizeApiBaseUrl(environment.apiBaseUrl)}/api/odontograms`;
 
   openOdontogram(patientId: number, visitId: number): Observable<OpenOdontogramResponse> {
     return this.http.post<OpenOdontogramResponse>(`${this.odontogramsUrl}/open`, {

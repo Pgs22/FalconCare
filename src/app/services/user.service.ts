@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiUser, UserProfile, normalizeUserProfile } from '../models/user-profile.model';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 
 export type AppUser = UserProfile;
 
@@ -14,7 +15,7 @@ export type UpdateUserPayload = {
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private readonly baseUrl = `${environment.apiBaseUrl}/api/users`;
+  private readonly baseUrl = `${normalizeApiBaseUrl(environment.apiBaseUrl)}/api/users`;
 
   constructor(private readonly http: HttpClient) {}
 

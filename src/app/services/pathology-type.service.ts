@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 
 export type PathologyTypeItem = {
   id: number;
@@ -12,7 +13,7 @@ export type PathologyTypeItem = {
 
 @Injectable({ providedIn: 'root' })
 export class PathologyTypeService {
-  private readonly pathologyTypesUrl = `${environment.apiBaseUrl}/api/pathologies/types`;
+  private readonly pathologyTypesUrl = `${normalizeApiBaseUrl(environment.apiBaseUrl)}/api/pathologies/types`;
 
   constructor(private readonly http: HttpClient) {}
 

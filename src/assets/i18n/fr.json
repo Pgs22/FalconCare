@@ -1,7 +1,10 @@
 {
   "app": {
     "language": "Langue",
-    "brandLogoAlt": "Logo FalconCare"
+    "brandLogoAlt": "Logo FalconCare",
+    "clinicDentalAlt": "Clinique dentaire FalconCare",
+    "profilePhotoUserAlt": "Photo de profil de l'utilisateur",
+    "profilePhotoPatientAlt": "Photo de profil du patient"
   },
   "common": {
     "save": "Enregistrer",
@@ -50,7 +53,9 @@
   "doctorRegister": {
     "title": "Inscription du médecin",
     "subtitle": "Créez votre compte professionnel pour accéder à votre panneau et gérer vos patients.",
-    "validation": { "reviewRequired": "Vérifiez les champs obligatoires (*) avant de vous inscrire." },
+    "validation": {
+      "reviewRequired": "Vérifiez les champs obligatoires (*) avant de vous inscrire."
+    },
     "fields": {
       "fullNameLabel": "Nom et prénom",
       "fullNamePlaceholder": "Votre nom complet",
@@ -59,9 +64,17 @@
       "passwordLabel": "Mot de passe",
       "passwordPlaceholder": "Minimum 8 caractères"
     },
-    "actions": { "registering": "Inscription du médecin...", "register": "M'inscrire" },
-    "footer": { "hasAccount": "Vous avez déjà un compte ?", "signIn": "Se connecter" },
-    "messages": { "registerOkRedirecting": "Inscription réussie. Redirection vers le panneau du médecin..." },
+    "actions": {
+      "registering": "Inscription du médecin...",
+      "register": "M'inscrire"
+    },
+    "footer": {
+      "hasAccount": "Vous avez déjà un compte ?",
+      "signIn": "Se connecter"
+    },
+    "messages": {
+      "registerOkRedirecting": "Inscription réussie. Redirection vers le panneau du médecin..."
+    },
     "errors": {
       "required": "Ce champ est obligatoire.",
       "fullNameIncomplete": "Saisissez nom et prénom complets.",
@@ -77,7 +90,9 @@
   "patientRegister": {
     "title": "Créez votre compte",
     "subtitle": "Nous soignons chaque détail avec la précision de ceux qui visent plus haut.",
-    "validation": { "reviewRequired": "Vérifiez les champs obligatoires (*) avant de vous inscrire." },
+    "validation": {
+      "reviewRequired": "Vérifiez les champs obligatoires (*) avant de vous inscrire."
+    },
     "fields": {
       "identityLabel": "Numéro d'identité",
       "identityPlaceholder": "DNI, NIE ou Passeport",
@@ -91,9 +106,17 @@
       "addressPlaceholder": "Rue, numéro, ville",
       "optional": "Optionnel"
     },
-    "actions": { "registering": "Inscription du patient...", "register": "Inscrire le patient", "backToPanel": "Retour au panneau" },
-    "defaults": { "noInitialInfo": "Aucune information initiale" },
-    "messages": { "registerOkOpeningRecord": "Patient inscrit avec succès. Ouverture du dossier patient..." },
+    "actions": {
+      "registering": "Inscription du patient...",
+      "register": "Inscrire le patient",
+      "backToPanel": "Retour au panneau"
+    },
+    "defaults": {
+      "noInitialInfo": "Aucune information initiale"
+    },
+    "messages": {
+      "registerOkOpeningRecord": "Patient inscrit avec succès. Ouverture du dossier patient..."
+    },
     "errors": {
       "required": "Ce champ est obligatoire.",
       "identityInvalid": "Format d'identité invalide. Utilisez DNI (12345678A), NIE (X1234567A) ou passeport (5-9 caractères).",
@@ -111,7 +134,9 @@
   "settings": {
     "title": "Paramètres du compte",
     "subtitle": "Mettez à jour votre e-mail et votre mot de passe d'accès.",
-    "validation": { "reviewFields": "Vérifiez les champs indiqués avant d'enregistrer les modifications." },
+    "validation": {
+      "reviewFields": "Vérifiez les champs indiqués avant d'enregistrer les modifications."
+    },
     "fields": {
       "emailLabel": "Adresse e-mail",
       "emailPlaceholder": "nom@exemple.com",
@@ -127,8 +152,13 @@
     "image": {
       "title": "Image de profil",
       "profilePhotoAlt": "Photo de profil du médecin",
-      "actions": { "uploading": "Téléversement...", "changeImage": "Changer l'image" },
-      "messages": { "updatedOk": "Image de profil mise à jour avec succès." },
+      "actions": {
+        "uploading": "Téléversement...",
+        "changeImage": "Changer l'image"
+      },
+      "messages": {
+        "updatedOk": "Image de profil mise à jour avec succès."
+      },
       "errors": {
         "onlyImages": "Seuls les fichiers image sont autorisés.",
         "invalidOrTooLarge": "L'image est trop volumineuse ou invalide.",
@@ -136,12 +166,20 @@
         "updateGeneric": "Impossible de mettre à jour l'image. Réessayez."
       }
     },
-    "footer": { "backQuestion": "Souhaitez-vous revenir au panneau ?", "backToPanel": "Retour au panneau" },
+    "footer": {
+      "backQuestion": "Souhaitez-vous revenir au panneau ?",
+      "backToPanel": "Retour au panneau"
+    },
     "delete": {
       "confirmPrompt": "Cette action supprimera définitivement votre compte médecin. Voulez-vous continuer ?",
-      "errors": { "noPermission": "Vous n'avez pas l'autorisation de supprimer ce compte.", "generic": "Impossible de supprimer le compte. Réessayez." }
+      "errors": {
+        "noPermission": "Vous n'avez pas l'autorisation de supprimer ce compte.",
+        "generic": "Impossible de supprimer le compte. Réessayez."
+      }
     },
-    "messages": { "updatedOk": "Données mises à jour avec succès." },
+    "messages": {
+      "updatedOk": "Données mises à jour avec succès."
+    },
     "errors": {
       "required": "Ce champ est obligatoire.",
       "invalidEmail": "Adresse e-mail invalide. Utilisez un format comme : nom@exemple.com",
@@ -253,7 +291,10 @@
   "patientPanel": {
     "title": "Dossier du patient",
     "loadingRecord": "Chargement du dossier patient...",
-    "defaults": { "patient": "Patient", "noInitialInfo": "Aucune information initiale" },
+    "defaults": {
+      "patient": "Patient",
+      "noInitialInfo": "Aucune information initiale"
+    },
     "actions": {
       "backToDoctorPanel": "Retour au panneau du médecin",
       "backToMyPanel": "Retour à mon panneau",
@@ -261,9 +302,19 @@
       "edit": "Modifier",
       "saving": "Enregistrement..."
     },
-    "header": { "recordOf": "Dossier complet de {{name}}", "subtitle": "Informations cliniques centralisées et gestion documentaire." },
-    "profile": { "changePhoto": "Changer la photo", "removePhoto": "Supprimer la photo", "activeTreatment": "Traitement actif" },
-    "nav": { "fullRecord": "Dossier complet", "odontograms": "Odontogrammes" },
+    "header": {
+      "recordOf": "Dossier complet de {{name}}",
+      "subtitle": "Informations cliniques centralisées et gestion documentaire."
+    },
+    "profile": {
+      "changePhoto": "Changer la photo",
+      "removePhoto": "Supprimer la photo",
+      "activeTreatment": "Traitement actif"
+    },
+    "nav": {
+      "fullRecord": "Dossier complet",
+      "odontograms": "Odontogrammes"
+    },
     "allergies": {
       "title": "Allergies critiques",
       "subtitle": "Réactions influençant les médicaments et matériaux cliniques.",
@@ -272,7 +323,9 @@
       "newPlaceholder": "Nom de l'allergie",
       "empty": "Aucune allergie critique enregistrée. Appuyez sur + pour en ajouter.",
       "removeAria": "Retirer l'allergie",
-      "messages": { "updatedOk": "Les allergies critiques ont été mises à jour avec succès." },
+      "messages": {
+        "updatedOk": "Les allergies critiques ont été mises à jour avec succès."
+      },
       "errors": {
         "enterAllergyName": "Saisissez le nom de l'allergie.",
         "alreadyRegistered": "Cette allergie est déjà enregistrée.",
@@ -289,7 +342,9 @@
       "lifestyleAria": "Habitudes de vie du patient",
       "placeholder": "Aucune information enregistrée",
       "savingAuto": "Enregistrement automatique des modifications…",
-      "messages": { "savedAuto": "État de santé et habitudes de vie enregistrés automatiquement." },
+      "messages": {
+        "savedAuto": "État de santé et habitudes de vie enregistrés automatiquement."
+      },
       "errors": {
         "serverConnection": "Impossible d'enregistrer pour le moment.",
         "noPermission": "Vous n'avez pas la permission de mettre à jour ces champs.",
@@ -306,7 +361,9 @@
       "addressLabel": "Adresse",
       "addressAria": "Adresse",
       "confirmData": "Confirmer les informations",
-      "messages": { "savedOk": "Les coordonnées du patient ont été enregistrées avec succès." },
+      "messages": {
+        "savedOk": "Les coordonnées du patient ont été enregistrées avec succès."
+      },
       "errors": {
         "pressEditFirst": "Appuyez sur « Modifier » pour changer les coordonnées.",
         "reviewData": "Vérifiez les coordonnées.",
@@ -326,7 +383,11 @@
       "empty": "Aucune visite enregistrée pour le moment.",
       "noClinicalNotes": "Aucune note clinique enregistrée.",
       "refreshTitle": "Mettre à jour l'historique et afficher ce bloc",
-      "actions": { "viewAll": "Voir tout l'historique", "scheduleFirstVisit": "Planifier première visite", "scheduleVisit": "Planifier visite" },
+      "actions": {
+        "viewAll": "Voir tout l'historique",
+        "scheduleFirstVisit": "Planifier première visite",
+        "scheduleVisit": "Planifier visite"
+      },
       "errors": {
         "sessionExpired": "Session expirée ou invalide. Veuillez vous reconnecter.",
         "forbidden": "Vous n'avez pas la permission de voir ces rendez-vous (vérifiez rôle/affectation médecin).",
@@ -349,8 +410,13 @@
       "anyFormatMax": "Tout format (max. 15 Mo par fichier)",
       "uploading": "Téléversement…",
       "selectFilesAria": "Sélectionner des fichiers cliniques à téléverser dans le dossier de ce patient",
-      "defaults": { "fileName": "document" },
-      "messages": { "savedOne": "Document enregistré avec succès.", "savedMany": "{{count}} documents enregistrés avec succès." },
+      "defaults": {
+        "fileName": "document"
+      },
+      "messages": {
+        "savedOne": "Document enregistré avec succès.",
+        "savedMany": "{{count}} documents enregistrés avec succès."
+      },
       "errors": {
         "invalidPatientContext": "Aucun dossier patient valide ou non correspondant à l'URL. Rechargez la page.",
         "emptyFiles": "Les fichiers vides (0 octet) ne peuvent pas être téléversés.",
@@ -386,18 +452,39 @@
     }
   },
   "documents": {
-    "brand": { "aria": "Clinique Dentaire FalconCare" },
-    "nav": { "panel": "Panneau", "agenda": "Agenda", "documents": "Documents", "settings": "Paramètres" },
-    "header": { "collectionTitle": "Collection de Fichiers", "registrationDate": "Inscription" },
+    "brand": {
+      "aria": "Clinique Dentaire FalconCare"
+    },
+    "nav": {
+      "panel": "Panneau",
+      "agenda": "Agenda",
+      "documents": "Documents",
+      "settings": "Paramètres"
+    },
+    "header": {
+      "collectionTitle": "Collection de Fichiers",
+      "registrationDate": "Inscription"
+    },
     "actions": {
       "uploading": "Téléversement...",
       "uploadNew": "Téléverser un Nouveau Document",
       "selectFilesAria": "Sélectionner des documents à téléverser",
+      "brandImgTitle": "Marque FalconCare",
+      "selectFilesTitle": "Sélectionner des fichiers",
+      "calibrationPxCmTitle": "Calibration pixels par centimètre",
+      "previewImageTitle": "Aperçu du document",
+      "clinicalNoteTitle": "Note clinique",
+      "sendNoteTitle": "Envoyer la note",
       "delete": "Supprimer le document actif",
       "deleteConfirm": "Supprimer le document « {{name}} » ? Cette action est irréversible.",
       "downloadFile": "Télécharger le fichier"
     },
-    "tabs": { "aria": "Types de radiographie", "all": "Tout", "pan": "Panoramique", "pa": "Périapicale" },
+    "tabs": {
+      "aria": "Types de radiographie",
+      "all": "Tout",
+      "pan": "Panoramique",
+      "pa": "Périapicale"
+    },
     "states": {
       "loadingDocuments": "Chargement des documents...",
       "noDocuments": "Aucun document pour ce patient.",
@@ -427,7 +514,9 @@
       "referenceLength": "Longueur réelle de référence en centimètres"
     },
     "viewer": {
-      "measure": { "pending": "Mesure en attente" },
+      "measure": {
+        "pending": "Mesure en attente"
+      },
       "calibration": {
         "stepStart": "Calibration : clic au point initial",
         "stepEnd": "Calibration : clic au point final",
@@ -495,6 +584,180 @@
       "uploadGeneric": "Un ou plusieurs documents n'ont pas pu être téléversés.",
       "download": "Impossible de télécharger ou prévisualiser le document sélectionné.",
       "list": "Impossible de charger les documents du patient sélectionné."
+    }
+  },
+  "appointment": {
+    "nav": {
+      "panel": "Tableau de bord",
+      "agenda": "Agenda",
+      "patients": "Patients",
+      "documents": "Documents"
+    },
+    "searchPlaceholder": "Rechercher des rendez-vous...",
+    "profileAria": "Profil",
+    "filterBoxes": "Filtrer les salles",
+    "allBoxes": "TOUTES",
+    "occupancy": "OCCUPATION",
+    "savedToday": "{{count}} rendez-vous enregistrés aujourd'hui",
+    "allergiesTitle": "Allergies",
+    "alertCleaning": "Important : 5 minutes sont automatiquement réservées entre les patients pour le nettoyage et la désinfection de la salle. Vous ne pouvez ajuster qu'à 5/10/15 minutes.",
+    "weekPrefix": "Semaine :",
+    "viewDay": "Jour",
+    "viewWeek": "Semaine",
+    "newAppointment": "Nouveau rendez-vous",
+    "boxTreatmentRoom": "Salle de soins",
+    "allergyPillAria": "Patient avec allergies",
+    "firstVisit": "Première visite",
+    "changeStatusTitle": "Changer le statut",
+    "urgency": "Urgence",
+    "doctorPrefix": "Dr",
+    "pathologyPrefix": "Pathologie :",
+    "openAppointmentTitle": "Ouvrir le rendez-vous",
+    "finishAppointmentTitle": "Terminer le rendez-vous",
+    "moreActionsTitle": "Plus d'actions",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cleaningBox": "Nettoyage de la salle ({{minutes}} min)",
+    "cleaningWeek": "Nettoyage ({{minutes}} min)",
+    "adjust": "Ajuster",
+    "minOption": "{{n}} min",
+    "weekAppointmentsCount": "{{count}} rendez-vous",
+    "panelTitleNew": "Nouveau rendez-vous",
+    "panelTitleEdit": "Modifier le rendez-vous",
+    "panelSubtitle": "Gestion du rendez-vous et du patient",
+    "formPatient": "Patient",
+    "selectPatient": "Sélectionnez un patient...",
+    "allergiesLabel": "Allergies :",
+    "allergyBanner": "IMPORTANT : Patient avec allergies ! Un créneau en fin de journée est recommandé",
+    "placeholderFullName": "Nom complet",
+    "placeholderDni": "Pièce d'identité",
+    "visitDate": "Date du rendez-vous",
+    "options": "Options",
+    "startTime": "Heure de début",
+    "duration": "Durée",
+    "doctor": "Médecin",
+    "doctorPlaceholder": "Médecin...",
+    "box": "Salle",
+    "boxPlaceholder": "Salle...",
+    "continueTreatment": "Poursuivre le traitement actif",
+    "pathologyScheduled": "Pathologie programmée",
+    "pathologyFallback": "Pathologie",
+    "treatmentFallback": "Traitement",
+    "newPathology": "Nouvelle pathologie",
+    "selectPathology": "Sélectionnez une pathologie",
+    "pathologyFieldHasTreatments": "Nouvelle pathologie",
+    "pathologyFieldNoTreatments": "Sélectionnez une pathologie",
+    "pathologyTypePlaceholder": "Type de pathologie...",
+    "reason": "Motif",
+    "reasonPlaceholder": "Notes cliniques",
+    "cancel": "Annuler",
+    "save": "Enregistrer le rendez-vous",
+    "update": "Mettre à jour le rendez-vous",
+    "confirmDeleteAppointment": "Voulez-vous vraiment supprimer ce rendez-vous ?",
+    "confirmFinishAppointment": "Voulez-vous vraiment terminer ce rendez-vous ?",
+    "allergies": {
+      "penicillin": "Pénicilline",
+      "latex": "Latex",
+      "anesthesia": "Anesthésie",
+      "nsaids": "AINS",
+      "unknown": "Allergie {{flag}}"
+    },
+    "messages": {
+      "created": "Rendez-vous créé avec succès.",
+      "updated": "Rendez-vous mis à jour avec succès.",
+      "reviewForm": "Vérifiez les champs du formulaire indiqués.",
+      "serverDateFormat": "Le serveur n'accepte pas le format de date.",
+      "newPatientFailed": "Impossible de créer le nouveau patient",
+      "allergyAlertHeader": "Attention : le patient a des allergies enregistrées."
+    },
+    "errors": {
+      "validation": "Impossible de créer le rendez-vous. Vérifiez les données du formulaire.",
+      "timeConflict": "Un rendez-vous existe déjà à cette heure. Choisissez une autre heure.",
+      "doctorOccupied": "Le médecin a déjà un rendez-vous à cette heure.",
+      "boxOccupied": "La salle est déjà occupée à cette heure.",
+      "patientNotFound": "Patient sélectionné introuvable.",
+      "doctorNotFound": "Médecin sélectionné introuvable.",
+      "boxNotFound": "Salle sélectionnée introuvable.",
+      "fieldPatient": "Sélectionnez un patient valide.",
+      "fieldDoctor": "Sélectionnez un médecin valide.",
+      "fieldBox": "Sélectionnez une salle valide.",
+      "fieldVisitDate": "La date du rendez-vous n'est pas valide.",
+      "fieldVisitTime": "L'heure du rendez-vous n'est pas valide.",
+      "fieldDuration": "La durée du rendez-vous n'est pas valide.",
+      "fieldPathology": "La pathologie sélectionnée n'est pas valide.",
+      "fieldTreatment": "Le traitement sélectionné n'est pas valide.",
+      "fieldConsultationReason": "Le motif de consultation n'est pas valide.",
+      "offline": "Impossible de se connecter au serveur pour le moment. Réessayez.",
+      "notFoundResources": "Une des ressources du rendez-vous est introuvable (patient, médecin ou salle).",
+      "genericCreate": "Impossible de créer le rendez-vous pour le moment.",
+      "fieldInvalid": "Le champ {{field}} n'est pas valide.",
+      "validateAvailability": "Impossible de valider la disponibilité du rendez-vous. Réessayez.",
+      "weekLoadFailed": "Impossible de charger les rendez-vous de la semaine.",
+      "localDoctorOverlap": "Ce médecin a déjà un rendez-vous à cette heure.",
+      "localBoxOverlap": "Cette salle a déjà un rendez-vous à cette heure."
+    },
+    "alerts": {
+      "updatedOk": "Rendez-vous mis à jour avec succès.",
+      "sessionExpiredStatus": "Session expirée ou droits insuffisants pour modifier le statut du rendez-vous.",
+      "invalidStatusOptions": "Statut non autorisé. Options valides : Confirmé, Arrivé ou Annulé.",
+      "statusChangeFailed": "Impossible de modifier le statut du rendez-vous.",
+      "sessionExpiredDelete": "Session expirée ou droits insuffisants pour supprimer le rendez-vous.",
+      "deleteFailed": "Impossible de supprimer le rendez-vous.",
+      "cleaningOnly5810": "Le nettoyage de la salle ne peut être que de 5, 10 ou 15 minutes.",
+      "cleaningInvalid": "Valeur de nettoyage invalide. Seules 5, 10 ou 15 minutes sont autorisées.",
+      "sessionExpiredCleaning": "Session expirée ou droits insuffisants pour mettre à jour le nettoyage.",
+      "cleaningUpdateFailed": "Impossible de mettre à jour la durée de nettoyage de la salle.",
+      "odontogramOpenFailed": "Impossible d'ouvrir l'odontogramme du patient.",
+      "appointmentOpenFailed": "Impossible d'ouvrir le rendez-vous.",
+      "closeFailed": "Erreur lors de la fermeture du rendez-vous"
+    }
+  },
+  "odontogram": {
+    "loading": "Chargement de l'odontogramme...",
+    "title": "Explorateur d'odontogramme",
+    "metaPatient": "Patient :",
+    "metaVisit": "Visite :",
+    "metaOdontogram": "Odontogramme :",
+    "closing": "Fermeture du rendez-vous...",
+    "closeVisit": "Fermer le rendez-vous",
+    "boardEyebrow": "Dentition complète (FDI)",
+    "boardTitle": "Vue d'ensemble de toutes les dents",
+    "batchMode": "Sélection multiple",
+    "gridAria": "Odontogramme",
+    "legendAria": "Légende des couleurs",
+    "legendTitle": "Légende des couleurs",
+    "legendPending": "Rouge : traitement en attente",
+    "legendDone": "Bleu : traitement effectué",
+    "protocolEyebrow": "Protocole",
+    "protocolTitle": "Protocole de pathologie",
+    "pickerAria": "Ajouter une pathologie",
+    "pickerLabel": "Ajouter une pathologie depuis la base de données",
+    "pickerEmpty": "Aucune autre pathologie disponible à ajouter.",
+    "filterHint": "Sélectionnez l'état avant de peindre ou d'effacer.",
+    "eraseMode": "Effacer la marque",
+    "emptyProtocols": "Aucune pathologie ajoutée à cet odontogramme. Utilisez le bouton + pour commencer.",
+    "hintSelectProtocol": "Sélectionnez une pathologie à droite pour voir les marques enregistrées.",
+    "hintErase": "Mode effacement actif : cliquez sur une face pour supprimer la marque de cette pathologie.",
+    "hintBatch": "Sélection multiple active : faites glisser sur plusieurs faces pour appliquer directement.",
+    "quadrants": {
+      "q1": "Quadrant supérieur droit",
+      "q2": "Quadrant supérieur gauche",
+      "q3": "Quadrant inférieur gauche",
+      "q4": "Quadrant inférieur droit"
+    },
+    "protocolTypes": {
+      "caries": "Carie",
+      "endodontics": "Endodontie",
+      "cleaning": "Nettoyage"
+    },
+    "colorModes": {
+      "pending": "En attente",
+      "done": "Terminé"
+    },
+    "errors": {
+      "saveFailed": "Impossible d'enregistrer l'odontogramme ou de fermer le rendez-vous.",
+      "invalidAppointment": "Aucun rendez-vous valide reçu pour ouvrir l'odontogramme.",
+      "loadFailed": "Impossible de charger l'odontogramme."
     }
   }
 }

@@ -1,6 +1,6 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -10,6 +10,7 @@ import { belongsToPatientRelationStrict } from '../../models/patient-relation.ut
 import { documentDisplayNameFromRaw, documentTypeForUpload } from '../../models/document-api.util';
 import type { Patient } from '../../models/patient.model';
 import { DocumentService } from '../../services/document.service';
+import { LanguageService } from '../../services/language.service';
 import { PatientRealtimeService, type PatientRealtimeEvent } from '../../services/patient-realtime.service';
 import { PatientService } from '../../services/patient.service';
 
@@ -44,6 +45,10 @@ const DOCUMENT_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
   styleUrl: './documents.page.css',
 })
 export class DocumentsPageComponent implements OnInit, OnDestroy {
+  private readonly languageService = inject(LanguageService);
+  /** Locale para DatePipe al cambiar idioma (ngx-translate). */
+  readonly dateLocaleId = signal(this.languageService.current());
+
   patients: Patient[] = [];
   filteredPatients: Patient[] = [];
   selectedPatientId: number | null = null;
@@ -111,6 +116,10 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.dateLocaleId.set(this.languageService.current());
+    this.subs.add(
+      this.translate.onLangChange.subscribe(() => this.dateLocaleId.set(this.languageService.current()))
+    );
     this.updateMadridClock();
     this.madridClockTimer = setInterval(() => this.updateMadridClock(), 1000);
     this.restorePatientListHeightPreference();

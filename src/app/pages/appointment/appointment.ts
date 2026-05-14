@@ -1,7 +1,8 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   AppointmentService,
   Appointment,
@@ -9,11 +10,12 @@ import {
   ManualAppointmentStatus,
 } from '../../services/appointment.service';
 import { FormsModule } from '@angular/forms';
+import { LanguageService } from '../../services/language.service';
 import {
   pickAppointmentPatientId,
 } from '../../models/appointment-api.util';
 import { AllergyFlag, selectedAllergiesFromBitmask } from '../../models/patient.model';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, of, Subscription } from 'rxjs';
 
 type ApiRecord = Record<string, unknown>;
 const BOX_CLEANING_BUFFER_MINUTES = 5;
@@ -32,13 +34,17 @@ interface WeekDayItem {
 @Component({
   selector: 'app-appointment',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, TranslateModule],
   templateUrl: './appointment.html',
   styleUrl: './appointment.css',
 })
 
-export class AppointmentComponent implements OnInit {
+export class AppointmentComponent implements OnInit, OnDestroy {
   private errorDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly languageService = inject(LanguageService);
+  /** Locale para DatePipe al cambiar idioma (ngx-translate). */
+  readonly dateLocaleId = signal(this.languageService.current());
+  private dateLocaleSub: Subscription | null = null;
 
   private selectedTreatment: {
     treatmentId: number;
@@ -96,58 +102,58 @@ export class AppointmentComponent implements OnInit {
   private boxesSelectionInitialized = false;
   private hasUserAdjustedBoxSelection = false;
 
-  private readonly allergyLabelByFlag: Record<number, string> = {
-    [AllergyFlag.PENICILLIN]: 'Penicil·lina',
-    [AllergyFlag.LATEX]: 'Làtex',
-    [AllergyFlag.ANESTHESIA]: 'Anestèsia',
-    [AllergyFlag.NSAIDS]: 'AINEs',
+  private readonly allergyLabelKeyByFlag: Record<number, string> = {
+    [AllergyFlag.PENICILLIN]: 'appointment.allergies.penicillin',
+    [AllergyFlag.LATEX]: 'appointment.allergies.latex',
+    [AllergyFlag.ANESTHESIA]: 'appointment.allergies.anesthesia',
+    [AllergyFlag.NSAIDS]: 'appointment.allergies.nsaids',
   };
 
   private readonly createSuccessMessagesByCode: Record<string, string> = {
-    APPOINTMENT_CREATED: 'Cita creada correctament.',
-    APPOINTMENT_CREATED_SUCCESSFULLY: 'Cita creada correctament.',
+    APPOINTMENT_CREATED: 'appointment.messages.created',
+    APPOINTMENT_CREATED_SUCCESSFULLY: 'appointment.messages.created',
   };
 
   private readonly createSuccessMessagesByKey: Record<string, string> = {
-    'appointment.created': 'Cita creada correctament.',
-    'appointment.create.success': 'Cita creada correctament.',
+    'appointment.created': 'appointment.messages.created',
+    'appointment.create.success': 'appointment.messages.created',
   };
 
   private readonly createErrorMessagesByCode: Record<string, string> = {
-    APPOINTMENT_VALIDATION_ERROR: 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
-    APPOINTMENT_VALIDATION_FAILED: 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
-    APPOINTMENT_TIME_CONFLICT: 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
-    APPOINTMENT_OVERLAP: 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
-    DOCTOR_OCCUPIED: 'El doctor ja te una cita en aquest horari.',
-    BOX_OCCUPIED: 'El box ja esta ocupat en aquest horari.',
-    PATIENT_NOT_FOUND: 'No s\'ha trobat el pacient seleccionat.',
-    DOCTOR_NOT_FOUND: 'No s\'ha trobat el doctor seleccionat.',
-    BOX_NOT_FOUND: 'No s\'ha trobat el box seleccionat.',
+    APPOINTMENT_VALIDATION_ERROR: 'appointment.errors.validation',
+    APPOINTMENT_VALIDATION_FAILED: 'appointment.errors.validation',
+    APPOINTMENT_TIME_CONFLICT: 'appointment.errors.timeConflict',
+    APPOINTMENT_OVERLAP: 'appointment.errors.timeConflict',
+    DOCTOR_OCCUPIED: 'appointment.errors.doctorOccupied',
+    BOX_OCCUPIED: 'appointment.errors.boxOccupied',
+    PATIENT_NOT_FOUND: 'appointment.errors.patientNotFound',
+    DOCTOR_NOT_FOUND: 'appointment.errors.doctorNotFound',
+    BOX_NOT_FOUND: 'appointment.errors.boxNotFound',
   };
 
   private readonly createErrorMessagesByKey: Record<string, string> = {
-    'appointment.error.validation': 'No s\'ha pogut crear la cita. Revisa les dades del formulari.',
-    'appointment.error.time_conflict': 'Ja existeix una cita en aquest horari. Selecciona una altra hora.',
-    'appointment.doctor.occupied': 'El doctor ja te una cita en aquest horari.',
-    'appointment.box.occupied': 'El box ja esta ocupat en aquest horari.',
-    'appointment.error.patient_not_found': 'No s\'ha trobat el pacient seleccionat.',
-    'appointment.error.doctor_not_found': 'No s\'ha trobat el doctor seleccionat.',
-    'appointment.error.box_not_found': 'No s\'ha trobat el box seleccionat.',
+    'appointment.error.validation': 'appointment.errors.validation',
+    'appointment.error.time_conflict': 'appointment.errors.timeConflict',
+    'appointment.doctor.occupied': 'appointment.errors.doctorOccupied',
+    'appointment.box.occupied': 'appointment.errors.boxOccupied',
+    'appointment.error.patient_not_found': 'appointment.errors.patientNotFound',
+    'appointment.error.doctor_not_found': 'appointment.errors.doctorNotFound',
+    'appointment.error.box_not_found': 'appointment.errors.boxNotFound',
   };
 
   private readonly createErrorMessagesByField: Record<string, string> = {
-    patient: 'Selecciona un pacient vàlid.',
-    doctor: 'Selecciona un doctor vàlid.',
-    box: 'Selecciona un box vàlid.',
-    visitDate: 'La data de la cita no és vàlida.',
-    visitTime: 'L\'hora de la cita no és vàlida.',
-    duration: 'La durada de la cita no és vàlida.',
-    durationMinutes: 'La durada de la cita no és vàlida.',
-    pathology: 'La patologia seleccionada no és vàlida.',
-    pathologyId: 'La patologia seleccionada no és vàlida.',
-    treatment: 'El tractament seleccionat no és vàlid.',
-    treatmentId: 'El tractament seleccionat no és vàlid.',
-    consultationReason: 'El motiu de la consulta no és vàlid.',
+    patient: 'appointment.errors.fieldPatient',
+    doctor: 'appointment.errors.fieldDoctor',
+    box: 'appointment.errors.fieldBox',
+    visitDate: 'appointment.errors.fieldVisitDate',
+    visitTime: 'appointment.errors.fieldVisitTime',
+    duration: 'appointment.errors.fieldDuration',
+    durationMinutes: 'appointment.errors.fieldDuration',
+    pathology: 'appointment.errors.fieldPathology',
+    pathologyId: 'appointment.errors.fieldPathology',
+    treatment: 'appointment.errors.fieldTreatment',
+    treatmentId: 'appointment.errors.fieldTreatment',
+    consultationReason: 'appointment.errors.fieldConsultationReason',
   };
 
   newAppointmentData = {
@@ -168,10 +174,13 @@ export class AppointmentComponent implements OnInit {
 
   constructor(
     private readonly appointmentService: AppointmentService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnDestroy(): void {
+    this.dateLocaleSub?.unsubscribe();
+    this.dateLocaleSub = null;
     this.clearErrorDismissTimer();
   }
 
@@ -181,7 +190,14 @@ export class AppointmentComponent implements OnInit {
       visitMinute: 'visitTime',
     };
     const key = aliases[field] ?? field;
-    return this.createFormFieldErrors()[key] ?? null;
+    const raw = this.createFormFieldErrors()[key];
+    if (!raw) {
+      return null;
+    }
+    if (raw === 'appointment.errors.fieldInvalid') {
+      return this.translate.instant(raw, { field });
+    }
+    return this.translate.instant(raw);
   }
 
   private clearCreateFormErrors(): void {
@@ -220,6 +236,10 @@ export class AppointmentComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.dateLocaleId.set(this.languageService.current());
+    this.dateLocaleSub = this.translate.onLangChange.subscribe(() =>
+      this.dateLocaleId.set(this.languageService.current())
+    );
     this.refreshWeekDays();
     this.fetchAppointments();
     this.loadPatients();
@@ -257,7 +277,7 @@ export class AppointmentComponent implements OnInit {
   }
 
   isMainSectionActive(section: 'panel' | 'agenda' | 'patients' | 'documents'): boolean {
-    const url = this.router.url;
+    const url = this.router.url ?? '';
 
     switch (section) {
       case 'panel':
@@ -423,7 +443,7 @@ export class AppointmentComponent implements OnInit {
   getAppointmentAllergyText(appointment: Appointment): string {
     const labels = this.extractAllergyLabelsFromAppointmentRecord(appointment as unknown as ApiRecord);
     return labels.length > 0
-      ? `Al·lèrgies: ${labels.join(', ')}`
+      ? `${this.translate.instant('appointment.allergiesLabel')} ${labels.join(', ')}`
       : '';
   }
 
@@ -445,14 +465,17 @@ export class AppointmentComponent implements OnInit {
     this.selectedPatientAllergyText = allergyText;
 
     if (allergyText && !this.newAppointmentData.treatmentId) {
-      this.newAppointmentData.consultationReason = `Al·lèrgies: ${allergyText}`;
+      this.newAppointmentData.consultationReason = `${this.translate.instant('appointment.allergiesLabel')} ${allergyText}`;
     }
   }
 
   private getAllergyTextFromPatient(patient: ApiRecord): string {
     const selectedAllergies = this.extractSelectedAllergies(patient);
     return selectedAllergies
-      .map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`)
+      .map((flag) => {
+        const key = this.allergyLabelKeyByFlag[flag];
+        return key ? this.translate.instant(key) : this.translate.instant('appointment.allergies.unknown', { flag });
+      })
       .join(', ');
   }
 
@@ -547,7 +570,7 @@ export class AppointmentComponent implements OnInit {
       },
       error: (err) => {
         console.error('El servidor sigue fallando:', err);
-        this.error.set('El servidor no accepta el format de data.');
+        this.error.set(this.translate.instant('appointment.messages.serverDateFormat'));
         this.loading.set(false);
       },
     });
@@ -616,7 +639,13 @@ export class AppointmentComponent implements OnInit {
 
   private extractAllergyLabelsFromRecord(record: ApiRecord): string[] {
     const selectedAllergies = this.extractSelectedAllergyFlags(record);
-    return selectedAllergies.map((flag) => this.allergyLabelByFlag[flag] ?? `Al·lèrgia ${flag}`);
+    return selectedAllergies.map((flag) => {
+      const key = this.allergyLabelKeyByFlag[flag];
+      if (key) {
+        return this.translate.instant(key);
+      }
+      return this.translate.instant('appointment.allergies.unknown', { flag: String(flag) });
+    });
   }
 
   private extractSelectedAllergyFlags(record: ApiRecord): number[] {
@@ -893,7 +922,7 @@ export class AppointmentComponent implements OnInit {
           this.newAppointmentData.patient = patientCreated.id;
           this.executeSave();
         },
-        error: (_err) => alert('Error en crear el pacient nou')
+        error: (_err) => alert(this.translate.instant('appointment.messages.newPatientFailed'))
       });
     } else {
       this.executeSave();
@@ -912,17 +941,17 @@ export class AppointmentComponent implements OnInit {
     const boxId = this.toNumberOrNull(this.newAppointmentData.box);
 
     if (patientId == null) {
-      this.setCreateFieldError('patient', 'Selecciona un pacient vàlid.');
+      this.setCreateFieldError('patient', 'appointment.errors.fieldPatient');
     }
     if (doctorId == null) {
-      this.setCreateFieldError('doctor', 'Selecciona un doctor vàlid.');
+      this.setCreateFieldError('doctor', 'appointment.errors.fieldDoctor');
     }
     if (boxId == null) {
-      this.setCreateFieldError('box', 'Selecciona un box vàlid.');
+      this.setCreateFieldError('box', 'appointment.errors.fieldBox');
     }
 
     if (patientId == null || doctorId == null || boxId == null) {
-      this.createFormError.set('Revisa els camps marcats del formulari.');
+      this.createFormError.set(this.translate.instant('appointment.messages.reviewForm'));
       return;
     }
 
@@ -962,13 +991,11 @@ export class AppointmentComponent implements OnInit {
           if (this.isWeekView()) {
             this.fetchWeekAppointments();
           }
-          alert('Cita actualitzada correctament.');
+          alert(this.translate.instant('appointment.messages.updated'));
         },
         error: (err: unknown) => {
           const httpError = err as HttpErrorResponse;
-          const message = this.resolveCreateErrorMessage(httpError)
-            .replace('crear', 'actualitzar')
-            .replace('creada', 'actualitzada');
+          const message = this.resolveCreateErrorMessage(httpError);
           this.createFormError.set(message);
           alert(message);
         }
@@ -1003,7 +1030,11 @@ export class AppointmentComponent implements OnInit {
         const fieldError = this.resolveCreateFieldError(httpError);
         if (fieldError) {
           this.setCreateFieldError(fieldError.field, fieldError.message);
-          this.createFormError.set(fieldError.message);
+          const banner =
+            fieldError.message === 'appointment.errors.fieldInvalid'
+              ? this.translate.instant(fieldError.message, { field: fieldError.field })
+              : this.translate.instant(fieldError.message);
+          this.createFormError.set(banner);
           return;
         }
 
@@ -1058,14 +1089,14 @@ export class AppointmentComponent implements OnInit {
         this.persistAppointment(dataToSend);
       },
       error: () => {
-        this.createFormError.set('No s\'ha pogut validar la disponibilitat de la cita. Torna-ho a provar.');
+        this.createFormError.set(this.translate.instant('appointment.errors.validateAvailability'));
       },
     });
   }
 
-  private showScheduleConflict(message: string): void {
-    this.setCreateFieldError('visitTime', message);
-    this.createFormError.set(message);
+  private showScheduleConflict(messageKey: string): void {
+    this.setCreateFieldError('visitTime', messageKey);
+    this.createFormError.set(this.translate.instant(messageKey));
   }
 
   private findScheduleConflict(
@@ -1101,11 +1132,11 @@ export class AppointmentComponent implements OnInit {
       }
 
       if (this.appointmentMatchesDoctor(appointment, doctorId, selectedDoctorLabel)) {
-        return 'Aquest doctor ja te una cita en aquest horari.';
+        return 'appointment.errors.localDoctorOverlap';
       }
 
       if (this.appointmentMatchesBox(appointment, boxId, selectedBoxLabel)) {
-        return 'Aquest box ja te una cita en aquest horari.';
+        return 'appointment.errors.localBoxOverlap';
       }
     }
 
@@ -1236,14 +1267,14 @@ export class AppointmentComponent implements OnInit {
 
   private resolveCreateSuccessMessage(payload: ApiRecord | null): string {
     if (!payload) {
-      return 'Cita creada correctament.';
+      return this.translate.instant('appointment.messages.created');
     }
 
     const messageKey = this.pickString(payload, ['messageKey']);
     if (messageKey) {
       const byKey = this.createSuccessMessagesByKey[messageKey];
       if (byKey) {
-        return byKey;
+        return this.translate.instant(byKey);
       }
     }
 
@@ -1251,16 +1282,16 @@ export class AppointmentComponent implements OnInit {
     if (code) {
       const byCode = this.createSuccessMessagesByCode[code];
       if (byCode) {
-        return byCode;
+        return this.translate.instant(byCode);
       }
     }
 
-    return 'Cita creada correctament.';
+    return this.translate.instant('appointment.messages.created');
   }
 
   private resolveCreateErrorMessage(err: HttpErrorResponse): string {
     if (err.status === 0) {
-      return 'No s\'ha pogut connectar amb el servidor en aquest moment. Torna-ho a provar.';
+      return this.translate.instant('appointment.errors.offline');
     }
 
     const payload = this.asRecord(err.error);
@@ -1270,7 +1301,7 @@ export class AppointmentComponent implements OnInit {
     if (errorMessageKey) {
       const byNestedKey = this.createErrorMessagesByKey[errorMessageKey];
       if (byNestedKey) {
-        return byNestedKey;
+        return this.translate.instant(byNestedKey);
       }
     }
 
@@ -1278,7 +1309,7 @@ export class AppointmentComponent implements OnInit {
     if (rootMessageKey) {
       const byRootKey = this.createErrorMessagesByKey[rootMessageKey];
       if (byRootKey) {
-        return byRootKey;
+        return this.translate.instant(byRootKey);
       }
     }
 
@@ -1297,21 +1328,21 @@ export class AppointmentComponent implements OnInit {
     if (code) {
       const byCode = this.createErrorMessagesByCode[code];
       if (byCode) {
-        return byCode;
+        return this.translate.instant(byCode);
       }
     }
 
     if (err.status === 400) {
-      return 'No s\'ha pogut crear la cita. Revisa les dades del formulari.';
+      return this.translate.instant('appointment.errors.validation');
     }
     if (err.status === 404) {
-      return 'No s\'ha trobat algun dels recursos de la cita (pacient, doctor o box).';
+      return this.translate.instant('appointment.errors.notFoundResources');
     }
     if (err.status === 409) {
-      return 'Ja existeix una cita en aquest horari. Selecciona una altra hora.';
+      return this.translate.instant('appointment.errors.timeConflict');
     }
 
-    return 'No s\'ha pogut crear la cita en aquest moment.';
+    return this.translate.instant('appointment.errors.genericCreate');
   }
 
   private resolveCreateFieldError(err: HttpErrorResponse): { field: string; message: string } | null {
@@ -1322,8 +1353,8 @@ export class AppointmentComponent implements OnInit {
       return null;
     }
 
-    const byField = this.createErrorMessagesByField[field] ?? `El camp ${field} no és vàlid.`;
-    return { field, message: byField };
+    const messageKey = this.createErrorMessagesByField[field] ?? 'appointment.errors.fieldInvalid';
+    return { field, message: messageKey };
   }
 
   private resolveCreateFieldValidationMessage(payload: ApiRecord | null, errorNode: ApiRecord | null): string | null {
@@ -1335,10 +1366,10 @@ export class AppointmentComponent implements OnInit {
 
     const byField = this.createErrorMessagesByField[field];
     if (byField) {
-      return byField;
+      return this.translate.instant(byField);
     }
 
-    return `El camp ${field} no és vàlid.`;
+    return this.translate.instant('appointment.errors.fieldInvalid', { field });
   }
 
   private extractCreateErrorField(payload: ApiRecord | null, errorNode: ApiRecord | null): string {
@@ -1410,7 +1441,7 @@ export class AppointmentComponent implements OnInit {
   }
 
   private resolveAllergyAlertHeader(_payload: ApiRecord | null): string {
-    return 'Atenció: el pacient té al·lèrgies registrades.';
+    return this.translate.instant('appointment.messages.allergyAlertHeader');
   }
 
   private extractAllergyItemsFromCreateResponse(payload: ApiRecord | null): string[] {
@@ -1564,7 +1595,7 @@ export class AppointmentComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('No s\'han pogut carregar les cites de la setmana.');
+        this.error.set(this.translate.instant('appointment.errors.weekLoadFailed'));
         this.loading.set(false);
       },
     });
@@ -2131,14 +2162,14 @@ export class AppointmentComponent implements OnInit {
       error: (err: unknown) => {
         const httpErr = err as HttpErrorResponse;
         if (httpErr?.status === 401) {
-          alert('Sessio caducada o sense permisos per canviar l\'estat de la cita.');
+          alert(this.translate.instant('appointment.alerts.sessionExpiredStatus'));
           return;
         }
         if (httpErr?.status === 400 && this.asRecord(httpErr.error)?.['code'] === 'INVALID_STATUS') {
-          alert('Estat no permes. Opcions valides: Confirmada, Arribada o Cancelada.');
+          alert(this.translate.instant('appointment.alerts.invalidStatusOptions'));
           return;
         }
-        alert('No s\'ha pogut canviar l\'estat de la cita.');
+        alert(this.translate.instant('appointment.alerts.statusChangeFailed'));
       },
     });
   }
@@ -2208,7 +2239,7 @@ export class AppointmentComponent implements OnInit {
     }
 
     if (action === 'eliminar') {
-      if (!confirm('Segur que vols eliminar aquesta cita?')) {
+      if (!confirm(this.translate.instant('appointment.confirmDeleteAppointment'))) {
         return;
       }
 
@@ -2223,10 +2254,10 @@ export class AppointmentComponent implements OnInit {
         error: (err: unknown) => {
           const httpErr = err as HttpErrorResponse;
           if (httpErr?.status === 401 || httpErr?.status === 403) {
-            alert('Sessio caducada o sense permisos per eliminar la cita.');
+            alert(this.translate.instant('appointment.alerts.sessionExpiredDelete'));
             return;
           }
-          alert('No s\'ha pogut eliminar la cita.');
+          alert(this.translate.instant('appointment.alerts.deleteFailed'));
         },
       });
       return;
@@ -2237,7 +2268,7 @@ export class AppointmentComponent implements OnInit {
   setAppointmentCleaningBuffer(appointment: Appointment, minutes: number): void {
     const allowedValues = [5, 10, 15];
     if (!allowedValues.includes(minutes)) {
-      alert('La neteja del box nomes pot ser de 5, 10 o 15 minuts.');
+      alert(this.translate.instant('appointment.alerts.cleaningOnly5810'));
       return;
     }
 
@@ -2269,14 +2300,14 @@ export class AppointmentComponent implements OnInit {
       error: (err: unknown) => {
         const httpErr = err as HttpErrorResponse;
         if (httpErr?.status === 400) {
-          alert('Valor de neteja invalid. Nomes es permet 5, 10 o 15 minuts.');
+          alert(this.translate.instant('appointment.alerts.cleaningInvalid'));
           return;
         }
         if (httpErr?.status === 401 || httpErr?.status === 403) {
-          alert('Sessio caducada o sense permisos per actualitzar la neteja.');
+          alert(this.translate.instant('appointment.alerts.sessionExpiredCleaning'));
           return;
         }
-        alert('No s\'ha pogut actualitzar el temps de neteja del box.');
+        alert(this.translate.instant('appointment.alerts.cleaningUpdateFailed'));
       },
     });
   }
@@ -2622,7 +2653,7 @@ export class AppointmentComponent implements OnInit {
         );
 
         if (patientId == null) {
-          alert('No s\'ha pogut obrir l\'odontograma del pacient.');
+          alert(this.translate.instant('appointment.alerts.odontogramOpenFailed'));
           return;
         }
 
@@ -2634,13 +2665,13 @@ export class AppointmentComponent implements OnInit {
         });
       },
       error: () => {
-        alert('No s\'ha pogut obrir la cita.');
+        alert(this.translate.instant('appointment.alerts.appointmentOpenFailed'));
       },
     });
   }
 
   finishAppointment(appointmentId: number): void {
-    if (confirm('Estàs segur que vols finalitzar aquesta cita?')) {
+    if (confirm(this.translate.instant('appointment.confirmFinishAppointment'))) {
       this.appointmentService.closeAppointment(appointmentId).subscribe({
         next: (response: unknown) => {
           this.applyAppointmentStatus(
@@ -2648,7 +2679,7 @@ export class AppointmentComponent implements OnInit {
             this.pickAppointmentStatusFromResponse(response, 'Finalitzada')
           );
         },
-        error: () => alert('Error al tancar la cita')
+        error: () => alert(this.translate.instant('appointment.alerts.closeFailed'))
       });
     }
   }

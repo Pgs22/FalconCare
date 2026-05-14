@@ -837,7 +837,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Carga citas del paciente actual (`GET /api/appointments?patientId=…`). */
+  /** Carga citas del paciente actual (`GET /api/patients/{id}/appointments`). */
   private loadVisitHistory(patientId: number): void {
     this.visitHistorySub?.unsubscribe();
     this.visitHistoryLoading.set(true);
@@ -903,7 +903,7 @@ export class PatientPanelComponent implements OnInit, OnDestroy {
     return current.id;
   }
 
-  /** `GET /api/documents?patientId=…` (o variantes API Platform). */
+  /** Documentos del paciente vía `DocumentService` (prioridad: `GET /api/patients/{id}/documents`, con fallbacks de filtro). */
   private loadPatientDocuments(patientId: number): void {
     this.patientDocumentsSub?.unsubscribe();
     this.patientDocumentsLoading.set(true);

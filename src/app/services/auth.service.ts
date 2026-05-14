@@ -4,6 +4,9 @@ import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { LoginResponse } from '../models/login-response.model';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
+
+const apiBase = normalizeApiBaseUrl(environment.apiBaseUrl);
 
 type LoginRequest = {
   email: string;
@@ -24,7 +27,7 @@ export class AuthService {
   constructor(private readonly http: HttpClient) {}
 
   login(email: string, password: string): Observable<LoginResponse> {
-    const url = `${environment.apiBaseUrl}/api/auth/login`;
+    const url = `${apiBase}/api/auth/login`;
     const body: LoginRequest = { email, password };
     return this.http.post<LoginResponse>(url, body).pipe(
       tap((res) => {
@@ -40,13 +43,13 @@ export class AuthService {
   }
 
   registerDoctor(fullName: string, email: string, password: string): Observable<LoginResponse['user']> {
-    const url = `${environment.apiBaseUrl}/api/auth/register-doctor`;
+    const url = `${apiBase}/api/auth/register-doctor`;
     const body: RegisterDoctorRequest = { fullName, email, password };
     return this.http.post<LoginResponse['user']>(url, body);
   }
 
   deleteMyAccount(): Observable<void> {
-    const url = `${environment.apiBaseUrl}/api/auth/me`;
+    const url = `${apiBase}/api/auth/me`;
     return this.http.delete<void>(url);
   }
 

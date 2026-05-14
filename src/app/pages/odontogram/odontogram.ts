@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { switchMap } from 'rxjs';
 import {
   OdontogramFace,
@@ -28,7 +29,7 @@ type ToothItem = {
 
 type Quadrant = {
   id: string;
-  title: string;
+  titleKey: string;
   permanent: ToothItem[];
   temporary: ToothItem[];
   side: 'left' | 'right';
@@ -37,6 +38,7 @@ type Quadrant = {
 type ProtocolItem = {
   id: number;
   label: string;
+  labelKey?: string;
   accentColor: string;
 };
 
@@ -50,7 +52,7 @@ type FaceMark = {
 
 type ColorMode = {
   id: 'pending' | 'done';
-  label: string;
+  labelKey: string;
   color: string;
   visualType: string;
 };
@@ -58,7 +60,7 @@ type ColorMode = {
 @Component({
   selector: 'app-odontogram',
   standalone: true,
-  imports: [CommonModule, OdontogramToothComponent],
+  imports: [CommonModule, OdontogramToothComponent, TranslateModule],
   templateUrl: './odontogram.html',
   styleUrl: './odontogram.css',
 })
@@ -68,6 +70,7 @@ export class OdontogramComponent implements OnInit {
   private readonly odontogramService = inject(OdontogramService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly translate = inject(TranslateService);
   private pendingLoadCount = 0;
   private readonly protocolCatalog = new Map<number, ProtocolItem>();
   private readonly manuallyAddedProtocolIds = new Set<number>();
@@ -89,29 +92,29 @@ export class OdontogramComponent implements OnInit {
   selectedColorModeId: ColorMode['id'] = 'pending';
 
   readonly protocolsFallback: ProtocolItem[] = [
-    { id: 1, label: 'Càries', accentColor: '#FF0000' },
-    { id: 3, label: 'Endodòncia', accentColor: '#9B8CFF' },
-    { id: 2, label: 'Neteja', accentColor: '#62D5E2' },
+    { id: 1, label: 'Caries', labelKey: 'odontogram.protocolTypes.caries', accentColor: '#FF0000' },
+    { id: 3, label: 'Endodoncia', labelKey: 'odontogram.protocolTypes.endodontics', accentColor: '#9B8CFF' },
+    { id: 2, label: 'Limpieza', labelKey: 'odontogram.protocolTypes.cleaning', accentColor: '#62D5E2' },
   ];
 
   protocols: ProtocolItem[] = [];
 
   readonly colorModes: ColorMode[] = [
-    { id: 'pending', label: 'Pendent', color: '#FF0000', visualType: 'Pendent' },
-    { id: 'done', label: 'Fet', color: '#6EC6E8', visualType: 'Fet' },
+    { id: 'pending', labelKey: 'odontogram.colorModes.pending', color: '#FF0000', visualType: 'Pendent' },
+    { id: 'done', labelKey: 'odontogram.colorModes.done', color: '#6EC6E8', visualType: 'Fet' },
   ];
 
   readonly topQuadrants: Quadrant[] = [
     {
       id: 'q1',
-      title: 'Quadrant superior dret',
+      titleKey: 'odontogram.quadrants.q1',
       side: 'left',
       permanent: this.createTeeth(['18', '17', '16', '15', '14', '13', '12', '11']),
       temporary: this.createTeeth(['55', '54', '53', '52', '51']),
     },
     {
       id: 'q2',
-      title: 'Quadrant superior esquerre',
+      titleKey: 'odontogram.quadrants.q2',
       side: 'right',
       permanent: this.createTeeth(['21', '22', '23', '24', '25', '26', '27', '28']),
       temporary: this.createTeeth(['61', '62', '63', '64', '65']),
@@ -121,14 +124,14 @@ export class OdontogramComponent implements OnInit {
   readonly bottomQuadrants: Quadrant[] = [
     {
       id: 'q4',
-      title: 'Quadrant inferior dret',
+      titleKey: 'odontogram.quadrants.q4',
       side: 'left',
       permanent: this.createTeeth(['48', '47', '46', '45', '44', '43', '42', '41']),
       temporary: this.createTeeth(['85', '84', '83', '82', '81']),
     },
     {
       id: 'q3',
-      title: 'Quadrant inferior esquerre',
+      titleKey: 'odontogram.quadrants.q3',
       side: 'right',
       permanent: this.createTeeth(['31', '32', '33', '34', '35', '36', '37', '38']),
       temporary: this.createTeeth(['71', '72', '73', '74', '75']),
@@ -298,7 +301,7 @@ export class OdontogramComponent implements OnInit {
         error: (error: unknown) => {
           console.error('Failed to synchronize the odontogram or close the appointment.', error);
           this.isSaving = false;
-          this.saveFeedback = 'No s\'ha pogut guardar l\'odontograma o tancar la cita.';
+          this.saveFeedback = this.translate.instant('odontogram.errors.saveFailed');
         },
       });
   }
@@ -398,7 +401,7 @@ export class OdontogramComponent implements OnInit {
     const visitId = Number(this.route.snapshot.queryParamMap.get('visitId'));
 
     if (!Number.isFinite(patientId) || patientId < 1 || !Number.isFinite(visitId) || visitId < 1) {
-      this.loadError = 'No s\'ha rebut una cita valida per obrir l\'odontograma.';
+      this.loadError = this.translate.instant('odontogram.errors.invalidAppointment');
       this.finishLoading();
       return;
     }
@@ -410,7 +413,7 @@ export class OdontogramComponent implements OnInit {
       },
       error: (error: unknown) => {
         console.error('Failed to open the fixed odontogram.', error);
-        this.loadError = 'No s\'ha pogut carregar l\'odontograma.';
+        this.loadError = this.translate.instant('odontogram.errors.loadFailed');
         this.finishLoading();
       },
     });

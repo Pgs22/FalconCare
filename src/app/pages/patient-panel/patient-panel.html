@@ -27,7 +27,7 @@
     >
       <div class="flex items-center gap-3 text-text-main dark:text-white">
         <img
-          alt="Clínica Dental FalconCare"
+          [alt]="'app.clinicDentalAlt' | translate"
           class="block h-auto w-full max-h-10 object-contain"
           src="/assets/branding/logo-fullname.png"
         />
@@ -43,7 +43,7 @@
             <div class="flex flex-col items-center text-center px-2 py-2 w-full">
               <img
                 [src]="profileImageUrl()"
-                alt="Foto de perfil del paciente"
+                [attr.alt]="'app.profilePhotoPatientAlt' | translate"
                 class="rounded-full size-16 object-cover border border-primary/30 dark:border-primary/30 shrink-0 mb-3 shadow-sm"
               />
               <div class="flex flex-col items-center min-w-0 w-full gap-0.5">
@@ -535,7 +535,7 @@
               [attr.accept]="'*/*'"
               [disabled]="patientDocumentsZoneLocked()"
               [attr.aria-label]="'patientPanel.documents.selectFilesAria' | translate"
-              title="Select files"
+              [attr.title]="'documents.actions.selectFilesTitle' | translate"
               (change)="onPatientDocumentsFileSelected($event)"
             />
             <div class="flex flex-wrap gap-4 justify-between items-start mb-4">

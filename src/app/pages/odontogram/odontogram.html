@@ -2,7 +2,7 @@
   <section class="odontograma__loading-screen" aria-live="polite" aria-busy="true">
     <div class="odontograma__loading-card">
       <span class="odontograma__loading-spinner" aria-hidden="true"></span>
-      <p class="odontograma__loading-label">Carregant odontograma...</p>
+      <p class="odontograma__loading-label">{{ 'odontogram.loading' | translate }}</p>
     </div>
   </section>
 </main>
@@ -11,11 +11,11 @@
 <main class="odontograma">
   <header class="odontograma__topbar">
     <div>
-      <h1>Explorador d'odontograma</h1>
+      <h1>{{ 'odontogram.title' | translate }}</h1>
       <div class="odontograma__meta">
-        <span>Pacient: #{{ patientId ?? 1 }}</span>
-        <span>Visita: #{{ visitId ?? 1 }}</span>
-        <span *ngIf="odontogramId">Odontograma: #{{ odontogramId }}</span>
+        <span>{{ 'odontogram.metaPatient' | translate }} #{{ patientId ?? 1 }}</span>
+        <span>{{ 'odontogram.metaVisit' | translate }} #{{ visitId ?? 1 }}</span>
+        <span *ngIf="odontogramId">{{ 'odontogram.metaOdontogram' | translate }} #{{ odontogramId }}</span>
       </div>
     </div>
 
@@ -26,13 +26,14 @@
         [disabled]="isLoading || isSaving || !odontogramId || !visitId"
         (click)="onCloseOdontogram()"
       >
-        {{ isSaving ? 'Tancant cita...' : 'Tancar cita' }}
+        <ng-container *ngIf="isSaving">{{ 'odontogram.closing' | translate }}</ng-container>
+        <ng-container *ngIf="!isSaving">{{ 'odontogram.closeVisit' | translate }}</ng-container>
       </button>
     </div>
   </header>
 
   <p *ngIf="loadError" class="odontograma__status odontograma__status--error" role="alert">{{ loadError }}</p>
-  <p *ngIf="saveFeedback" class="odontograma__status" [class.odontograma__status--error]="saveFeedback.startsWith('No ')" role="status">
+  <p *ngIf="saveFeedback" class="odontograma__status odontograma__status--error" role="status">
     {{ saveFeedback }}
   </p>
 
@@ -40,8 +41,8 @@
     <article class="odontograma__board">
       <header class="odontograma__board-header">
         <div>
-          <p class="odontograma__eyebrow">Dentició completa (FDI)</p>
-          <h2>Vista general de totes les peces</h2>
+          <p class="odontograma__eyebrow">{{ 'odontogram.boardEyebrow' | translate }}</p>
+          <h2>{{ 'odontogram.boardTitle' | translate }}</h2>
         </div>
 
         <label class="odontograma__switch">
@@ -51,18 +52,18 @@
             (change)="toggleBatchSelectionMode()"
           />
           <span class="odontograma__switch-track" aria-hidden="true"></span>
-          <span class="odontograma__switch-label">Selecció múltiple</span>
+          <span class="odontograma__switch-label">{{ 'odontogram.batchMode' | translate }}</span>
         </label>
       </header>
 
-      <section class="odontograma__grid" aria-label="Odontograma">
+      <section class="odontograma__grid" [attr.aria-label]="'odontogram.gridAria' | translate">
         <div class="odontograma__half odontograma__half--top">
           <section
             *ngFor="let quadrant of topQuadrants; trackBy: trackByQuadrant"
             class="quadrant"
             [class.quadrant--right]="quadrant.side === 'right'"
           >
-            <h3>{{ quadrant.title }}</h3>
+            <h3>{{ quadrant.titleKey | translate }}</h3>
 
             <div class="quadrant__row">
               <app-odontogram-tooth
@@ -99,7 +100,7 @@
             class="quadrant"
             [class.quadrant--right]="quadrant.side === 'right'"
           >
-            <h3>{{ quadrant.title }}</h3>
+            <h3>{{ quadrant.titleKey | translate }}</h3>
 
             <div class="quadrant__row quadrant__row--temporary">
               <app-odontogram-tooth
@@ -129,18 +130,18 @@
         </div>
       </section>
 
-      <section class="odontograma__legend" aria-label="Llegenda de colors">
-        <p class="odontograma__legend-title">Llegenda de colors</p>
+      <section class="odontograma__legend" [attr.aria-label]="'odontogram.legendAria' | translate">
+        <p class="odontograma__legend-title">{{ 'odontogram.legendTitle' | translate }}</p>
 
         <div class="odontograma__legend-list">
           <div class="odontograma__legend-item">
             <span class="odontograma__legend-swatch odontograma__legend-swatch--pending" aria-hidden="true"></span>
-            <span>Vermell: tractament pendent</span>
+            <span>{{ 'odontogram.legendPending' | translate }}</span>
           </div>
 
           <div class="odontograma__legend-item">
             <span class="odontograma__legend-swatch odontograma__legend-swatch--done" aria-hidden="true"></span>
-            <span>Blau: tractament fet</span>
+            <span>{{ 'odontogram.legendDone' | translate }}</span>
           </div>
         </div>
       </section>
@@ -149,8 +150,8 @@
     <aside class="odontograma__protocol">
       <header class="odontograma__protocol-header">
         <div>
-          <p class="odontograma__eyebrow">Protocol</p>
-          <h2>Protocol de patologia</h2>
+          <p class="odontograma__eyebrow">{{ 'odontogram.protocolEyebrow' | translate }}</p>
+          <h2>{{ 'odontogram.protocolTitle' | translate }}</h2>
         </div>
         <button
           type="button"
@@ -162,8 +163,8 @@
         </button>
       </header>
 
-      <div *ngIf="isProtocolPickerOpen" class="odontograma__picker" role="dialog" aria-label="Afegir patologia">
-        <p class="odontograma__picker-label">Afegir patologia des de la base de dades</p>
+      <div *ngIf="isProtocolPickerOpen" class="odontograma__picker" role="dialog" [attr.aria-label]="'odontogram.pickerAria' | translate">
+        <p class="odontograma__picker-label">{{ 'odontogram.pickerLabel' | translate }}</p>
 
         <div *ngIf="getAvailableProtocolsToAdd().length > 0; else noProtocolsToAdd" class="odontograma__picker-list">
           <button
@@ -172,19 +173,19 @@
             class="odontograma__picker-option"
             (click)="addProtocol(protocol)"
           >
-            {{ protocol.label }}
+            {{ protocol.labelKey ? (protocol.labelKey | translate) : protocol.label }}
           </button>
         </div>
       </div>
 
       <ng-template #noProtocolsToAdd>
-        <p class="odontograma__picker-empty">No hi ha mes patologies disponibles per afegir.</p>
+        <p class="odontograma__picker-empty">{{ 'odontogram.pickerEmpty' | translate }}</p>
       </ng-template>
 
       <div *ngIf="getSelectedProtocol() as selectedProtocol" class="odontograma__filter-card">
         <div class="odontograma__filter-copy">
-          <strong>{{ selectedProtocol.label }}</strong>
-          <span>Selecciona l'estat abans de pintar o esborrar.</span>
+          <strong>{{ selectedProtocol.labelKey ? (selectedProtocol.labelKey | translate) : selectedProtocol.label }}</strong>
+          <span>{{ 'odontogram.filterHint' | translate }}</span>
         </div>
 
         <div class="odontograma__color-modes">
@@ -196,7 +197,7 @@
             [style.--state-color]="colorMode.color"
             (click)="selectColorMode(colorMode)"
           >
-            {{ colorMode.label }}
+            {{ colorMode.labelKey | translate }}
           </button>
 
           <button
@@ -205,7 +206,7 @@
             [class.odontograma__color-mode--active]="isEraseMode"
             (click)="toggleEraseMode()"
           >
-            Esborrar marca
+            {{ 'odontogram.eraseMode' | translate }}
           </button>
         </div>
 
@@ -221,23 +222,23 @@
           (click)="selectProtocol(protocol)"
         >
           <span class="protocol__copy">
-            <strong>{{ protocol.label }}</strong>
+            <strong>{{ protocol.labelKey ? (protocol.labelKey | translate) : protocol.label }}</strong>
           </span>
         </button>
 
         <p *ngIf="!hasVisibleProtocols()" class="odontograma__empty-state">
-          Encara no hi ha patologies afegides en aquest odontograma. Fes servir el botó <strong>+</strong> per començar.
+          {{ 'odontogram.emptyProtocols' | translate }}
         </p>
       </div>
 
       <p *ngIf="!selectedProtocolId" class="odontograma__selection-hint">
-        Selecciona una patologia de la dreta per veure les marques guardades.
+        {{ 'odontogram.hintSelectProtocol' | translate }}
       </p>
       <p *ngIf="selectedProtocolId && isEraseMode" class="odontograma__selection-hint">
-        Mode esborrar actiu: fes clic sobre una cara per eliminar la marca d'aquesta patologia.
+        {{ 'odontogram.hintErase' | translate }}
       </p>
       <p *ngIf="selectedProtocolId && isBatchSelectionMode" class="odontograma__selection-hint">
-        Selecció múltiple activa: arrossega per diverses cares i s'aplicarà directament.
+        {{ 'odontogram.hintBatch' | translate }}
       </p>
     </aside>
   </section>
