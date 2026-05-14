@@ -1,11 +1,11 @@
 <main class="documents-shell">
   <header class="documents-topbar">
     <div class="documents-brand-wrap">
-      <div class="documents-brand" aria-label="FalconCare brand" [attr.aria-label]="'documents.brand.aria' | translate">
+      <div class="documents-brand" [attr.aria-label]="'documents.brand.aria' | translate">
         <img
           src="/assets/branding/logo-fullname.png"
           [alt]="'documents.brand.aria' | translate"
-          title="FalconCare brand"
+          [attr.title]="'documents.brand.aria' | translate"
           class="documents-brand-logo"
         />
       </div>
@@ -58,34 +58,58 @@
         <h1>{{ 'documents.header.collectionTitle' | translate }}</h1>
         <p>
           {{ selectedPatientName }}
-          @if (selectedPatient?.registrationDate) {
-            <span>{{ 'documents.header.registrationDate' | translate }}: {{ selectedPatient?.registrationDate | date: 'dd/MM/yyyy' }}</span>
+          @if (selectedPatientRegistrationDisplay) {
+            <span>{{ 'documents.header.registrationDate' | translate }}: {{ selectedPatientRegistrationDisplay }}</span>
           }
         </p>
-        <p class="documents-sync-indicator" aria-live="polite">{{ realtimeSyncLabel }}</p>
+        <p
+          class="documents-sync-indicator"
+          [class.is-error]="!!loadError"
+          [class.is-pending]="loadingPatients || loadingDocuments"
+          aria-live="polite"
+        >
+          {{ realtimeSyncLabel }}
+        </p>
 
-        <button type="button" class="documents-upload-btn" (click)="openUploadPicker(uploadInput)">
-          <span class="material-symbols-outlined">cloud_upload</span>
+        <button
+          type="button"
+          class="documents-upload-btn"
+          [attr.aria-label]="uploadingFiles ? ('documents.actions.uploading' | translate) : ('documents.actions.uploadNew' | translate)"
+          [attr.aria-busy]="uploadingFiles"
+          [disabled]="selectedPatientId == null || uploadingFiles"
+          (click)="openUploadPicker(uploadInput)"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span>
           <span>{{ uploadingFiles ? ('documents.actions.uploading' | translate) : ('documents.actions.uploadNew' | translate) }}</span>
         </button>
+        <label for="documents-upload-input" class="documents-sr-only">{{ 'documents.actions.selectFilesAria' | translate }}</label>
         <input
           #uploadInput
+          id="documents-upload-input"
           type="file"
           multiple
+          accept="*/*"
           class="hidden-input"
-          title="Select files"
+          [attr.title]="'documents.actions.selectFilesAria' | translate"
           [attr.aria-label]="'documents.actions.selectFilesAria' | translate"
           [disabled]="selectedPatientId == null || uploadingFiles"
           (change)="onFilesSelected($event)"
         />
 
         @if (uploadFeedback; as feedback) {
-          <p class="documents-feedback" [class.is-error]="feedback.kind === 'error'">{{ feedback.text }}</p>
+          <p
+            class="documents-feedback"
+            [class.is-error]="feedback.kind === 'error'"
+            [class.is-success]="feedback.kind === 'success'"
+            role="status"
+          >
+            {{ feedback.text }}
+          </p>
         }
       </div>
 
       <div class="documents-patient-list custom-scrollbar" [style.height.px]="patientListHeightPx">
-        @for (p of filteredPatients; track p.id) {
+        @for (p of patients; track p.id) {
           <button
             type="button"
             class="documents-patient-item"
@@ -144,138 +168,56 @@
     </aside>
 
     <section class="documents-viewer">
-      <div class="documents-toolbar">
-        <button type="button" [title]="'documents.toolbar.zoomOut' | translate" (click)="zoomOut()" [disabled]="!canZoomCurrentDocument"><span class="material-symbols-outlined">remove_circle</span></button>
-        <div class="documents-zoom-track">
-          <div class="documents-zoom-fill" [style.width.%]="zoomFillPercent"></div>
-        </div>
-        <button type="button" [title]="'documents.toolbar.zoomIn' | translate" (click)="zoomIn()" [disabled]="!canZoomCurrentDocument"><span class="material-symbols-outlined">add_circle</span></button>
-        <span class="documents-toolbar-label">{{ zoomPercent }}%</span>
-        <div class="toolbar-separator"></div>
-        <button type="button" [disabled]="!canMeasureOnCurrentDocument" [class.is-primary]="measureMode" [title]="'documents.toolbar.measure' | translate" (click)="toggleMeasureMode()"><span class="material-symbols-outlined">straighten</span></button>
-        <button type="button" [disabled]="!canMeasureOnCurrentDocument" [class.is-primary]="calibrationMode" [title]="'documents.toolbar.calibration' | translate" (click)="toggleCalibrationMode()"><span class="material-symbols-outlined">architecture</span></button>
-        <button type="button" [disabled]="!canMeasureOnCurrentDocument" [class.is-primary]="calibrationLocked" [title]="'documents.toolbar.lockCalibration' | translate" (click)="toggleCalibrationLock()"><span class="material-symbols-outlined">{{ calibrationLocked ? 'lock' : 'lock_open' }}</span></button>
-        <button type="button" [disabled]="!canMeasureOnCurrentDocument" [class.is-primary]="snapEnabled" [title]="'documents.toolbar.snap' | translate" (click)="toggleSnap()"><span class="material-symbols-outlined">center_focus_strong</span></button>
-        <label class="documents-calibration">
-          {{ 'documents.toolbar.snapLabel' | translate }}
-          <select
-            class="documents-snap-select"
-            [ngModel]="snapSensitivitySelectValue"
-            (ngModelChange)="onSnapSensitivityChange($event)"
-            [disabled]="!canMeasureOnCurrentDocument"
-            [title]="'documents.toolbar.snapSensitivity' | translate"
-            [attr.aria-label]="'documents.toolbar.snapSensitivity' | translate"
-          >
-            <option value="auto">{{ 'documents.viewer.snap.auto' | translate }}</option>
-            <option value="low">{{ 'documents.viewer.snap.low' | translate }}</option>
-            <option value="medium">{{ 'documents.viewer.snap.medium' | translate }}</option>
-            <option value="high">{{ 'documents.viewer.snap.high' | translate }}</option>
-          </select>
-        </label>
-        <label class="documents-calibration">
-          px/cm
-          <input
-            type="number"
-            min="1"
-            step="0.1"
-            [ngModel]="pxPerCm"
-            (ngModelChange)="onPxPerCmChange($event)"
-            [disabled]="!canMeasureOnCurrentDocument"
-            title="Calibración píxeles por centímetro"
-            aria-label="Calibración píxeles por centímetro"
-          />
-        </label>
-        <label class="documents-calibration" [class.is-active]="calibrationMode">
-          {{ 'documents.toolbar.refCm' | translate }}
-          <input
-            type="number"
-            min="0.1"
-            step="0.1"
-            [ngModel]="calibrationReferenceCm"
-            (ngModelChange)="onCalibrationReferenceCmChange($event)"
-            [disabled]="!canMeasureOnCurrentDocument"
-          [title]="'documents.toolbar.referenceLength' | translate"
-          [attr.aria-label]="'documents.toolbar.referenceLength' | translate"
-          />
-        </label>
-        <div class="toolbar-separator"></div>
-        <button
-          type="button"
-          [title]="'documents.actions.delete' | translate"
-          [disabled]="!activeDocument || deletingDocument"
-          (click)="removeActiveDocument()"
-        >
-          <span class="material-symbols-outlined">{{ deletingDocument ? 'progress_activity' : 'delete' }}</span>
-        </button>
-      </div>
-
-      <div
-        class="documents-viewer-canvas"
-        (wheel)="onViewerWheel($event)"
-        (mouseenter)="onViewerPointerEnter()"
-        (mouseleave)="onViewerPointerLeave()"
-      >
-        <div
-          class="documents-main-image"
-          [class.is-measuring]="measureMode && viewerAssetKind === 'image'"
-          [style.transform]="'scale(' + zoomLevel + ')'"
-        >
+      <div class="documents-viewer-canvas">
+        <div class="documents-main-image">
           @if (loadingViewerAsset) {
             <p class="documents-viewer-label">{{ 'documents.states.loadingPreview' | translate }}</p>
           } @else if (viewerImageUrl) {
             @if (viewerAssetKind === 'image') {
-              <div
-                class="documents-render-stage"
-                (click)="onViewerCanvasClick($event)"
-                (mousemove)="onViewerCanvasMouseMove($event)"
-                (mouseleave)="onViewerCanvasMouseLeave()"
-              >
-                <img [src]="viewerImageUrl" [alt]="'documents.states.previewAlt' | translate" title="Document preview" class="documents-main-image-el" />
-                @if (measureMode || calibrationMode) {
-                  <div class="documents-measure-layer">
-                    @if (calibrationMode && calibrationPointA; as calPointA) {
-                      <span class="documents-measure-dot is-calibration" [style.left.%]="calPointA.xPct * 100" [style.top.%]="calPointA.yPct * 100"></span>
-                    }
-                    @if (calibrationMode && calibrationPointB; as calPointB) {
-                      <span class="documents-measure-dot is-calibration" [style.left.%]="calPointB.xPct * 100" [style.top.%]="calPointB.yPct * 100"></span>
-                    }
-                    @if (calibrationMode && calibrationLineStyle; as calLineStyle) {
-                      <span class="documents-measure-line is-calibration" [ngStyle]="calLineStyle"></span>
-                    }
-                    @if (calibrationMode && calibrationBadgeStyle; as calBadgeStyle) {
-                      <span class="documents-measure-badge is-calibration" [ngStyle]="calBadgeStyle">{{ calibrationLabel }}</span>
-                    }
-                    @if (measurePointA; as pointA) {
-                      <span class="documents-measure-dot" [style.left.%]="pointA.xPct * 100" [style.top.%]="pointA.yPct * 100"></span>
-                    }
-                    @if (measurePointB; as pointB) {
-                      <span class="documents-measure-dot" [style.left.%]="pointB.xPct * 100" [style.top.%]="pointB.yPct * 100"></span>
-                    }
-                    @if (measurementLineStyle; as lineStyle) {
-                      <span class="documents-measure-line" [ngStyle]="lineStyle"></span>
-                    }
-                    @if (measurementBadgeStyle; as badgeStyle) {
-                      <span class="documents-measure-badge" [ngStyle]="badgeStyle">{{ measureLabel }}</span>
-                    }
-                  </div>
-                }
-              </div>
-            } @else if (viewerAssetKind === 'pdf') {
-              <object
-                class="documents-pdf-frame"
-                [data]="viewerImageUrl"
-                type="application/pdf"
-                [title]="'documents.states.pdfPreview' | translate"
-              >
-                <div class="documents-viewer-fallback">
-                  <p>{{ 'documents.states.pdfPreviewUnavailable' | translate }}</p>
+              <img
+                [src]="viewerImageUrl"
+                [alt]="'documents.states.previewAlt' | translate"
+                [attr.title]="'documents.states.previewAlt' | translate"
+                class="documents-main-image-el"
+                loading="lazy"
+                decoding="async"
+              />
+            } @else if (viewerAssetKind === 'pdf' && viewerTrustedResourceUrl) {
+              <div class="documents-pdf-wrap">
+                <embed
+                  class="documents-pdf-frame"
+                  [src]="viewerTrustedResourceUrl"
+                  type="application/pdf"
+                  [attr.title]="'documents.states.pdfPreview' | translate"
+                  [attr.aria-label]="'documents.states.pdfPreview' | translate"
+                />
+                <div class="documents-inline-preview-actions">
                   <a
                     [href]="viewerImageUrl"
-                    [attr.download]="viewerDownloadName"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     class="documents-download-btn"
-                  >{{ 'documents.actions.downloadFile' | translate }}</a>
+                    >{{ 'documents.actions.openInNewTab' | translate }}</a>
                 </div>
-              </object>
+              </div>
+            } @else if (viewerAssetKind === 'text' && viewerTrustedResourceUrl) {
+              <div class="documents-text-wrap">
+                <iframe
+                  class="documents-text-frame"
+                  [src]="viewerTrustedResourceUrl"
+                  sandbox="allow-same-origin"
+                  [attr.title]="'documents.states.textPreview' | translate"
+                  [attr.aria-label]="'documents.states.textPreview' | translate"
+                ></iframe>
+                <div class="documents-inline-preview-actions">
+                  <a
+                    [href]="viewerImageUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="documents-download-btn"
+                    >{{ 'documents.actions.openInNewTab' | translate }}</a>
+                </div>
+              </div>
             } @else {
               <div class="documents-viewer-fallback">
                 <p>{{ 'documents.states.previewUnavailableType' | translate }}</p>
@@ -284,10 +226,20 @@
                   [attr.download]="viewerDownloadName"
                   class="documents-download-btn"
                 >{{ 'documents.actions.downloadFile' | translate }}</a>
+                <a
+                  [href]="viewerImageUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="documents-download-btn documents-download-btn--secondary"
+                  >{{ 'documents.actions.openInNewTab' | translate }}</a>
               </div>
             }
           } @else if (activeDocument) {
-            <p class="documents-viewer-label">{{ 'documents.states.previewUnavailableType' | translate }}</p>
+            @if (viewerError) {
+              <p class="documents-viewer-label documents-viewer-label--error">{{ viewerError }}</p>
+            } @else {
+              <p class="documents-viewer-label">{{ 'documents.states.previewUnavailableType' | translate }}</p>
+            }
           } @else {
             <p class="documents-viewer-label">{{ 'documents.states.selectDocument' | translate }}</p>
           }
@@ -295,20 +247,30 @@
       </div>
 
       <footer class="documents-viewer-footer">
-        <div>
-          <span>{{ 'documents.footer.imageId' | translate }}: {{ activeDocument?.id ?? '—' }}</span>
-          <span>{{ 'documents.footer.type' | translate }}: {{ activeDocument?.typeLabel ?? '—' }}</span>
-          <span>{{ 'documents.footer.date' | translate }}: {{ activeDocument?.captureDateLabel ?? '—' }}</span>
-          <span>{{ 'documents.footer.measure' | translate }}: {{ measureLabel }}</span>
-          <span>{{ snapStatusLabel }}</span>
-          @if (!canMeasureOnCurrentDocument && viewerAssetKind === 'image') {
-            <span>{{ 'documents.footer.measureAvailableImages' | translate }}</span>
-          }
-          @if (calibrationMode) {
-            <span>{{ calibrationLabel }}</span>
-          }
+        <div class="documents-viewer-footer-meta">
+          <span>{{ 'documents.footer.imageId' | translate }}: {{ footerDocumentIdText }}</span>
+          <span>{{ 'documents.footer.type' | translate }}: {{ activeDocumentTypeDisplay }}</span>
+          <span>{{ 'documents.footer.date' | translate }}: {{ footerDocumentDateText }}</span>
         </div>
-        <span>{{ selectedPatientName }}</span>
+        <div class="documents-viewer-footer-actions">
+          <button
+            type="button"
+            class="documents-footer-delete"
+            [attr.title]="'documents.actions.delete' | translate"
+            [attr.aria-label]="'documents.actions.delete' | translate"
+            [disabled]="!activeDocument || deletingDocument"
+            (click)="removeActiveDocument()"
+          >
+            <span class="documents-sr-only">{{ 'documents.actions.delete' | translate }}</span>
+            <span
+              class="material-symbols-outlined"
+              [class.documents-icon--spinning]="deletingDocument"
+              aria-hidden="true"
+              >{{ deletingDocument ? 'progress_activity' : 'delete' }}</span
+            >
+          </button>
+          <span class="documents-viewer-footer-patient">{{ selectedPatientName }}</span>
+        </div>
       </footer>
     </section>
 
@@ -316,7 +278,7 @@
       <header>
         <h3>{{ 'documents.notes.title' | translate }}</h3>
         <p>{{ 'documents.notes.subtitle' | translate }}</p>
-        <p class="documents-notes-sync-status">{{ notesSyncLabel }}</p>
+        <p class="documents-notes-sync-status" [class.is-error]="noteFeedback?.kind === 'error'">{{ notesSyncLabel }}</p>
       </header>
 
       <div class="documents-note-editor documents-note-editor--standalone">
@@ -325,11 +287,20 @@
           <p>{{ 'documents.notes.editorSubtitle' | translate }}</p>
         </div>
         @if (noteFeedback; as nf) {
-          <p class="documents-feedback" [class.is-error]="nf.kind === 'error'">{{ nf.text }}</p>
+          <p
+            class="documents-feedback"
+            [class.is-error]="nf.kind === 'error'"
+            [class.is-success]="nf.kind === 'success'"
+            role="status"
+          >
+            {{ nf.text }}
+          </p>
         }
         <div class="documents-editor-wrap">
+          <label for="documents-note-textarea" class="documents-sr-only">{{ 'documents.notes.inputTitle' | translate }}</label>
           <textarea
-            title="Clinical note"
+            id="documents-note-textarea"
+            [attr.title]="'documents.notes.inputTitle' | translate"
             [placeholder]="activeDocument ? ('documents.notes.placeholderActive' | translate) : ('documents.notes.placeholderInactive' | translate)"
             [attr.aria-label]="'documents.notes.inputTitle' | translate"
             [(ngModel)]="noteDraft"
@@ -337,8 +308,11 @@
           ></textarea>
           <button
             type="button"
+            class="documents-note-send"
+            [class.is-saving]="noteSaving"
             [attr.aria-label]="'documents.notes.send' | translate"
-            title="Send note"
+            [attr.title]="'documents.notes.send' | translate"
+            [attr.aria-busy]="noteSaving"
             [disabled]="noteSaving || !activeDocument || !noteDraft.trim()"
             (click)="saveClinicalNote()"
           >
