@@ -2,15 +2,15 @@
   <header class="appointment-header">
     <div class="top-nav">
       <nav class="view-selector">
-        <button type="button" [class.active]="isMainSectionActive('panel')" (click)="navigateToMainSection('panel')">Panel</button>
-        <button type="button" [class.active]="isMainSectionActive('agenda')" (click)="navigateToMainSection('agenda')">Agenda</button>
-        <button type="button" [class.active]="isMainSectionActive('patients')" (click)="navigateToMainSection('patients')">Pacients</button>
-        <button type="button" [class.active]="isMainSectionActive('documents')" (click)="navigateToMainSection('documents')">Documents</button>
+        <button type="button" [class.active]="isMainSectionActive('panel')" (click)="navigateToMainSection('panel')">{{ 'appointment.nav.panel' | translate }}</button>
+        <button type="button" [class.active]="isMainSectionActive('agenda')" (click)="navigateToMainSection('agenda')">{{ 'appointment.nav.agenda' | translate }}</button>
+        <button type="button" [class.active]="isMainSectionActive('patients')" (click)="navigateToMainSection('patients')">{{ 'appointment.nav.patients' | translate }}</button>
+        <button type="button" [class.active]="isMainSectionActive('documents')" (click)="navigateToMainSection('documents')">{{ 'appointment.nav.documents' | translate }}</button>
       </nav>
 
       <div class="header-actions">
-        <input class="search-input" type="search" placeholder="Cercar cites...">
-        <button class="avatar-btn" type="button" aria-label="Perfil">👨‍⚕️</button>
+        <input class="search-input" type="search" [placeholder]="'appointment.searchPlaceholder' | translate">
+        <button class="avatar-btn" type="button" [attr.aria-label]="'appointment.profileAria' | translate">👨‍⚕️</button>
       </div>
     </div>
   </header>
@@ -18,7 +18,7 @@
   <div class="appointment-layout">
     <aside class="sidebar">
       <div class="mini-calendar">
-        <h4>{{ newAppointmentData.visitDate | date:'MMMM y' }}</h4>
+        <h4>{{ newAppointmentData.visitDate | date:'MMMM y' : undefined : dateLocaleId() }}</h4>
         <input
           type="date"
           [ngModel]="newAppointmentData.visitDate"
@@ -29,14 +29,14 @@
 
       <div class="filters">
         <div class="filters-header">
-          <h4>Filtrar boxes</h4>
+          <h4>{{ 'appointment.filterBoxes' | translate }}</h4>
           <label class="toggle-all-boxes">
             <input
               type="checkbox"
               [checked]="areAllBoxesSelected()"
               (change)="toggleAllBoxes($any($event.target).checked)"
             >
-            <span>TOTS</span>
+            <span>{{ 'appointment.allBoxes' | translate }}</span>
           </label>
         </div>
 
@@ -80,16 +80,16 @@
       </div>
 
       <div class="occupancy-card">
-        <h5>OCUPACIÓ</h5>
+        <h5>{{ 'appointment.occupancy' | translate }}</h5>
         <div class="occupancy-bar">
           <span [style.width.%]="(appointments().length / (getDisplayBoxes().length || 1)) * 25"></span>
         </div>
-        <small>{{ appointments().length }} cites guardades avui</small>
+        <small>{{ 'appointment.savedToday' | translate:{ count: appointments().length } }}</small>
       </div>
 
       <section class="day-allergy-summary sidebar-allergy-summary" *ngIf="getDayAllergySummary().length > 0">
         <div class="day-allergy-summary__header">
-          <h2>Al·lèrgies</h2>
+          <h2>{{ 'appointment.allergiesTitle' | translate }}</h2>
         </div>
 
         <div class="day-allergy-summary__table-wrap">
@@ -106,16 +106,16 @@
 
     <main class="appointment-main">
       <div class="agenda-alert">
-        Important: Es reserven 5 minuts automàticament entre pacients per a neteja i desinfecció del box. Permet només ajustar a 5/10/15 minuts.
+        {{ 'appointment.alertCleaning' | translate }}
       </div>
 
       <div class="header-main">
         <h1>
           <ng-container *ngIf="isDayView(); else weekTitle">
-            {{ newAppointmentData.visitDate | date:'EEEE, d MMMM' }}
+            {{ newAppointmentData.visitDate | date:'EEEE, d MMMM' : undefined : dateLocaleId() }}
           </ng-container>
           <ng-template #weekTitle>
-            Setmana: {{ getWeekRangeLabel() }}
+            {{ 'appointment.weekPrefix' | translate }} {{ getWeekRangeLabel() }}
           </ng-template>
         </h1>
         <div class="header-tools">
@@ -124,12 +124,12 @@
             <button type="button" (click)="goToNextWeek()">→</button>
           </div>
           <div class="view-selector compact">
-            <button [class.active]="isDayView()" (click)="setViewMode('day')" type="button">Dia</button>
-            <button [class.active]="isWeekView()" (click)="setViewMode('week')" type="button">Setmana</button>
+            <button [class.active]="isDayView()" (click)="setViewMode('day')" type="button">{{ 'appointment.viewDay' | translate }}</button>
+            <button [class.active]="isWeekView()" (click)="setViewMode('week')" type="button">{{ 'appointment.viewWeek' | translate }}</button>
           </div>
           <button (click)="openNewAppointmentPanel()" class="btn-new-appointment" type="button">
             <span class="plus-icon">+</span>
-            Nova Cita
+            {{ 'appointment.newAppointment' | translate }}
           </button>
         </div>
       </div>
@@ -149,7 +149,7 @@
           <div class="box-column" *ngFor="let b of getVisibleBoxes()">
             <div class="box-header">
               <h3>{{ getBoxLabel(b) }}</h3>
-              <small>Sala d'atenció</small>
+              <small>{{ 'appointment.boxTreatmentRoom' | translate }}</small>
             </div>
 
             <div class="appointments-container" [style.height.px]="dayGridHeightPx">
@@ -181,14 +181,14 @@
                             <span
                               *ngIf="hasAppointmentAllergies(cita)"
                               class="allergy-pill"
-                              aria-label="Pacient amb al·lèrgies"
+                              [attr.aria-label]="'appointment.allergyPillAria' | translate"
                             >A</span>
                           </span>
-                          <small *ngIf="cita.isFirstVisit" class="first-visit-badge">Primera visita</small>
+                          <small *ngIf="cita.isFirstVisit" class="first-visit-badge">{{ 'appointment.firstVisit' | translate }}</small>
                         </span>
                         <div class="status-stack">
                           <select
-                            title="Canviar estat"
+                            [title]="'appointment.changeStatusTitle' | translate"
                             class="status-pill status-pill-btn"
                             [ngClass]="getAppointmentStatusClass(cita.status)"
                             [disabled]="isStatusUpdating(cita.id) || isAppointmentStatusLocked(cita.status)"
@@ -207,11 +207,11 @@
                               {{ statusOption }}
                             </option>
                           </select>
-                          <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                          <small class="urgency-note" *ngIf="cita.isUrgency">{{ 'appointment.urgency' | translate }}</small>
                         </div>
                       </div>
 
-                      <span class="doctor-tag">Dr. {{ cita.doctorName }}</span>
+                      <span class="doctor-tag">{{ 'appointment.doctorPrefix' | translate }} {{ cita.doctorName }}</span>
 
                       <div class="meta-row">
                         <span class="meta-icon clock" aria-hidden="true"></span>
@@ -220,16 +220,16 @@
 
                       <div class="meta-row" *ngIf="shouldShowPathologyRow(cita) && !isCompactAppointmentCard(cita)">
                         <span class="meta-icon medical" aria-hidden="true"></span>
-                        <p class="reason-text">Patologia: {{ cita.reason }}</p>
+                        <p class="reason-text">{{ 'appointment.pathologyPrefix' | translate }} {{ cita.reason }}</p>
                       </div>
                     </div>
 
                     <div class="actions" *ngIf="cita.status !== 'Finalitzada'">
-                      <button title="Obrir cita" class="btn-action view" (click)="openOdontogram(cita)" type="button">🦷</button>
-                      <button title="Finalitzar cita" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
+                      <button [title]="'appointment.openAppointmentTitle' | translate" class="btn-action view" (click)="openOdontogram(cita)" type="button">🦷</button>
+                      <button [title]="'appointment.finishAppointmentTitle' | translate" class="btn-action check" (click)="finishAppointment(cita.id)" type="button">✓</button>
                       <div class="quick-actions-wrap">
                         <button
-                          title="Més accions"
+                          [title]="'appointment.moreActionsTitle' | translate"
                           class="btn-action quick-plus"
                           type="button"
                           (click)="toggleQuickActions(cita.id)"
@@ -240,8 +240,8 @@
                           *ngIf="isQuickActionsOpen(cita.id)"
                           class="quick-actions-menu"
                         >
-                          <button type="button" (click)="onQuickActionSelected(cita, 'editar')">Editar</button>
-                          <button type="button" (click)="onQuickActionSelected(cita, 'eliminar')">Eliminar</button>
+                          <button type="button" (click)="onQuickActionSelected(cita, 'editar')">{{ 'appointment.edit' | translate }}</button>
+                          <button type="button" (click)="onQuickActionSelected(cita, 'eliminar')">{{ 'appointment.delete' | translate }}</button>
                         </div>
                       </div>
                     </div>
@@ -256,17 +256,17 @@
                 >
                   <div class="cleaning-block">
                     <span class="cleaning-line">
-                      Neteja de box ({{ cita.cleaningTime }} min)
-                      <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">Ajusta</button>
+                      {{ 'appointment.cleaningBox' | translate:{ minutes: cita.cleaningTime } }}
+                      <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">{{ 'appointment.adjust' | translate }}</button>
                       <select
                         *ngIf="isCleaningSelectorOpen(cita.id)"
                         class="cleaning-select"
                         [value]="cita.cleaningTime + ''"
                         (change)="onCleaningOptionSelected(cita, $any($event.target).value)"
                       >
-                        <option value="5">5 min</option>
-                        <option value="10">10 min</option>
-                        <option value="15">15 min</option>
+                        <option value="5">{{ 'appointment.minOption' | translate:{ n: 5 } }}</option>
+                        <option value="10">{{ 'appointment.minOption' | translate:{ n: 10 } }}</option>
+                        <option value="15">{{ 'appointment.minOption' | translate:{ n: 15 } }}</option>
                       </select>
                     </span>
                   </div>
@@ -293,7 +293,7 @@
             <article class="week-day-timeline" *ngFor="let day of weekDays()">
               <header class="week-day-header">
                 <h3>{{ day.label }}</h3>
-                <small>{{ getTotalAppointmentsForVisibleBoxes(day.date) }} cites</small>
+                <small>{{ 'appointment.weekAppointmentsCount' | translate:{ count: getTotalAppointmentsForVisibleBoxes(day.date) } }}</small>
               </header>
 
               <div class="week-appointments-container" [style.height.px]="dayGridHeightPx">
@@ -324,13 +324,13 @@
                               <span
                                 *ngIf="hasAppointmentAllergies(cita)"
                                 class="allergy-pill"
-                                aria-label="Pacient amb al·lèrgies"
-                              >A</span>
+                              [attr.aria-label]="'appointment.allergyPillAria' | translate"
+                            >A</span>
                             </span>
                           </span>
                           <div class="status-stack">
                             <select
-                              title="Canviar estat"
+                              [title]="'appointment.changeStatusTitle' | translate"
                               class="status-pill status-pill-btn"
                               [ngClass]="getAppointmentStatusClass(cita.status)"
                               [disabled]="isStatusUpdating(cita.id) || isAppointmentStatusLocked(cita.status)"
@@ -349,11 +349,11 @@
                                 {{ statusOption }}
                               </option>
                             </select>
-                            <small class="urgency-note" *ngIf="cita.isUrgency">Urgència</small>
+                            <small class="urgency-note" *ngIf="cita.isUrgency">{{ 'appointment.urgency' | translate }}</small>
                           </div>
                         </div>
 
-                        <span class="doctor-tag">Dr. {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
+                        <span class="doctor-tag">{{ 'appointment.doctorPrefix' | translate }} {{ cita.doctorName }} · {{ getAppointmentBoxLabel(cita) }}</span>
 
                         <div class="meta-row">
                           <span class="meta-icon clock" aria-hidden="true"></span>
@@ -372,17 +372,17 @@
                   >
                     <div class="cleaning-block">
                       <span class="cleaning-line">
-                        Neteja ({{ cita.cleaningTime }} min)
-                        <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">Ajusta</button>
+                        {{ 'appointment.cleaningWeek' | translate:{ minutes: cita.cleaningTime } }}
+                        <button type="button" class="cleaning-cta" (click)="toggleCleaningSelector(cita.id)">{{ 'appointment.adjust' | translate }}</button>
                         <select
                           *ngIf="isCleaningSelectorOpen(cita.id)"
                           class="cleaning-select"
                           [value]="cita.cleaningTime + ''"
                           (change)="onCleaningOptionSelected(cita, $any($event.target).value)"
                         >
-                          <option value="5">5 min</option>
-                          <option value="10">10 min</option>
-                          <option value="15">15 min</option>
+                          <option value="5">{{ 'appointment.minOption' | translate:{ n: 5 } }}</option>
+                          <option value="10">{{ 'appointment.minOption' | translate:{ n: 10 } }}</option>
+                          <option value="15">{{ 'appointment.minOption' | translate:{ n: 15 } }}</option>
                         </select>
                       </span>
                     </div>
@@ -400,8 +400,9 @@
   <aside class="side-panel" [class.open]="showForm()">
     <div class="panel-header">
       <div>
-        <h2>{{ isEditMode ? 'Edita cita' : 'Nova cita' }}</h2>
-        <small>Gestió de cita i pacient</small>
+        <h2 *ngIf="isEditMode">{{ 'appointment.panelTitleEdit' | translate }}</h2>
+        <h2 *ngIf="!isEditMode">{{ 'appointment.panelTitleNew' | translate }}</h2>
+        <small>{{ 'appointment.panelSubtitle' | translate }}</small>
       </div>
       <button (click)="closePanel()" class="close-btn" type="button">×</button>
     </div>
@@ -411,7 +412,7 @@
 
       <div class="form-group">
         <div class="label-header">
-          <label>Pacient</label>
+          <label>{{ 'appointment.formPatient' | translate }}</label>
         </div>
 
         <select
@@ -423,44 +424,44 @@
           (ngModelChange)="clearCreateFieldError('patient')"
           (change)="onPatientChange(newAppointmentData.patient)"
         >
-          <option value="" disabled>Selecciona pacient...</option>
+          <option value="" disabled>{{ 'appointment.selectPatient' | translate }}</option>
           <option *ngFor="let p of patientsList()" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
         </select>
 
         <div *ngIf="getCreateFieldError('patient')" class="form-field-error">{{ getCreateFieldError('patient') }}</div>
 
         <div *ngIf="getSelectedPatientAllergyText()" class="allergy-alert-text">
-          Al·lèrgies: {{ getSelectedPatientAllergyText() }}
+          {{ 'appointment.allergiesLabel' | translate }} {{ getSelectedPatientAllergyText() }}
         </div>
 
         <div *ngIf="getSelectedPatientAllergyText()" class="allergy-warning-banner">
-          IMPORTANT: Pacient amb al·lèrgies! Es recomana cita a última hora
+          {{ 'appointment.allergyBanner' | translate }}
         </div>
 
         <div *ngIf="isNewPatientMode" class="quick-patient-box">
-          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" placeholder="Nom complet" class="form-control mb-2" [required]="isNewPatientMode">
-          <input type="text" [(ngModel)]="newAppointmentData.newPatientDni" name="newPatientDni" placeholder="DNI / NIE" class="form-control">
+          <input type="text" [(ngModel)]="newAppointmentData.newPatientName" name="newPatientName" [placeholder]="'appointment.placeholderFullName' | translate" class="form-control mb-2" [required]="isNewPatientMode">
+          <input type="text" [(ngModel)]="newAppointmentData.newPatientDni" name="newPatientDni" [placeholder]="'appointment.placeholderDni' | translate" class="form-control">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group col">
-          <label>Data de la cita</label>
+          <label>{{ 'appointment.visitDate' | translate }}</label>
           <input type="date" [(ngModel)]="newAppointmentData.visitDate" name="visitDate" class="form-control" required (ngModelChange)="clearCreateFieldError('visitDate')" (change)="onDateChange()">
           <div *ngIf="getCreateFieldError('visitDate')" class="form-field-error">{{ getCreateFieldError('visitDate') }}</div>
         </div>
 
         <div class="form-group col date-flags">
-          <label class="flags-label">Opcions</label>
+          <label class="flags-label">{{ 'appointment.options' | translate }}</label>
           <div class="date-flags-options">
             <label class="checkbox-container compact">
               <input type="checkbox" [(ngModel)]="newAppointmentData.isFirstVisit" name="isFirstVisit" (change)="onFirstVisitChange()">
-              <span>Primera visita</span>
+              <span>{{ 'appointment.firstVisit' | translate }}</span>
             </label>
 
             <label class="checkbox-container compact">
               <input type="checkbox" [(ngModel)]="newAppointmentData.isUrgency" name="isUrgency" (change)="onUrgencyChange()">
-              <span>Urgència</span>
+              <span>{{ 'appointment.urgency' | translate }}</span>
             </label>
           </div>
         </div>
@@ -468,7 +469,7 @@
 
       <div class="form-row">
         <div class="form-group col">
-          <label>Hora d'inici</label>
+          <label>{{ 'appointment.startTime' | translate }}</label>
           <div class="time-select-group">
             <select
               [ngModel]="getVisitHour()"
@@ -493,7 +494,7 @@
           <div *ngIf="getCreateFieldError('visitHour')" class="form-field-error">{{ getCreateFieldError('visitHour') }}</div>
         </div>
         <div class="form-group col">
-          <label>Duració</label>
+          <label>{{ 'appointment.duration' | translate }}</label>
           <input type="number" [(ngModel)]="newAppointmentData.durationMinutes" name="durationMinutes" class="form-control" min="5" step="5" required (ngModelChange)="clearCreateFieldError('durationMinutes')">
           <div *ngIf="getCreateFieldError('durationMinutes')" class="form-field-error">{{ getCreateFieldError('durationMinutes') }}</div>
         </div>
@@ -501,17 +502,17 @@
 
       <div class="form-row">
         <div class="form-group col">
-          <label>Doctor</label>
+          <label>{{ 'appointment.doctor' | translate }}</label>
           <select [(ngModel)]="newAppointmentData.doctor" name="doctor" class="form-control" required (ngModelChange)="clearCreateFieldError('doctor')">
-            <option value="" disabled selected>Doctor...</option>
+            <option value="" disabled selected>{{ 'appointment.doctorPlaceholder' | translate }}</option>
             <option *ngFor="let d of doctorsList()" [value]="d.id">{{ d.name || d.firstName }}</option>
           </select>
           <div *ngIf="getCreateFieldError('doctor')" class="form-field-error">{{ getCreateFieldError('doctor') }}</div>
         </div>
         <div class="form-group col">
-          <label>Box</label>
+          <label>{{ 'appointment.box' | translate }}</label>
           <select [(ngModel)]="newAppointmentData.box" name="box" class="form-control" required (ngModelChange)="clearCreateFieldError('box')">
-            <option value="" disabled selected>Box...</option>
+            <option value="" disabled selected>{{ 'appointment.boxPlaceholder' | translate }}</option>
             <option *ngFor="let b of boxesList()" [value]="b.id">{{ b.name }}</option>
           </select>
           <div *ngIf="getCreateFieldError('box')" class="form-field-error">{{ getCreateFieldError('box') }}</div>
@@ -521,11 +522,11 @@
       <div class="form-group mt-3 bg-light p-3 rounded border">
 
         <div class="mb-3" *ngIf="treatmentsList().length > 0">
-          <label class="text-primary text-xs mb-1 d-block font-weight-bold">Continua tractament actiu</label>
+          <label class="text-primary text-xs mb-1 d-block font-weight-bold">{{ 'appointment.continueTreatment' | translate }}</label>
           <select [(ngModel)]="newAppointmentData.treatmentId" name="treatmentId" (change)="onTreatmentSelect(newAppointmentData.treatmentId)" class="form-control border-primary shadow-sm">
-            <option value="">Patologia programada</option>
+            <option value="">{{ 'appointment.pathologyScheduled' | translate }}</option>
             <option *ngFor="let t of treatmentsList()" [value]="t.treatmentId ?? t.id">
-              {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? 'Patologia' }} ({{ t.treatmentName ?? t.name ?? 'Tractament' }})
+              {{ t.pathologyTypeName ?? t.pathologyName ?? t.pathology?.name ?? ('appointment.pathologyFallback' | translate) }} ({{ t.treatmentName ?? t.name ?? ('appointment.treatmentFallback' | translate) }})
             </option>
           </select>
           <div *ngIf="getCreateFieldError('treatmentId')" class="form-field-error">{{ getCreateFieldError('treatmentId') }}</div>
@@ -533,25 +534,25 @@
 
         <div>
           <label class="text-xs mb-1 d-block">
-            {{ treatmentsList().length > 0 ? 'Nova patologia' : 'Selecciona patologia' }}
+            {{ treatmentsList().length > 0 ? ('appointment.pathologyFieldHasTreatments' | translate) : ('appointment.pathologyFieldNoTreatments' | translate) }}
           </label>
           <select [(ngModel)]="newAppointmentData.pathologyId" name="pathologyId" class="form-control" [disabled]="newAppointmentData.treatmentId !== ''" [required]="!newAppointmentData.treatmentId && !newAppointmentData.isFirstVisit && !newAppointmentData.isUrgency">
-            <option value="" disabled selected>Tipus de patologia...</option>
+            <option value="" disabled selected>{{ 'appointment.pathologyTypePlaceholder' | translate }}</option>
             <option *ngFor="let p of pathologiesList()" [value]="p.id">{{ p.name }} ({{ p.duration }} min)</option>
           </select>
           <div *ngIf="getCreateFieldError('pathologyId')" class="form-field-error">{{ getCreateFieldError('pathologyId') }}</div>
         </div>
 
         <div class="form-group mt-2">
-          <label>Motiu</label>
-          <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="3" placeholder="Notes cliniques"></textarea>
+          <label>{{ 'appointment.reason' | translate }}</label>
+          <textarea [(ngModel)]="newAppointmentData.consultationReason" name="consultationReason" class="form-control" rows="3" [placeholder]="'appointment.reasonPlaceholder' | translate"></textarea>
           <div *ngIf="getCreateFieldError('consultationReason')" class="form-field-error">{{ getCreateFieldError('consultationReason') }}</div>
         </div>
       </div>
 
       <div class="panel-footer mt-4">
-        <button type="button" (click)="closePanel()" class="btn-cancel">Cancel·lar</button>
-        <button type="submit" class="btn-save" [disabled]="loading()">{{ isEditMode ? 'Actualitzar cita' : 'Desar cita' }}</button>
+        <button type="button" (click)="closePanel()" class="btn-cancel">{{ 'appointment.cancel' | translate }}</button>
+        <button type="submit" class="btn-save" [disabled]="loading()"><ng-container *ngIf="isEditMode">{{ 'appointment.update' | translate }}</ng-container><ng-container *ngIf="!isEditMode">{{ 'appointment.save' | translate }}</ng-container></button>
       </div>
     </form>
   </aside>
