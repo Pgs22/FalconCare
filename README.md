@@ -82,6 +82,12 @@ Las responsabilidades del frontend se limitan a:
 * Gestionar formularios y validaciones básicas.
 * Controlar la navegación y la experiencia de usuario.
 
+### Idioma de la API (`Accept-Language`)
+
+Para que Symfony traduzca mensajes del dominio `api` en el mismo idioma que la UI (ngx-translate: `ca`, `es`, `en`, `fr`), cada petición HTTP cuya URL contenga `/api/` incluye la cabecera **`Accept-Language`** con el idioma activo (`LanguageService` + interceptor `src/app/interceptors/locale.interceptor.ts`, registrado en `src/app/app.config.ts`).
+
+En el repositorio backend (**FalconCareSymfony**) el locale se aplica en `src/EventSubscriber/ApiLocaleSubscriber.php` (también admite `?locale=` como anulación). Tests de contrato: `tests/Controller/Api/ApiAcceptLanguageTest.php`.
+
 ---
 
 ## 📄 Documentación técnica
