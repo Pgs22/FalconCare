@@ -142,28 +142,62 @@ async function main() {
   }
   log('patients', `Paciente de prueba: #${patientId}. Total pacientes visibles: ${patients.length}.`);
 
-  // 3) Consistencia de listado documentos (3 filtros soportados)
+  const appointmentsUrl = `${base}/api/patients/${patientId}/appointments`;
+  const { res: apptRes, body: apptBody } = await httpJson(appointmentsUrl, {
+    method: 'GET',
+    headers: authHeaders,
+  });
+  if (!apptRes.ok) {
+    fail(`GET /api/patients/${patientId}/appointments falló (${apptRes.status}).`);
+  }
+  const apptList = Array.isArray(apptBody) ? apptBody : extractCollection(apptBody);
+  log('appointments', `Historial de citas (subrecurso): ${apptList.length} filas.`);
+
+  // 3) Consistencia de listado documentos (alineado con DocumentService Angular)
+  const subresourceUrl = `${base}/api/patients/${patientId}/documents`;
   const listByPatientIdUrl = `${base}/api/documents?patientId=${patientId}`;
   const listByPatientDotIdUrl = `${base}/api/documents?patient.id=${patientId}`;
+  const listByPatientUnderscoreUrl = `${base}/api/documents?patient_id=${patientId}`;
+  const listByPatientBracketUrl = `${base}/api/documents?patient%5Bid%5D=${patientId}`;
   const patientIri = `${base}/api/patients/${patientId}`;
   const listByPatientIriUrl = `${base}/api/documents?patient=${encodeURIComponent(patientIri)}`;
 
-  const [l1, l2, l3] = await Promise.all([
+  const [sub0, l1, l2, l3, l4, l5] = await Promise.all([
+    httpJson(subresourceUrl, { method: 'GET', headers: authHeaders }),
     httpJson(listByPatientIdUrl, { method: 'GET', headers: authHeaders }),
     httpJson(listByPatientDotIdUrl, { method: 'GET', headers: authHeaders }),
+    httpJson(listByPatientUnderscoreUrl, { method: 'GET', headers: authHeaders }),
+    httpJson(listByPatientBracketUrl, { method: 'GET', headers: authHeaders }),
     httpJson(listByPatientIriUrl, { method: 'GET', headers: authHeaders }),
   ]);
-  if (!l1.res.ok || !l2.res.ok || !l3.res.ok) {
+  if (!sub0.res.ok || !l1.res.ok || !l2.res.ok || !l3.res.ok || !l4.res.ok || !l5.res.ok) {
     fail(
-      `Fallo en listados de documentos (${l1.res.status}, ${l2.res.status}, ${l3.res.status}).`
+      `Fallo en listados de documentos (sub:${sub0.res.status}, patientId:${l1.res.status}, patient.id:${l2.res.status}, patient_id:${l3.res.status}, patient[id]:${l4.res.status}, patientIRI:${l5.res.status}).`
     );
   }
+  const docsSub = extractCollection(sub0.body);
   const docsById = extractCollection(l1.body);
   const docsByDot = extractCollection(l2.body);
-  const docsByIri = extractCollection(l3.body);
+  const docsByUnderscore = extractCollection(l3.body);
+  const docsByBracket = extractCollection(l4.body);
+  const docsByIri = extractCollection(l5.body);
+  const counts = [
+    docsSub.length,
+    docsById.length,
+    docsByDot.length,
+    docsByUnderscore.length,
+    docsByBracket.length,
+    docsByIri.length,
+  ];
+  const uniqueCounts = new Set(counts);
+  if (uniqueCounts.size > 1) {
+    fail(
+      `Conteos de listado inconsistentes entre variantes (sub/patientId/patient.id/patient_id/patient[id]/IRI): ${counts.join(', ')}`
+    );
+  }
   log(
     'consistency',
-    `Listados OK. Conteos patientId=${docsById.length}, patient.id=${docsByDot.length}, patientIRI=${docsByIri.length}.`
+    `Listados OK (${docsById.length} docs). Subrecurso + filtros patientId / patient.id / patient_id / patient[id] / IRI alineados.`
   );
 
   // 4) Upload
