@@ -1,7 +1,10 @@
 {
   "app": {
     "language": "Idioma",
-    "brandLogoAlt": "Logotipo FalconCare"
+    "brandLogoAlt": "Logotipo FalconCare",
+    "clinicDentalAlt": "Clínica Dental FalconCare",
+    "profilePhotoUserAlt": "Foto de perfil del usuario",
+    "profilePhotoPatientAlt": "Foto de perfil del paciente"
   },
   "common": {
     "save": "Guardar",
@@ -449,18 +452,39 @@
     }
   },
   "documents": {
-    "brand": { "aria": "Clínica Dental FalconCare" },
-    "nav": { "panel": "Panel", "agenda": "Agenda", "documents": "Documentos", "settings": "Ajustes" },
-    "header": { "collectionTitle": "Colección de Archivos", "registrationDate": "Alta" },
+    "brand": {
+      "aria": "Clínica Dental FalconCare"
+    },
+    "nav": {
+      "panel": "Panel",
+      "agenda": "Agenda",
+      "documents": "Documentos",
+      "settings": "Ajustes"
+    },
+    "header": {
+      "collectionTitle": "Colección de Archivos",
+      "registrationDate": "Alta"
+    },
     "actions": {
       "uploading": "Subiendo...",
       "uploadNew": "Subir Nuevo Documento",
       "selectFilesAria": "Seleccionar documentos para subir",
+      "brandImgTitle": "Marca FalconCare",
+      "selectFilesTitle": "Seleccionar archivos",
+      "calibrationPxCmTitle": "Calibración píxeles por centímetro",
+      "previewImageTitle": "Vista previa del documento",
+      "clinicalNoteTitle": "Nota clínica",
+      "sendNoteTitle": "Enviar nota",
       "delete": "Eliminar documento activo",
       "deleteConfirm": "¿Eliminar el documento \"{{name}}\"? Esta acción no se puede deshacer.",
       "downloadFile": "Descargar archivo"
     },
-    "tabs": { "aria": "Tipos de radiografía", "all": "Todo", "pan": "Panorámica", "pa": "Periapical" },
+    "tabs": {
+      "aria": "Tipos de radiografía",
+      "all": "Todo",
+      "pan": "Panorámica",
+      "pa": "Periapical"
+    },
     "states": {
       "loadingDocuments": "Cargando documentos...",
       "noDocuments": "No hay documentos para este paciente.",
@@ -490,7 +514,9 @@
       "referenceLength": "Longitud real de referencia en centímetros"
     },
     "viewer": {
-      "measure": { "pending": "Medición pendiente" },
+      "measure": {
+        "pending": "Medición pendiente"
+      },
       "calibration": {
         "stepStart": "Calibración: clic en punto inicial",
         "stepEnd": "Calibración: clic en punto final",
@@ -558,6 +584,180 @@
       "uploadGeneric": "No se pudieron subir uno o más documentos.",
       "download": "No se pudo descargar o previsualizar el documento seleccionado.",
       "list": "No se pudieron cargar los documentos del paciente seleccionado."
+    }
+  },
+  "appointment": {
+    "nav": {
+      "panel": "Panel",
+      "agenda": "Agenda",
+      "patients": "Pacientes",
+      "documents": "Documentos"
+    },
+    "searchPlaceholder": "Buscar citas...",
+    "profileAria": "Perfil",
+    "filterBoxes": "Filtrar gabinetes",
+    "allBoxes": "Todos",
+    "occupancy": "OCUPACIÓN",
+    "savedToday": "{{count}} citas guardadas hoy",
+    "allergiesTitle": "Alergias",
+    "alertCleaning": "Importante: se reservan 5 minutos automáticamente entre pacientes para limpieza y desinfección del gabinete. Solo permite ajustar a 5/10/15 minutos.",
+    "weekPrefix": "Semana:",
+    "viewDay": "Día",
+    "viewWeek": "Semana",
+    "newAppointment": "Nueva cita",
+    "boxTreatmentRoom": "Sala de atención",
+    "allergyPillAria": "Paciente con alergias",
+    "firstVisit": "Primera visita",
+    "changeStatusTitle": "Cambiar estado",
+    "urgency": "Urgencia",
+    "doctorPrefix": "Dr.",
+    "pathologyPrefix": "Patología:",
+    "openAppointmentTitle": "Abrir cita",
+    "finishAppointmentTitle": "Finalizar cita",
+    "moreActionsTitle": "Más acciones",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "cleaningBox": "Limpieza de gabinete ({{minutes}} min)",
+    "cleaningWeek": "Limpieza ({{minutes}} min)",
+    "adjust": "Ajustar",
+    "minOption": "{{n}} min",
+    "weekAppointmentsCount": "{{count}} citas",
+    "panelTitleNew": "Nueva cita",
+    "panelTitleEdit": "Editar cita",
+    "panelSubtitle": "Gestión de cita y paciente",
+    "formPatient": "Paciente",
+    "selectPatient": "Selecciona paciente...",
+    "allergiesLabel": "Alergias:",
+    "allergyBanner": "IMPORTANTE: ¡Paciente con alergias! Se recomienda cita a última hora",
+    "placeholderFullName": "Nombre completo",
+    "placeholderDni": "DNI / NIE",
+    "visitDate": "Fecha de la cita",
+    "options": "Opciones",
+    "startTime": "Hora de inicio",
+    "duration": "Duración",
+    "doctor": "Doctor",
+    "doctorPlaceholder": "Doctor...",
+    "box": "Gabinete",
+    "boxPlaceholder": "Gabinete...",
+    "continueTreatment": "Continuar tratamiento activo",
+    "pathologyScheduled": "Patología programada",
+    "pathologyFallback": "Patología",
+    "treatmentFallback": "Tratamiento",
+    "newPathology": "Nueva patología",
+    "selectPathology": "Selecciona patología",
+    "pathologyFieldHasTreatments": "Nueva patología",
+    "pathologyFieldNoTreatments": "Selecciona patología",
+    "pathologyTypePlaceholder": "Tipo de patología...",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Notas clínicas",
+    "cancel": "Cancelar",
+    "save": "Guardar cita",
+    "update": "Actualizar cita",
+    "confirmDeleteAppointment": "¿Seguro que deseas eliminar esta cita?",
+    "confirmFinishAppointment": "¿Seguro que deseas finalizar esta cita?",
+    "allergies": {
+      "penicillin": "Penicilina",
+      "latex": "Látex",
+      "anesthesia": "Anestesia",
+      "nsaids": "AINEs",
+      "unknown": "Alergia {{flag}}"
+    },
+    "messages": {
+      "created": "Cita creada correctamente.",
+      "updated": "Cita actualizada correctamente.",
+      "reviewForm": "Revisa los campos marcados del formulario.",
+      "serverDateFormat": "El servidor no acepta el formato de fecha.",
+      "newPatientFailed": "Error al crear el nuevo paciente",
+      "allergyAlertHeader": "Atención: el paciente tiene alergias registradas."
+    },
+    "errors": {
+      "validation": "No se pudo crear la cita. Revisa los datos del formulario.",
+      "timeConflict": "Ya existe una cita en este horario. Selecciona otra hora.",
+      "doctorOccupied": "El doctor ya tiene una cita en este horario.",
+      "boxOccupied": "El gabinete ya está ocupado en este horario.",
+      "patientNotFound": "No se encontró el paciente seleccionado.",
+      "doctorNotFound": "No se encontró el doctor seleccionado.",
+      "boxNotFound": "No se encontró el gabinete seleccionado.",
+      "fieldPatient": "Selecciona un paciente válido.",
+      "fieldDoctor": "Selecciona un doctor válido.",
+      "fieldBox": "Selecciona un gabinete válido.",
+      "fieldVisitDate": "La fecha de la cita no es válida.",
+      "fieldVisitTime": "La hora de la cita no es válida.",
+      "fieldDuration": "La duración de la cita no es válida.",
+      "fieldPathology": "La patología seleccionada no es válida.",
+      "fieldTreatment": "El tratamiento seleccionado no es válido.",
+      "fieldConsultationReason": "El motivo de la consulta no es válido.",
+      "offline": "No se pudo conectar con el servidor en este momento. Inténtalo de nuevo.",
+      "notFoundResources": "No se encontró alguno de los recursos de la cita (paciente, doctor o gabinete).",
+      "genericCreate": "No se pudo crear la cita en este momento.",
+      "fieldInvalid": "El campo {{field}} no es válido.",
+      "validateAvailability": "No se pudo validar la disponibilidad de la cita. Inténtalo de nuevo.",
+      "weekLoadFailed": "No se pudieron cargar las citas de la semana.",
+      "localDoctorOverlap": "Este doctor ya tiene una cita en este horario.",
+      "localBoxOverlap": "Este gabinete ya tiene una cita en este horario."
+    },
+    "alerts": {
+      "updatedOk": "Cita actualizada correctamente.",
+      "sessionExpiredStatus": "Sesión caducada o sin permisos para cambiar el estado de la cita.",
+      "invalidStatusOptions": "Estado no permitido. Opciones válidas: Confirmada, Llegada o Cancelada.",
+      "statusChangeFailed": "No se pudo cambiar el estado de la cita.",
+      "sessionExpiredDelete": "Sesión caducada o sin permisos para eliminar la cita.",
+      "deleteFailed": "No se pudo eliminar la cita.",
+      "cleaningOnly5810": "La limpieza del gabinete solo puede ser de 5, 10 o 15 minutos.",
+      "cleaningInvalid": "Valor de limpieza inválido. Solo se permite 5, 10 o 15 minutos.",
+      "sessionExpiredCleaning": "Sesión caducada o sin permisos para actualizar la limpieza.",
+      "cleaningUpdateFailed": "No se pudo actualizar el tiempo de limpieza del gabinete.",
+      "odontogramOpenFailed": "No se pudo abrir el odontograma del paciente.",
+      "appointmentOpenFailed": "No se pudo abrir la cita.",
+      "closeFailed": "Error al cerrar la cita"
+    }
+  },
+  "odontogram": {
+    "loading": "Cargando odontograma...",
+    "title": "Explorador de odontograma",
+    "metaPatient": "Paciente:",
+    "metaVisit": "Visita:",
+    "metaOdontogram": "Odontograma:",
+    "closing": "Cerrando cita...",
+    "closeVisit": "Cerrar cita",
+    "boardEyebrow": "Dentición completa (FDI)",
+    "boardTitle": "Vista general de todas las piezas",
+    "batchMode": "Selección múltiple",
+    "gridAria": "Odontograma",
+    "legendAria": "Leyenda de colores",
+    "legendTitle": "Leyenda de colores",
+    "legendPending": "Rojo: tratamiento pendiente",
+    "legendDone": "Azul: tratamiento realizado",
+    "protocolEyebrow": "Protocolo",
+    "protocolTitle": "Protocolo de patología",
+    "pickerAria": "Añadir patología",
+    "pickerLabel": "Añadir patología desde la base de datos",
+    "pickerEmpty": "No hay más patologías disponibles para añadir.",
+    "filterHint": "Selecciona el estado antes de pintar o borrar.",
+    "eraseMode": "Borrar marca",
+    "emptyProtocols": "Aún no hay patologías añadidas en este odontograma. Usa el botón + para empezar.",
+    "hintSelectProtocol": "Selecciona una patología de la derecha para ver las marcas guardadas.",
+    "hintErase": "Modo borrar activo: haz clic sobre una cara para eliminar la marca de esta patología.",
+    "hintBatch": "Selección múltiple activa: arrastra por varias caras y se aplicará directamente.",
+    "quadrants": {
+      "q1": "Cuadrante superior derecho",
+      "q2": "Cuadrante superior izquierdo",
+      "q3": "Cuadrante inferior izquierdo",
+      "q4": "Cuadrante inferior derecho"
+    },
+    "protocolTypes": {
+      "caries": "Caries",
+      "endodontics": "Endodoncia",
+      "cleaning": "Limpieza"
+    },
+    "colorModes": {
+      "pending": "Pendiente",
+      "done": "Hecho"
+    },
+    "errors": {
+      "saveFailed": "No se pudo guardar el odontograma o cerrar la cita.",
+      "invalidAppointment": "No se recibió una cita válida para abrir el odontograma.",
+      "loadFailed": "No se pudo cargar el odontograma."
     }
   }
 }
