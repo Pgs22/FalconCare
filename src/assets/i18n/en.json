@@ -387,15 +387,19 @@
   },
   "documents": {
     "brand": { "aria": "FalconCare Dental Clinic" },
+    "common": { "emDash": "—" },
+    "downloads": { "fallbackFilename": "document-{{id}}" },
     "nav": { "panel": "Panel", "agenda": "Schedule", "documents": "Documents", "settings": "Settings" },
     "header": { "collectionTitle": "File Collection", "registrationDate": "Registered" },
+    "card": { "unknownType": "Unknown type", "noDate": "No date" },
     "actions": {
       "uploading": "Uploading...",
       "uploadNew": "Upload New Document",
       "selectFilesAria": "Select documents to upload",
       "delete": "Delete active document",
       "deleteConfirm": "Delete document \"{{name}}\"? This action cannot be undone.",
-      "downloadFile": "Download file"
+      "downloadFile": "Download file",
+      "openInNewTab": "Open in new tab"
     },
     "tabs": { "aria": "Radiograph types", "all": "All", "pan": "Panoramic", "pa": "Periapical" },
     "states": {
@@ -404,6 +408,7 @@
       "loadingPreview": "Loading preview...",
       "previewAlt": "Selected document preview",
       "pdfPreview": "PDF preview",
+      "textPreview": "Text preview",
       "pdfPreviewUnavailable": "PDF preview is not available in this browser.",
       "previewUnavailableType": "Preview not available for this format.",
       "selectDocument": "Select a document to preview."
@@ -413,35 +418,6 @@
       "resizeAria": "Resize patient list height",
       "defaultName": "Patient",
       "fallbackWithId": "Patient #{{id}}"
-    },
-    "toolbar": {
-      "zoomOut": "Zoom out",
-      "zoomIn": "Zoom in",
-      "measure": "Measure in cm",
-      "calibration": "Guided calibration (2 clicks)",
-      "lockCalibration": "Lock calibration for this patient/document",
-      "snap": "Magnetic edge snap",
-      "snapLabel": "snap",
-      "snapSensitivity": "Anatomical snap sensitivity",
-      "refCm": "ref cm",
-      "referenceLength": "Real reference length in centimeters"
-    },
-    "viewer": {
-      "measure": { "pending": "Pending measurement" },
-      "calibration": {
-        "stepStart": "Calibration: click starting point",
-        "stepEnd": "Calibration: click ending point",
-        "reference": "Reference: {{value}} cm"
-      },
-      "snap": {
-        "unavailable": "Snap not available for this format",
-        "on": "Snap ON",
-        "off": "Snap OFF",
-        "auto": "Auto",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
-      }
     },
     "sync": {
       "error": "Synchronization error",
@@ -453,9 +429,7 @@
     "footer": {
       "imageId": "Image ID",
       "type": "Type",
-      "date": "Date",
-      "measure": "Measurement",
-      "measureAvailableImages": "Measurement available for images"
+      "date": "Date"
     },
     "notes": {
       "title": "Clinical Notes",
@@ -468,7 +442,9 @@
       "send": "Send note",
       "saving": "Saving...",
       "selectDocument": "Select a document to sync notes.",
-      "syncedPrefix": "Notes synchronized"
+      "syncedPrefix": "Notes synchronized",
+      "syncFailed": "Could not save the note (see message below)",
+      "historyLine": "{{time}} — {{text}}"
     },
     "feedback": {
       "noteSaved": "Clinical note saved and verified in database.",

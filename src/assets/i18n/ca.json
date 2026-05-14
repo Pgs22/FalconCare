@@ -387,15 +387,19 @@
   },
   "documents": {
     "brand": { "aria": "Clínica Dental FalconCare" },
+    "common": { "emDash": "—" },
+    "downloads": { "fallbackFilename": "document-{{id}}" },
     "nav": { "panel": "Panell", "agenda": "Agenda", "documents": "Documents", "settings": "Ajustos" },
     "header": { "collectionTitle": "Col·lecció d'Arxius", "registrationDate": "Alta" },
+    "card": { "unknownType": "Tipus desconegut", "noDate": "Sense data" },
     "actions": {
       "uploading": "Pujant...",
       "uploadNew": "Pujar Nou Document",
       "selectFilesAria": "Seleccionar documents per pujar",
       "delete": "Eliminar document actiu",
       "deleteConfirm": "Eliminar el document \"{{name}}\"? Aquesta acció no es pot desfer.",
-      "downloadFile": "Descarregar arxiu"
+      "downloadFile": "Descarregar arxiu",
+      "openInNewTab": "Obrir en una pestanya nova"
     },
     "tabs": { "aria": "Tipus de radiografia", "all": "Tot", "pan": "Panoràmica", "pa": "Periapical" },
     "states": {
@@ -404,6 +408,7 @@
       "loadingPreview": "Carregant vista prèvia...",
       "previewAlt": "Vista prèvia del document seleccionat",
       "pdfPreview": "Vista prèvia PDF",
+      "textPreview": "Vista prèvia de text",
       "pdfPreviewUnavailable": "La vista prèvia PDF no està disponible en aquest navegador.",
       "previewUnavailableType": "Vista prèvia no disponible per a aquest format.",
       "selectDocument": "Selecciona un document per visualitzar-lo."
@@ -413,35 +418,6 @@
       "resizeAria": "Ajustar l'alçada del llistat de pacients",
       "defaultName": "Pacient",
       "fallbackWithId": "Pacient #{{id}}"
-    },
-    "toolbar": {
-      "zoomOut": "Allunyar",
-      "zoomIn": "Apropar",
-      "measure": "Mesurar en cm",
-      "calibration": "Calibració guiada (2 clics)",
-      "lockCalibration": "Bloquejar calibració per a aquest pacient/document",
-      "snap": "Snap magnètic a vores",
-      "snapLabel": "snap",
-      "snapSensitivity": "Sensibilitat del snap anatòmic",
-      "refCm": "ref cm",
-      "referenceLength": "Longitud real de referència en centímetres"
-    },
-    "viewer": {
-      "measure": { "pending": "Mesura pendent" },
-      "calibration": {
-        "stepStart": "Calibració: clic al punt inicial",
-        "stepEnd": "Calibració: clic al punt final",
-        "reference": "Referència: {{value}} cm"
-      },
-      "snap": {
-        "unavailable": "Snap no disponible per a aquest format",
-        "on": "Snap ON",
-        "off": "Snap OFF",
-        "auto": "Auto",
-        "low": "Baix",
-        "medium": "Mitjà",
-        "high": "Alt"
-      }
     },
     "sync": {
       "error": "Error de sincronització",
@@ -453,9 +429,7 @@
     "footer": {
       "imageId": "ID Imatge",
       "type": "Tipus",
-      "date": "Data",
-      "measure": "Mesura",
-      "measureAvailableImages": "Mesura disponible per a imatges"
+      "date": "Data"
     },
     "notes": {
       "title": "Notes Clíniques",
@@ -468,7 +442,9 @@
       "send": "Enviar nota",
       "saving": "Desant...",
       "selectDocument": "Selecciona un document per sincronitzar notes.",
-      "syncedPrefix": "Notes sincronitzades"
+      "syncedPrefix": "Notes sincronitzades",
+      "syncFailed": "Error en desar la nota (revisa el missatge inferior)",
+      "historyLine": "{{time}} — {{text}}"
     },
     "feedback": {
       "noteSaved": "Nota clínica desada i verificada correctament a base de dades.",
