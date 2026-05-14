@@ -1,6 +1,6 @@
 /**
- * Producción: misma URL pública que `API_BASE_URL` en el backend (sin barra final).
- * Configurar CORS en Symfony (`CORS_ALLOW_ORIGIN`, nelmio, etc.).
+ * Producción: misma URL pública que `API_BASE_URL` en Symfony.
+ * El `DocumentService` quita barras finales al resolver IRI de `patient` en POST.
  */
 const apiUrl = 'https://api.tu-dominio.com';
 

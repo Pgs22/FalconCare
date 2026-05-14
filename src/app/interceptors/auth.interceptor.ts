@@ -5,8 +5,10 @@ import { catchError, throwError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 
-const API_PREFIX = `${environment.apiBaseUrl}/api`;
+const apiBase = normalizeApiBaseUrl(environment.apiBaseUrl);
+const API_PREFIX = `${apiBase}/api`;
 const LOGIN_URL = `${API_PREFIX}/auth/login`;
 const REGISTER_DOCTOR_URL = `${API_PREFIX}/auth/register-doctor`;
 /** OpenAPI / Swagger UI habitual en API Platform (`/api/docs`, `/api/docs.json`, etc.). */

@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
+
+import { environment } from '../../environments/environment';
 import { extractApiCollection } from '../models/appointment-api.util';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 
 export const APPOINTMENT_STATUSES = [
   'Programada',
@@ -63,10 +66,10 @@ export interface Appointment {
   providedIn: 'root',
 })
 export class AppointmentService {
-  
-  private apiUrl = 'http://localhost:8000/api/appointment';
-  private patientsUrl = 'http://localhost:8000/api/patients';
-  private treatmentsUrl = 'http://localhost:8000/api/treatments';
+  private readonly apiBase = normalizeApiBaseUrl(environment.apiBaseUrl);
+  private readonly apiUrl = `${this.apiBase}/api/appointment`;
+  private readonly patientsUrl = `${this.apiBase}/api/patients`;
+  private readonly treatmentsUrl = `${this.apiBase}/api/treatments`;
 
   constructor(private http: HttpClient) {}
 
@@ -124,10 +127,11 @@ export class AppointmentService {
       catchError((err) => {
         const status = (err as { status?: number } | null)?.status;
         if (status === 400 || status === 401 || status === 403) {
-          return throwError(() => err);
+          return throwError(() => this.normalizeHttpError(err));
         }
         return this.http.put(url, body, requestOptions).pipe(
-          map((response) => this.parseStatusUpdateResponse(response, canonicalStatus))
+          map((response) => this.parseStatusUpdateResponse(response, canonicalStatus)),
+          catchError((err2) => throwError(() => this.normalizeHttpError(err2)))
         );
       }),
     );
@@ -156,7 +160,7 @@ export class AppointmentService {
   }
 
   createQuickPatient(patientData: any): Observable<any> {
-    return this.http.post(`${this.patientsUrl}/new`, patientData);
+    return this.http.post(`${this.patientsUrl}`, patientData);
   }
 
   getPatientTreatments(patientId: number): Observable<any> {
@@ -196,6 +200,28 @@ export class AppointmentService {
     return String(nextStatus ?? '').trim();
   }
 
+  private normalizeHttpError(err: unknown): unknown {
+    if (!(err instanceof HttpErrorResponse)) {
+      return err;
+    }
+    const raw = err.error;
+    if (typeof raw === 'string' && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        return new HttpErrorResponse({
+          error: parsed,
+          headers: err.headers,
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url ?? undefined,
+        });
+      } catch {
+        return err;
+      }
+    }
+    return err;
+  }
+
   private parseStatusUpdateResponse(response: string, fallbackStatus: string): AppointmentStatusUpdateResponse {
     const trimmed = String(response ?? '').trim();
     if (!trimmed) {
@@ -217,34 +243,11 @@ export class AppointmentService {
   }
 
   /**
-   * Historial de citas por paciente con fallback de rutas/filtros para APIs heterogeneas.
+   * Historial de citas del paciente: `GET /api/patients/{id}/appointments` (Symfony).
    */
   listByPatientId(patientId: number): Observable<unknown[]> {
-    const idStr = String(patientId);
-
-    const fromPatientSubresource = this.http
+    return this.http
       .get<unknown>(`${this.patientsUrl}/${patientId}/appointments`)
       .pipe(map(extractApiCollection));
-
-    const fromAppointmentIndex = this.http
-      .get<unknown>(`${this.apiUrl}/index`, {
-        params: new HttpParams().set('patientId', idStr),
-      })
-      .pipe(map(extractApiCollection));
-
-    const fromAppointmentsPlural = this.http
-      .get<unknown>('http://localhost:8000/api/appointments', {
-        params: new HttpParams().set('patientId', idStr),
-      })
-      .pipe(map(extractApiCollection));
-
-    return fromPatientSubresource.pipe(
-      catchError(() =>
-        fromAppointmentIndex.pipe(
-          catchError(() => fromAppointmentsPlural),
-          catchError((err: unknown) => throwError(() => err))
-        )
-      )
-    );
   }
 }
