@@ -56,12 +56,14 @@
         </div>
 
         <h1>{{ 'documents.header.collectionTitle' | translate }}</h1>
-        <p>
-          {{ selectedPatientName }}
+        <div class="documents-header-patient">
+          <p class="documents-header-patient-name">{{ selectedPatientName }}</p>
           @if (selectedPatientRegistrationDisplay) {
-            <span>{{ 'documents.header.registrationDate' | translate }}: {{ selectedPatientRegistrationDisplay }}</span>
+            <p class="documents-header-patient-registration">
+              {{ 'documents.header.registrationDate' | translate }}: {{ selectedPatientRegistrationDisplay }}
+            </p>
           }
-        </p>
+        </div>
         <p
           class="documents-sync-indicator"
           [class.is-error]="!!loadError"

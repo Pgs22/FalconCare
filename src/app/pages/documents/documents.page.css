@@ -101,10 +101,26 @@
   line-height: 1.1;
 }
 
-.documents-left-header p {
+.documents-header-patient {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   margin: 0.45rem 0 1rem;
-  color: #5e8b8d;
+}
+
+.documents-header-patient p {
+  margin: 0;
   font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.documents-header-patient-name {
+  font-weight: 600;
+  color: #101818;
+}
+
+.documents-header-patient-registration {
+  color: #5e8b8d;
 }
 
 .documents-sync-indicator {
