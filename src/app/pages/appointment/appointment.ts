@@ -245,34 +245,6 @@ export class AppointmentComponent implements OnInit {
     return this.viewMode() === 'week';
   }
 
-  navigateToMainSection(section: 'panel' | 'agenda' | 'patients' | 'documents'): void {
-    const routeBySection: Record<typeof section, string> = {
-      panel: '/doctor-panel',
-      agenda: '/appointments',
-      patients: '/patients',
-      documents: '/documents',
-    };
-
-    this.router.navigate([routeBySection[section]]);
-  }
-
-  isMainSectionActive(section: 'panel' | 'agenda' | 'patients' | 'documents'): boolean {
-    const url = this.router.url;
-
-    switch (section) {
-      case 'panel':
-        return url === '/doctor-panel';
-      case 'agenda':
-        return url.startsWith('/appointments');
-      case 'patients':
-        return url.startsWith('/patients');
-      case 'documents':
-        return url.startsWith('/documents');
-      default:
-        return false;
-    }
-  }
-
   goToPreviousWeek(): void {
     const base = this.parseYmdToDate(this.newAppointmentData.visitDate);
     const previousWeek = new Date(base);

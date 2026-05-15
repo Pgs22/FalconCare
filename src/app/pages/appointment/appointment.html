@@ -1,21 +1,4 @@
-<div class="agenda-wrapper">
-  <header class="appointment-header">
-    <div class="top-nav">
-      <nav class="view-selector">
-        <button type="button" [class.active]="isMainSectionActive('panel')" (click)="navigateToMainSection('panel')">Panel</button>
-        <button type="button" [class.active]="isMainSectionActive('agenda')" (click)="navigateToMainSection('agenda')">Agenda</button>
-        <button type="button" [class.active]="isMainSectionActive('patients')" (click)="navigateToMainSection('patients')">Pacients</button>
-        <button type="button" [class.active]="isMainSectionActive('documents')" (click)="navigateToMainSection('documents')">Documents</button>
-      </nav>
-
-      <div class="header-actions">
-        <input class="search-input" type="search" placeholder="Cercar cites...">
-        <button class="avatar-btn" type="button" aria-label="Perfil">👨‍⚕️</button>
-      </div>
-    </div>
-  </header>
-
-  <div class="appointment-layout">
+<div class="appointment-layout">
     <aside class="sidebar">
       <div class="mini-calendar">
         <h4>{{ newAppointmentData.visitDate | date:'MMMM y' }}</h4>
@@ -555,4 +538,3 @@
       </div>
     </form>
   </aside>
-</div>
