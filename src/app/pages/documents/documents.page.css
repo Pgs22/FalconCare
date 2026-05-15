@@ -1,104 +1,9 @@
 :host {
   display: flex;
-  min-height: 0;
-  min-width: 0;
-  flex: 1 1 auto;
-  font-family: Outfit, sans-serif;
-}
-
-.documents-shell {
-  display: flex;
-  min-height: 0;
-  width: 100%;
   flex: 1 1 auto;
   flex-direction: column;
-  background: #f5f8f8;
-  color: #101818;
-}
-
-.documents-topbar {
-  z-index: 10;
-  display: flex;
-  position: sticky;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fff;
-  padding: 0.75rem 1.5rem;
-}
-
-.documents-brand-wrap,
-.documents-nav-wrap {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.documents-brand {
-  display: flex;
-  align-items: center;
-}
-
-.documents-brand-logo {
-  display: block;
-  height: auto;
-  max-height: 4rem;
-  width: 100%;
-  object-fit: contain;
-}
-
-.documents-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.documents-search {
-  display: flex;
-  height: 2.5rem;
-  width: 22rem;
-  max-width: 22rem;
-  align-items: center;
-  border-radius: 0.5rem;
-  background: #f0f5f5;
-  color: #5e8b8d;
-  padding: 0 0.75rem;
-}
-
-.documents-search input {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: #101818;
-  font-size: 0.875rem;
-  outline: none;
-}
-
-.documents-user-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.documents-user-actions button {
-  display: flex;
-  height: 2.5rem;
-  width: 2.5rem;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  background: #f0f5f5;
-  color: #5e8b8d;
-  cursor: pointer;
-}
-
-.documents-user-avatar {
-  height: 2.5rem;
-  width: 2.5rem;
-  border-radius: 999px;
-  background: #f4a261;
+  min-height: 0;
+  min-width: 0;
 }
 
 .documents-layout {
@@ -996,30 +901,6 @@
 
   to {
     transform: rotate(360deg);
-  }
-}
-
-@media (width <= 1200px) {
-  .documents-topbar {
-    padding: 0.65rem 1rem;
-  }
-
-  .documents-brand-logo {
-    max-height: 3.25rem;
-  }
-
-  .documents-nav {
-    gap: 0.35rem;
-  }
-}
-
-@media (width <= 980px) {
-  .documents-topbar {
-    padding: 0.6rem 0.75rem;
-  }
-
-  .documents-brand-logo {
-    max-height: 2.5rem;
   }
 }
 
