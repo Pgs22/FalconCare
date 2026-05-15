@@ -385,6 +385,16 @@
       "loadPatientGeneric": "Impossible de charger le patient. Vérifiez qu'il existe ou revenez au panneau médecin."
     }
   },
+  "clinic": {
+    "brand": { "aria": "Clinique Dentaire FalconCare" },
+    "nav": {
+      "aria": "Navigation principale",
+      "panel": "Panneau",
+      "agenda": "Agenda",
+      "documents": "Documents",
+      "settings": "Paramètres"
+    }
+  },
   "documents": {
     "brand": { "aria": "Clinique Dentaire FalconCare" },
     "nav": { "panel": "Panneau", "agenda": "Agenda", "documents": "Documents", "settings": "Paramètres" },
