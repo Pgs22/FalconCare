@@ -24,8 +24,7 @@ La operativa de paciente sigue disponible via `/api/patients`.
 - `PATCH /api/patients/{id}`
 - `DELETE /api/patients/{id}`
 - `GET /api/patients/{id}/documents`
-
-Nota: actualmente no existe `POST /api/patients/new` en backend.
+- `POST /api/patients/new` (alta rápida desde agenda; requiere JWT)
 
 ## 3) Contrato Patient: alergias por bitmask
 
