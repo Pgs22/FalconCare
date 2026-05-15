@@ -1,56 +1,9 @@
-<main class="documents-shell">
-  <header class="documents-topbar">
-    <div class="documents-brand-wrap">
-      <div class="documents-brand" aria-label="FalconCare brand" [attr.aria-label]="'documents.brand.aria' | translate">
-        <img
-          src="/assets/branding/logo-fullname.png"
-          [alt]="'documents.brand.aria' | translate"
-          title="FalconCare brand"
-          class="documents-brand-logo"
-        />
-      </div>
-    </div>
-
-    <div class="documents-nav-wrap">
-      <nav class="documents-nav">
-        <a
-          routerLink="/doctor-panel"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">{{ 'documents.nav.panel' | translate }}</span>
-        </a>
-        <a
-          routerLink="/appointments"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">{{ 'documents.nav.agenda' | translate }}</span>
-        </a>
-        <a
-          routerLink="/documents"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">{{ 'documents.nav.documents' | translate }}</span>
-        </a>
-        <a
-          routerLink="/settings"
-          routerLinkActive="bg-primary/10 text-primary font-bold"
-          class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
-        >
-          <span class="text-sm">{{ 'documents.nav.settings' | translate }}</span>
-        </a>
-      </nav>
-    </div>
-  </header>
-
+<app-clinic-page-shell>
   <section class="documents-layout">
     <aside class="documents-left">
       <div class="documents-left-header">
         <div class="documents-breadcrumbs">
-          <a routerLink="/documents">{{ 'documents.nav.documents' | translate }}</a>
+          <a routerLink="/documents">{{ 'clinic.nav.documents' | translate }}</a>
           <span>/</span>
           <strong>{{ selectedPatientName }}</strong>
         </div>
@@ -353,4 +306,4 @@
       </div>
     </aside>
   </section>
-</main>
+</app-clinic-page-shell>

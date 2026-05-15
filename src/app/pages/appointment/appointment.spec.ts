@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AppointmentComponent } from './appointment';
 import { Appointment, AppointmentService } from '../../services/appointment.service';
@@ -9,7 +10,7 @@ describe('AppointmentComponent', () => {
   let component: AppointmentComponent;
   let fixture: ComponentFixture<AppointmentComponent>;
   let appointmentService: jasmine.SpyObj<AppointmentService>;
-  let router: jasmine.SpyObj<Router>;
+  let router: Router;
 
   const baseAppointments: Appointment[] = [
     {
@@ -76,8 +77,6 @@ describe('AppointmentComponent', () => {
       'openAppointment',
       'closeAppointment',
     ]);
-    router = jasmine.createSpyObj<Router>('Router', ['navigate']);
-
     appointmentService.getAppointments.and.returnValue(of(baseAppointments));
     appointmentService.getWeeklyAppointments.and.returnValue(of(baseAppointments));
     appointmentService.getSetupFormData.and.returnValue(of(setupData));
@@ -98,12 +97,15 @@ describe('AppointmentComponent', () => {
     }));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentComponent],
+      imports: [AppointmentComponent, TranslateModule.forRoot()],
       providers: [
+        provideRouter([]),
         { provide: AppointmentService, useValue: appointmentService },
-        { provide: Router, useValue: router },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate');
 
     fixture = TestBed.createComponent(AppointmentComponent);
     component = fixture.componentInstance;

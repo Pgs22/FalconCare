@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  font-family: Outfit, sans-serif;
+}
+
+.clinic-topbar {
+  z-index: 10;
+  display: flex;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0.75rem 1.5rem;
+}
+
+.clinic-topbar__brand-wrap,
+.clinic-topbar__nav-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.clinic-topbar__brand {
+  display: flex;
+  align-items: center;
+}
+
+.clinic-topbar__logo {
+  display: block;
+  height: auto;
+  max-height: 4rem;
+  width: 100%;
+  object-fit: contain;
+}
+
+.clinic-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (width <= 1200px) {
+  .clinic-topbar {
+    padding: 0.65rem 1rem;
+  }
+
+  .clinic-topbar__logo {
+    max-height: 3.25rem;
+  }
+
+  .clinic-topbar__nav {
+    gap: 0.35rem;
+  }
+}
+
+@media (width <= 980px) {
+  .clinic-topbar {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .clinic-topbar__logo {
+    max-height: 2.5rem;
+  }
+}

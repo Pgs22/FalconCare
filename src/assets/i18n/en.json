@@ -385,6 +385,16 @@
       "loadPatientGeneric": "Could not load patient. Verify it exists or return to doctor panel."
     }
   },
+  "clinic": {
+    "brand": { "aria": "FalconCare Dental Clinic" },
+    "nav": {
+      "aria": "Main navigation",
+      "panel": "Panel",
+      "agenda": "Schedule",
+      "documents": "Documents",
+      "settings": "Settings"
+    }
+  },
   "documents": {
     "brand": { "aria": "FalconCare Dental Clinic" },
     "nav": { "panel": "Panel", "agenda": "Schedule", "documents": "Documents", "settings": "Settings" },

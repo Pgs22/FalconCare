@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ClinicPageShellComponent } from '../../shared/clinic-layout';
 import { AppointmentComponent } from './appointment';
 
 /**
@@ -9,9 +10,11 @@ import { AppointmentComponent } from './appointment';
 @Component({
   standalone: true,
   selector: 'app-appointment-page',
-  imports: [AppointmentComponent],
+  imports: [ClinicPageShellComponent, AppointmentComponent],
   template: `
-    <app-appointment></app-appointment>
+    <app-clinic-page-shell>
+      <app-appointment />
+    </app-clinic-page-shell>
   `,
   styles: [
     `

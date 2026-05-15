@@ -2,7 +2,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ClinicPageShellComponent } from '../../shared/clinic-layout';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { auditTime, catchError, concatMap, finalize, from, map, of, Subscription, switchMap, toArray } from 'rxjs';
 
@@ -39,7 +40,7 @@ const DOCUMENT_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 @Component({
   standalone: true,
   selector: 'app-documents-page',
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, DatePipe, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterLink, DatePipe, TranslateModule, ClinicPageShellComponent],
   templateUrl: './documents.page.html',
   styleUrl: './documents.page.css',
 })

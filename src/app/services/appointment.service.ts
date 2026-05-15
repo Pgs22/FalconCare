@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
+
+import { environment } from '../../environments/environment';
 import { extractApiCollection } from '../models/appointment-api.util';
 
 export const APPOINTMENT_STATUSES = [
@@ -63,10 +65,9 @@ export interface Appointment {
   providedIn: 'root',
 })
 export class AppointmentService {
-  
-  private apiUrl = 'http://localhost:8000/api/appointment';
-  private patientsUrl = 'http://localhost:8000/api/patients';
-  private treatmentsUrl = 'http://localhost:8000/api/treatments';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/appointment`;
+  private readonly patientsUrl = `${environment.apiBaseUrl}/api/patients`;
+  private readonly treatmentsUrl = `${environment.apiBaseUrl}/api/treatments`;
 
   constructor(private http: HttpClient) {}
 
@@ -89,30 +90,28 @@ export class AppointmentService {
   }
 
   createAppointment(appointmentData: any): Observable<any> {
-    const opts = { withCredentials: true };
     const isNotFound = (err: unknown): boolean => {
       const status = (err as { status?: number } | null)?.status;
       return status === 404;
     };
 
-    return this.http.post(`${this.apiUrl}/create`, appointmentData, opts).pipe(
+    return this.http.post(`${this.apiUrl}/create`, appointmentData).pipe(
       catchError((err) => {
         if (!isNotFound(err)) {
           return throwError(() => err);
         }
-        return this.http.post(this.apiUrl, appointmentData, opts);
+        return this.http.post(this.apiUrl, appointmentData);
       })
     );
   }
 
   closeAppointment(id: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/close`, {}, { withCredentials: true });
+    return this.http.post(`${this.apiUrl}/${id}/close`, {});
   }
 
   updateAppointmentStatus(id: number, nextStatus: ManualAppointmentStatus | string): Observable<AppointmentStatusUpdateResponse> {
     const canonicalStatus = this.normalizeAppointmentStatus(nextStatus);
     const requestOptions = {
-      withCredentials: true,
       responseType: 'text' as const,
     };
 
@@ -134,21 +133,19 @@ export class AppointmentService {
   }
 
   getAppointmentStatuses(): Observable<AppointmentStatusesResponse> {
-    return this.http.get<AppointmentStatusesResponse>(`${this.apiUrl}/statuses`, { withCredentials: true });
+    return this.http.get<AppointmentStatusesResponse>(`${this.apiUrl}/statuses`);
   }
 
   openAppointment(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${id}/open`, { withCredentials: true });
+    return this.http.get(`${this.apiUrl}/${id}/open`);
   }
 
   updateAppointment(id: number, payload: Record<string, unknown>): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/update`, payload, { withCredentials: true });
+    return this.http.put(`${this.apiUrl}/${id}/update`, payload);
   }
 
   deleteAppointment(id: number): Observable<any> {
-    const opts = { withCredentials: true };
-
-    return this.http.delete(`${this.apiUrl}/${id}`, opts);
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
   getPatients(): Observable<any[]> {
@@ -233,7 +230,7 @@ export class AppointmentService {
       .pipe(map(extractApiCollection));
 
     const fromAppointmentsPlural = this.http
-      .get<unknown>('http://localhost:8000/api/appointments', {
+      .get<unknown>(`${environment.apiBaseUrl}/api/appointments`, {
         params: new HttpParams().set('patientId', idStr),
       })
       .pipe(map(extractApiCollection));

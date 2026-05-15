@@ -1,0 +1,46 @@
+<header class="clinic-topbar">
+  <div class="clinic-topbar__brand-wrap">
+    <div class="clinic-topbar__brand" [attr.aria-label]="'clinic.brand.aria' | translate">
+      <img
+        src="/assets/branding/logo-fullname.png"
+        [alt]="'clinic.brand.aria' | translate"
+        title="FalconCare brand"
+        class="clinic-topbar__logo"
+      />
+    </div>
+  </div>
+
+  <div class="clinic-topbar__nav-wrap">
+    <nav class="clinic-topbar__nav" [attr.aria-label]="'clinic.nav.aria' | translate">
+      <a
+        routerLink="/doctor-panel"
+        routerLinkActive="bg-primary/10 text-primary font-bold"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
+      >
+        <span class="text-sm">{{ 'clinic.nav.panel' | translate }}</span>
+      </a>
+      <a
+        routerLink="/appointments"
+        routerLinkActive="bg-primary/10 text-primary font-bold"
+        class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
+      >
+        <span class="text-sm">{{ 'clinic.nav.agenda' | translate }}</span>
+      </a>
+      <a
+        routerLink="/documents"
+        routerLinkActive="bg-primary/10 text-primary font-bold"
+        class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
+      >
+        <span class="text-sm">{{ 'clinic.nav.documents' | translate }}</span>
+      </a>
+      <a
+        routerLink="/settings"
+        routerLinkActive="bg-primary/10 text-primary font-bold"
+        class="flex items-center justify-center px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400"
+      >
+        <span class="text-sm">{{ 'clinic.nav.settings' | translate }}</span>
+      </a>
+    </nav>
+  </div>
+</header>

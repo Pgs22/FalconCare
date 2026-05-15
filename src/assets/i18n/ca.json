@@ -385,6 +385,16 @@
       "loadPatientGeneric": "No s'ha pogut carregar el pacient. Verifica que existeixi o torna al panell del doctor."
     }
   },
+  "clinic": {
+    "brand": { "aria": "Clínica Dental FalconCare" },
+    "nav": {
+      "aria": "Navegació principal",
+      "panel": "Panell",
+      "agenda": "Agenda",
+      "documents": "Documents",
+      "settings": "Ajustos"
+    }
+  },
   "documents": {
     "brand": { "aria": "Clínica Dental FalconCare" },
     "nav": { "panel": "Panell", "agenda": "Agenda", "documents": "Documents", "settings": "Ajustos" },
