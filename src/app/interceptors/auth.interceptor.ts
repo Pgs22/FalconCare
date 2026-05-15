@@ -23,7 +23,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isRegisterDoctor = url === REGISTER_DOCTOR_URL;
   const isDocs = url.startsWith(DOCS_PREFIX);
   const isHealth = url === HEALTH_URL;
-  const isPublicPatientRegister = req.method === 'POST' && url.includes('/api/patients');
+  /** Solo registro público en la colección exacta; `/api/patients/new` requiere JWT. */
+  const isPublicPatientRegister =
+    req.method === 'POST' && (url === PATIENTS_COLLECTION_URL || url === `${PATIENTS_COLLECTION_URL}/`);
 
   if (
     !isApiCall ||
