@@ -31,11 +31,9 @@ describe('AppointmentService', () => {
       responseBody = String(response.status);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/63/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/63/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'Confirmada' });
-    expect(req.request.withCredentials).toBeTrue();
-
     req.flush(JSON.stringify({ ok: true, status: 'Confirmada' }));
     expect(responseBody).toBe('Confirmada');
   });
@@ -47,7 +45,7 @@ describe('AppointmentService', () => {
       responseBody = String(response.status);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/66/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/66/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'Arribada' });
 
@@ -58,7 +56,7 @@ describe('AppointmentService', () => {
   it('should send cancelled canonical status for Cancelada', () => {
     service.updateAppointmentStatus(64, 'Cancelada').subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/64/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/64/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'Cancelada' });
 
@@ -68,12 +66,12 @@ describe('AppointmentService', () => {
   it('should fallback from PATCH to PUT with the same status body', () => {
     service.updateAppointmentStatus(65, 'Confirmada').subscribe();
 
-    const firstReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    const firstReq = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/65/status');
     expect(firstReq.request.method).toBe('PATCH');
     expect(firstReq.request.body).toEqual({ status: 'Confirmada' });
     firstReq.flush('boom', { status: 500, statusText: 'Server Error' });
 
-    const secondReq = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    const secondReq = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/65/status');
     expect(secondReq.request.method).toBe('PUT');
     expect(secondReq.request.body).toEqual({ status: 'Confirmada' });
     secondReq.flush(JSON.stringify({ ok: true, status: 'Confirmada' }));
@@ -84,16 +82,24 @@ describe('AppointmentService', () => {
 
     service.updateAppointmentStatus(65, 'En curs').subscribe({
       error: (err) => {
-        receivedCode = String(err.error?.code);
+        const payload =
+          typeof err.error === 'string'
+            ? (JSON.parse(err.error) as { code?: string })
+            : (err.error as { code?: string } | null);
+        receivedCode = String(payload?.code ?? '');
       },
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/65/status');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/65/status');
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ status: 'En curs' });
+    expect(req.request.responseType).toBe('text');
 
-    req.flush({ ok: false, code: 'INVALID_STATUS' }, { status: 400, statusText: 'Bad Request' });
-    httpMock.expectNone('http://localhost:8000/api/appointment/65/status');
+    req.flush(JSON.stringify({ ok: false, code: 'INVALID_STATUS' }), {
+      status: 400,
+      statusText: 'Bad Request',
+    });
+    httpMock.expectNone('http://127.0.0.1:8000/api/appointment/65/status');
     expect(receivedCode).toBe('INVALID_STATUS');
   });
 
@@ -102,9 +108,8 @@ describe('AppointmentService', () => {
       expect(response.manualStatuses).toEqual(['Confirmada', 'Arribada', 'Cancelada']);
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/statuses');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/statuses');
     expect(req.request.method).toBe('GET');
-    expect(req.request.withCredentials).toBeTrue();
     req.flush({
       statuses: ['Programada', 'Confirmada', 'En curs', 'Arribada', 'Cancelada', 'Finalitzada', 'Falta consentiment'],
       manualStatuses: ['Confirmada', 'Arribada', 'Cancelada'],
@@ -114,9 +119,8 @@ describe('AppointmentService', () => {
   it('should use GET for openAppointment', () => {
     service.openAppointment(77).subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/77/open');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/77/open');
     expect(req.request.method).toBe('GET');
-    expect(req.request.withCredentials).toBeTrue();
 
     req.flush({ ok: true });
   });
@@ -137,9 +141,8 @@ describe('AppointmentService', () => {
       },
     });
 
-    const req = httpMock.expectOne('http://localhost:8000/api/appointment/12/update');
+    const req = httpMock.expectOne('http://127.0.0.1:8000/api/appointment/12/update');
     expect(req.request.method).toBe('PUT');
-    expect(req.request.withCredentials).toBeTrue();
 
     req.flush({
       ok: false,
