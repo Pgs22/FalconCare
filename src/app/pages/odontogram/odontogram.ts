@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { concatMap, from, map, of, switchMap, toArray } from 'rxjs';
 import {
   OdontogramFace,
   OdontogramFaceInteraction,
@@ -55,10 +56,29 @@ type ColorMode = {
   visualType: string;
 };
 
+type TreatmentItem = {
+  id: number;
+  name: string;
+  pathologyTypeName: string;
+  duration: number | null;
+  status: string | null;
+  description?: string | null;
+  notes?: string | null;
+  isPending?: boolean;
+};
+
+type TreatmentDraft = {
+  name: string;
+  description: string;
+  duration: number;
+  status: string;
+  notes: string;
+};
+
 @Component({
   selector: 'app-odontogram',
   standalone: true,
-  imports: [CommonModule, OdontogramToothComponent],
+  imports: [CommonModule, FormsModule, OdontogramToothComponent],
   templateUrl: './odontogram.html',
   styleUrl: './odontogram.css',
 })
@@ -80,13 +100,33 @@ export class OdontogramComponent implements OnInit {
   isEraseMode = false;
   isBatchSelectionMode = false;
   isBatchSelecting = false;
+  isTreatmentsModalOpen = false;
+  isTreatmentsLoading = false;
+  isTreatmentFormOpen = false;
+  isCreatingTreatment = false;
+  isTreatmentStatusModalOpen = false;
+  isUpdatingTreatmentStatus = false;
   loadError: string | null = null;
   saveFeedback: string | null = null;
+  treatmentsError: string | null = null;
+  treatmentFormError: string | null = null;
+  treatmentFormSuccess: string | null = null;
+  treatmentStatusError: string | null = null;
   odontogramId: number | null = null;
   patientId: number | null = null;
   visitId: number | null = null;
   selectedProtocolId: number | null = null;
   selectedColorModeId: ColorMode['id'] = 'pending';
+  treatments: TreatmentItem[] = [];
+  persistedTreatments: TreatmentItem[] = [];
+  treatmentDraft: TreatmentDraft = this.createEmptyTreatmentDraft();
+  editingTreatmentId: number | null = null;
+  selectedTreatmentForStatus: TreatmentItem | null = null;
+  editingTreatmentStatus = 'Actiu';
+  private nextPendingTreatmentId = -1;
+  private readonly pendingCreatedTreatments: TreatmentItem[] = [];
+  private readonly pendingTreatmentStatusUpdates = new Map<number, string>();
+  private readonly pendingDeletedTreatmentIds = new Set<number>();
 
   readonly protocolsFallback: ProtocolItem[] = [
     { id: 1, label: 'Càries', accentColor: '#FF0000' },
@@ -148,6 +188,11 @@ export class OdontogramComponent implements OnInit {
     this.batchSelection.clear();
   }
 
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.closeTreatmentsModal();
+  }
+
   selectTooth(tooth: ToothItem): void {
     this.selectedTooth = tooth;
   }
@@ -190,6 +235,213 @@ export class OdontogramComponent implements OnInit {
   toggleBatchSelectionMode(): void {
     this.isBatchSelectionMode = !this.isBatchSelectionMode;
     this.clearBatchSelection();
+  }
+
+  openTreatmentsModal(): void {
+    if (!this.patientId) {
+      this.treatmentsError = 'No s\'han pogut identificar els tractaments del pacient.';
+      this.isTreatmentsModalOpen = true;
+      return;
+    }
+
+    this.isTreatmentsModalOpen = true;
+    this.isTreatmentsLoading = true;
+    this.treatmentsError = null;
+    this.treatmentFormError = null;
+    this.treatmentFormSuccess = null;
+
+    this.odontogramService.getPatientTreatments(this.patientId).subscribe({
+      next: (response: unknown) => {
+        const list = Array.isArray(response) ? response : [];
+        this.persistedTreatments = list
+          .map((item) => this.mapTreatmentItem(item))
+          .filter((item): item is TreatmentItem => item !== null);
+        this.rebuildTreatmentsList();
+        this.isTreatmentsLoading = false;
+      },
+      error: (error: unknown) => {
+        console.error('Failed to load patient treatments for odontogram.', error);
+        this.persistedTreatments = [];
+        this.rebuildTreatmentsList();
+        this.treatmentsError = 'No s\'han pogut carregar els tractaments del pacient.';
+        this.isTreatmentsLoading = false;
+      },
+    });
+  }
+
+  closeTreatmentsModal(): void {
+    this.isTreatmentsModalOpen = false;
+    this.isTreatmentFormOpen = false;
+    this.isCreatingTreatment = false;
+    this.closeTreatmentStatusModal();
+    this.treatmentFormError = null;
+    this.treatmentFormSuccess = null;
+    this.treatmentDraft = this.createEmptyTreatmentDraft();
+  }
+
+  trackByTreatment(_index: number, treatment: TreatmentItem): number {
+    return treatment.id;
+  }
+
+  openTreatmentForm(): void {
+    this.isTreatmentsModalOpen = true;
+    this.isTreatmentFormOpen = true;
+    this.isTreatmentsLoading = true;
+    this.closeTreatmentStatusModal();
+    this.treatmentsError = null;
+    this.treatmentFormError = null;
+    this.treatmentFormSuccess = null;
+    this.treatmentDraft = this.createEmptyTreatmentDraft();
+    this.reloadTreatments();
+  }
+
+  openCreateTreatmentModal(): void {
+    this.openTreatmentForm();
+  }
+
+  cancelTreatmentForm(): void {
+    this.isTreatmentFormOpen = false;
+    this.isCreatingTreatment = false;
+    this.treatmentFormError = null;
+    this.treatmentFormSuccess = null;
+    this.treatmentDraft = this.createEmptyTreatmentDraft();
+  }
+
+  editTreatment(treatment: TreatmentItem): void {
+    this.selectedTreatmentForStatus = treatment;
+    this.editingTreatmentId = treatment.id;
+    this.editingTreatmentStatus = treatment.status ?? 'Actiu';
+    this.treatmentStatusError = null;
+    this.isTreatmentStatusModalOpen = true;
+  }
+
+  submitTreatmentForm(): void {
+    const name = this.treatmentDraft.name.trim();
+    const description = this.treatmentDraft.description.trim();
+    const duration = Number(this.treatmentDraft.duration);
+    const status = this.treatmentDraft.status.trim();
+
+    if (!this.visitId) {
+      this.treatmentFormError = 'No s\'ha trobat la cita oberta per vincular el tractament.';
+      return;
+    }
+
+    if (!name) {
+      this.treatmentFormError = 'El nom del tractament és obligatori.';
+      return;
+    }
+
+    if (!description) {
+      this.treatmentFormError = 'La descripció del tractament és obligatòria.';
+      return;
+    }
+
+    if (!Number.isFinite(duration) || duration < 1) {
+      this.treatmentFormError = 'La durada ha de ser superior a 0 minuts.';
+      return;
+    }
+
+    if (!status) {
+      this.treatmentFormError = 'L\'estat del tractament és obligatori.';
+      return;
+    }
+
+    this.isCreatingTreatment = true;
+    this.treatmentFormError = null;
+    this.treatmentFormSuccess = null;
+
+    this.odontogramService.createTreatment({
+      treatmentName: name,
+      description,
+      estimatedDuration: duration,
+      status,
+      schedulingNotes: this.treatmentDraft.notes.trim() || null,
+      pathology_ids: this.getLinkedPathologyIds(),
+      appointment_id: this.visitId,
+    });
+
+    const pendingTreatment: TreatmentItem = {
+      id: this.nextPendingTreatmentId--,
+      name,
+      pathologyTypeName: this.getPendingTreatmentPathologyLabel(),
+      duration,
+      status,
+      description,
+      notes: this.treatmentDraft.notes.trim() || null,
+      isPending: true,
+    };
+
+    this.pendingCreatedTreatments.push(pendingTreatment);
+    this.rebuildTreatmentsList();
+    this.treatmentFormSuccess = 'Tractament preparat. Es desarà en tancar la cita.';
+    this.isCreatingTreatment = false;
+    this.isTreatmentFormOpen = false;
+    this.treatmentDraft = this.createEmptyTreatmentDraft();
+  }
+
+  closeTreatmentStatusModal(): void {
+    this.isTreatmentStatusModalOpen = false;
+    this.isUpdatingTreatmentStatus = false;
+    this.selectedTreatmentForStatus = null;
+    this.editingTreatmentId = null;
+    this.editingTreatmentStatus = 'Actiu';
+    this.treatmentStatusError = null;
+  }
+
+  submitTreatmentStatusUpdate(): void {
+    if (!this.editingTreatmentId) {
+      this.treatmentStatusError = 'No s\'ha trobat el tractament a editar.';
+      return;
+    }
+
+    const status = this.editingTreatmentStatus.trim();
+    if (!status) {
+      this.treatmentStatusError = 'L\'estat del tractament és obligatori.';
+      return;
+    }
+
+    this.isUpdatingTreatmentStatus = true;
+    this.treatmentStatusError = null;
+
+    if (this.editingTreatmentId < 0) {
+      const pendingTreatment = this.pendingCreatedTreatments.find((treatment) => treatment.id === this.editingTreatmentId);
+      if (pendingTreatment) {
+        pendingTreatment.status = status;
+      }
+    } else {
+      this.pendingDeletedTreatmentIds.delete(this.editingTreatmentId);
+      this.pendingTreatmentStatusUpdates.set(this.editingTreatmentId, status);
+    }
+
+    this.rebuildTreatmentsList();
+    this.isUpdatingTreatmentStatus = false;
+    this.treatmentFormSuccess = 'Estat preparat. Es desarà en tancar la cita.';
+    this.closeTreatmentStatusModal();
+  }
+
+  deleteTreatmentFromStatusModal(): void {
+    if (!this.editingTreatmentId) {
+      this.treatmentStatusError = 'No s\'ha trobat el tractament a esborrar.';
+      return;
+    }
+
+    if (this.editingTreatmentId < 0) {
+      const pendingIndex = this.pendingCreatedTreatments.findIndex((treatment) => treatment.id === this.editingTreatmentId);
+      if (pendingIndex >= 0) {
+        this.pendingCreatedTreatments.splice(pendingIndex, 1);
+      }
+    } else {
+      this.pendingDeletedTreatmentIds.add(this.editingTreatmentId);
+      this.pendingTreatmentStatusUpdates.delete(this.editingTreatmentId);
+    }
+
+    this.rebuildTreatmentsList();
+    this.treatmentFormSuccess = 'Tractament marcat per esborrar. Es desarà en tancar la cita.';
+    this.closeTreatmentStatusModal();
+  }
+
+  getLinkedPathologyCount(): number {
+    return this.getLinkedPathologyIds().length;
   }
 
   clearBatchSelection(): void {
@@ -281,9 +533,9 @@ export class OdontogramComponent implements OnInit {
     this.isSaving = true;
     this.saveFeedback = null;
 
-    this.odontogramService
-      .syncDetails(this.odontogramId, this.buildSyncEntries())
+    this.persistPendingTreatmentChanges()
       .pipe(
+        switchMap(() => this.odontogramService.syncDetails(this.odontogramId!, this.buildSyncEntries())),
         switchMap(() => this.odontogramService.getOdontogram(this.odontogramId!)),
         switchMap((odontogram: OdontogramApi) => {
           this.applyOdontogramState(odontogram);
@@ -396,6 +648,7 @@ export class OdontogramComponent implements OnInit {
 
     const patientId = Number(this.route.snapshot.queryParamMap.get('patientId'));
     const visitId = Number(this.route.snapshot.queryParamMap.get('visitId'));
+    const odontogramId = Number(this.route.snapshot.queryParamMap.get('odontogramId'));
 
     if (!Number.isFinite(patientId) || patientId < 1 || !Number.isFinite(visitId) || visitId < 1) {
       this.loadError = 'No s\'ha rebut una cita valida per obrir l\'odontograma.';
@@ -403,13 +656,31 @@ export class OdontogramComponent implements OnInit {
       return;
     }
 
-    this.odontogramService.openOdontogram(patientId, visitId).subscribe({
-      next: ({ odontogram }: OpenOdontogramResponse) => {
+    const loadRequest = Number.isFinite(odontogramId) && odontogramId > 0
+      ? this.odontogramService.getOdontogram(odontogramId)
+      : this.appointmentService.openAppointment(visitId).pipe(
+          switchMap((response: unknown) => {
+            const resolvedOdontogramId = this.extractOdontogramIdFromAppointmentOpenResponse(response);
+
+            if (resolvedOdontogramId !== null) {
+              return this.odontogramService.getOdontogram(resolvedOdontogramId);
+            }
+
+            return this.odontogramService.openOdontogram(patientId, visitId).pipe(
+              switchMap(({ odontogram }: OpenOdontogramResponse) =>
+                this.odontogramService.getOdontogram(odontogram.id)
+              )
+            );
+          })
+        );
+
+    loadRequest.subscribe({
+      next: (odontogram: OdontogramApi) => {
         this.applyOdontogramState(odontogram);
         this.finishLoading();
       },
       error: (error: unknown) => {
-        console.error('Failed to open the fixed odontogram.', error);
+        console.error('Failed to load the odontogram.', error);
         this.loadError = 'No s\'ha pogut carregar l\'odontograma.';
         this.finishLoading();
       },
@@ -444,8 +715,20 @@ export class OdontogramComponent implements OnInit {
   }
 
   private applyOdontogramState(odontogram: OdontogramApi): void {
+    const nextPatientId = odontogram.patient_id;
+    if (this.patientId !== nextPatientId) {
+      this.treatments = [];
+      this.persistedTreatments = [];
+      this.treatmentsError = null;
+      this.isTreatmentsLoading = false;
+      this.isTreatmentsModalOpen = false;
+      this.pendingCreatedTreatments.splice(0, this.pendingCreatedTreatments.length);
+      this.pendingTreatmentStatusUpdates.clear();
+      this.pendingDeletedTreatmentIds.clear();
+    }
+
     this.odontogramId = odontogram.id;
-    this.patientId = odontogram.patient_id;
+    this.patientId = nextPatientId;
     this.visitId = odontogram.visit_id;
     this.faceMarkMap.clear();
 
@@ -497,6 +780,160 @@ export class OdontogramComponent implements OnInit {
         visualType,
       });
     }
+  }
+
+  private mapTreatmentItem(raw: unknown): TreatmentItem | null {
+    if (!raw || typeof raw !== 'object') {
+      return null;
+    }
+
+    const record = raw as Record<string, unknown>;
+    const id = this.toPositiveNumber(record['treatmentId'] ?? record['id']);
+    const name = this.toNonEmptyString(record['treatmentName'] ?? record['name']);
+
+    if (id === null || name === null) {
+      return null;
+    }
+
+    return {
+      id,
+      name,
+      pathologyTypeName: this.toNonEmptyString(record['pathologyTypeName']) ?? 'Sense tipus',
+      duration: this.toPositiveNumber(record['duration']),
+      status: this.toNonEmptyString(record['status_real'] ?? record['status']),
+      description: this.toNonEmptyString(record['description']),
+      notes: this.toNonEmptyString(record['schedulingNotes']),
+    };
+  }
+
+  private toPositiveNumber(value: unknown): number | null {
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      return null;
+    }
+
+    return parsed;
+  }
+
+  private toNonEmptyString(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = value.trim();
+    return normalized ? normalized : null;
+  }
+
+  private reloadTreatments(): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.isTreatmentsLoading = true;
+    this.treatmentsError = null;
+
+    this.odontogramService.getPatientTreatments(this.patientId).subscribe({
+      next: (response: unknown) => {
+        const list = Array.isArray(response) ? response : [];
+        this.persistedTreatments = list
+          .map((item) => this.mapTreatmentItem(item))
+          .filter((item): item is TreatmentItem => item !== null);
+        this.rebuildTreatmentsList();
+        this.isTreatmentsLoading = false;
+      },
+      error: (error: unknown) => {
+        console.error('Failed to reload patient treatments for odontogram.', error);
+        this.persistedTreatments = [];
+        this.rebuildTreatmentsList();
+        this.treatmentsError = 'No s\'han pogut carregar els tractaments del pacient.';
+        this.isTreatmentsLoading = false;
+      },
+    });
+  }
+
+  private getLinkedPathologyIds(): number[] {
+    return Array.from(
+      new Set(
+        Array.from(this.faceMarkMap.values())
+          .map((mark) => mark.pathologyId)
+          .filter((pathologyId): pathologyId is number => pathologyId !== null && pathologyId > 0)
+      )
+    );
+  }
+
+  private createEmptyTreatmentDraft(): TreatmentDraft {
+    return {
+      name: '',
+      description: '',
+      duration: 30,
+      status: 'Actiu',
+      notes: '',
+    };
+  }
+
+  private rebuildTreatmentsList(): void {
+    const mergedPersistedTreatments = this.persistedTreatments.map((treatment) => ({
+      ...treatment,
+      status: this.pendingTreatmentStatusUpdates.get(treatment.id) ?? treatment.status,
+      isPending: this.pendingTreatmentStatusUpdates.has(treatment.id),
+    }))
+      .filter((treatment) => !this.pendingDeletedTreatmentIds.has(treatment.id));
+
+    this.treatments = [...mergedPersistedTreatments, ...this.pendingCreatedTreatments];
+  }
+
+  private getPendingTreatmentPathologyLabel(): string {
+    const protocol = this.getSelectedProtocol();
+    return protocol?.label ?? 'Sense tipus';
+  }
+
+  private persistPendingTreatmentChanges() {
+    if (!this.visitId) {
+      return of(void 0);
+    }
+
+    const createRequests = this.pendingCreatedTreatments.map((treatment) => ({
+      treatmentName: treatment.name,
+      description: treatment.description ?? 'Creat des de l\'odontograma',
+      estimatedDuration: treatment.duration ?? 30,
+      status: treatment.status ?? 'Actiu',
+      schedulingNotes: treatment.notes ?? null,
+      pathology_ids: this.getLinkedPathologyIds(),
+      appointment_id: this.visitId!,
+    }));
+
+    const statusUpdateRequests = Array.from(this.pendingTreatmentStatusUpdates.entries()).map(([id, status]) => ({
+      id,
+      status,
+    }))
+      .filter(({ id }) => !this.pendingDeletedTreatmentIds.has(id));
+
+    const deleteRequests = Array.from(this.pendingDeletedTreatmentIds.values());
+
+    return from(createRequests).pipe(
+      concatMap((payload) => this.odontogramService.createTreatment(payload)),
+      toArray(),
+      switchMap(() =>
+        from(statusUpdateRequests).pipe(
+          concatMap(({ id, status }) => this.odontogramService.updateTreatment(id, { status })),
+          toArray(),
+          switchMap(() =>
+            from(deleteRequests).pipe(
+              concatMap((id) => this.odontogramService.deleteTreatment(id)),
+              toArray(),
+              map(() => void 0)
+            )
+          )
+        )
+      ),
+      switchMap(() => {
+        this.pendingCreatedTreatments.splice(0, this.pendingCreatedTreatments.length);
+        this.pendingTreatmentStatusUpdates.clear();
+        this.pendingDeletedTreatmentIds.clear();
+        return of(void 0);
+      })
+    );
   }
 
   private buildSyncEntries(): SyncOdontogramEntry[] {
@@ -576,6 +1013,10 @@ export class OdontogramComponent implements OnInit {
       this.isEraseMode = false;
       this.clearBatchSelection();
       this.isBatchSelectionMode = false;
+    }
+
+    if (this.selectedProtocolId === null && this.protocols.length > 0) {
+      this.selectedProtocolId = this.protocols[0].id;
     }
   }
 
@@ -678,5 +1119,27 @@ export class OdontogramComponent implements OnInit {
 
     const normalizedColor = color.trim().toUpperCase();
     return /^#[0-9A-F]{6}$/.test(normalizedColor) ? normalizedColor : null;
+  }
+
+  private extractOdontogramIdFromAppointmentOpenResponse(response: unknown): number | null {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    const payload = response as Record<string, unknown>;
+    const appointment = payload['appointment'];
+
+    return this.toPositiveNumberOrNull(payload['odontogramId'])
+      ?? this.toPositiveNumberOrNull(
+        appointment && typeof appointment === 'object'
+          ? (appointment as Record<string, unknown>)['odontogramId']
+          : null
+      );
+  }
+
+  private toPositiveNumberOrNull(value: unknown): number | null {
+    const numericValue = Number(value);
+
+    return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null;
   }
 }

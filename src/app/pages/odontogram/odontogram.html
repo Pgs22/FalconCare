@@ -146,100 +146,375 @@
       </section>
     </article>
 
-    <aside class="odontograma__protocol">
-      <header class="odontograma__protocol-header">
-        <div>
-          <p class="odontograma__eyebrow">Protocol</p>
-          <h2>Protocol de patologia</h2>
-        </div>
-        <button
-          type="button"
-          class="odontograma__add-button"
-          [attr.aria-expanded]="isProtocolPickerOpen"
-          (click)="toggleProtocolPicker()"
-        >
-          +
-        </button>
-      </header>
-
-      <div *ngIf="isProtocolPickerOpen" class="odontograma__picker" role="dialog" aria-label="Afegir patologia">
-        <p class="odontograma__picker-label">Afegir patologia des de la base de dades</p>
-
-        <div *ngIf="getAvailableProtocolsToAdd().length > 0; else noProtocolsToAdd" class="odontograma__picker-list">
-          <button
-            *ngFor="let protocol of getAvailableProtocolsToAdd(); trackBy: trackByProtocol"
-            type="button"
-            class="odontograma__picker-option"
-            (click)="addProtocol(protocol)"
-          >
-            {{ protocol.label }}
-          </button>
-        </div>
-      </div>
-
-      <ng-template #noProtocolsToAdd>
-        <p class="odontograma__picker-empty">No hi ha mes patologies disponibles per afegir.</p>
-      </ng-template>
-
-      <div *ngIf="getSelectedProtocol() as selectedProtocol" class="odontograma__filter-card">
-        <div class="odontograma__filter-copy">
-          <strong>{{ selectedProtocol.label }}</strong>
-          <span>Selecciona l'estat abans de pintar o esborrar.</span>
-        </div>
-
-        <div class="odontograma__color-modes">
-          <button
-            *ngFor="let colorMode of colorModes; trackBy: trackByColorMode"
-            type="button"
-            class="odontograma__color-mode"
-            [class.odontograma__color-mode--active]="selectedColorModeId === colorMode.id && !isEraseMode"
-            [style.--state-color]="colorMode.color"
-            (click)="selectColorMode(colorMode)"
-          >
-            {{ colorMode.label }}
-          </button>
-
+    <div class="odontograma__sidebar">
+      <aside class="odontograma__protocol">
+        <header class="odontograma__protocol-header">
+          <div>
+            <p class="odontograma__eyebrow">Protocol</p>
+            <h2>Protocol de patologia</h2>
+          </div>
           <button
             type="button"
-            class="odontograma__color-mode odontograma__color-mode--erase"
-            [class.odontograma__color-mode--active]="isEraseMode"
-            (click)="toggleEraseMode()"
+            class="odontograma__add-button"
+            [attr.aria-expanded]="isProtocolPickerOpen"
+            (click)="toggleProtocolPicker()"
           >
-            Esborrar marca
+            +
           </button>
+        </header>
+
+        <div *ngIf="isProtocolPickerOpen" class="odontograma__picker" role="dialog" aria-label="Afegir patologia">
+          <p class="odontograma__picker-label">Afegir patologia des de la base de dades</p>
+
+          <div *ngIf="getAvailableProtocolsToAdd().length > 0; else noProtocolsToAdd" class="odontograma__picker-list">
+            <button
+              *ngFor="let protocol of getAvailableProtocolsToAdd(); trackBy: trackByProtocol"
+              type="button"
+              class="odontograma__picker-option"
+              (click)="addProtocol(protocol)"
+            >
+              {{ protocol.label }}
+            </button>
+          </div>
         </div>
 
-      </div>
+        <ng-template #noProtocolsToAdd>
+          <p class="odontograma__picker-empty">No hi ha mes patologies disponibles per afegir.</p>
+        </ng-template>
 
-      <div class="odontograma__protocol-list">
-        <button
-          *ngFor="let protocol of protocols; trackBy: trackByProtocol"
-          type="button"
-          class="protocol"
-          [class.protocol--active]="selectedProtocolId === protocol.id"
-          [style.--protocol-accent]="protocol.accentColor"
-          (click)="selectProtocol(protocol)"
-        >
-          <span class="protocol__copy">
-            <strong>{{ protocol.label }}</strong>
-          </span>
-        </button>
+        <div *ngIf="getSelectedProtocol() as selectedProtocol" class="odontograma__filter-card">
+          <div class="odontograma__filter-copy">
+            <strong>{{ selectedProtocol.label }}</strong>
+            <span>Selecciona l'estat abans de pintar o esborrar.</span>
+          </div>
 
-        <p *ngIf="!hasVisibleProtocols()" class="odontograma__empty-state">
-          Encara no hi ha patologies afegides en aquest odontograma. Fes servir el botó <strong>+</strong> per començar.
+          <div class="odontograma__color-modes">
+            <button
+              *ngFor="let colorMode of colorModes; trackBy: trackByColorMode"
+              type="button"
+              class="odontograma__color-mode"
+              [class.odontograma__color-mode--active]="selectedColorModeId === colorMode.id && !isEraseMode"
+              [style.--state-color]="colorMode.color"
+              (click)="selectColorMode(colorMode)"
+            >
+              {{ colorMode.label }}
+            </button>
+
+            <button
+              type="button"
+              class="odontograma__color-mode odontograma__color-mode--erase"
+              [class.odontograma__color-mode--active]="isEraseMode"
+              (click)="toggleEraseMode()"
+            >
+              Esborrar marca
+            </button>
+          </div>
+        </div>
+
+        <div class="odontograma__protocol-list">
+          <button
+            *ngFor="let protocol of protocols; trackBy: trackByProtocol"
+            type="button"
+            class="protocol"
+            [class.protocol--active]="selectedProtocolId === protocol.id"
+            [style.--protocol-accent]="protocol.accentColor"
+            (click)="selectProtocol(protocol)"
+          >
+            <span class="protocol__copy">
+              <strong>{{ protocol.label }}</strong>
+            </span>
+          </button>
+
+          <p *ngIf="!hasVisibleProtocols()" class="odontograma__empty-state">
+            Encara no hi ha patologies afegides en aquest odontograma. Fes servir el botó <strong>+</strong> per començar.
+          </p>
+        </div>
+
+        <p *ngIf="!selectedProtocolId" class="odontograma__selection-hint">
+          Selecciona una patologia de la dreta per veure les marques guardades.
         </p>
-      </div>
+        <p *ngIf="selectedProtocolId && isEraseMode" class="odontograma__selection-hint">
+          Mode esborrar actiu: fes clic sobre una cara per eliminar la marca d'aquesta patologia.
+        </p>
+        <p *ngIf="selectedProtocolId && isBatchSelectionMode" class="odontograma__selection-hint">
+          Selecció múltiple activa: arrossega per diverses cares i s'aplicarà directament.
+        </p>
+      </aside>
 
-      <p *ngIf="!selectedProtocolId" class="odontograma__selection-hint">
-        Selecciona una patologia de la dreta per veure les marques guardades.
-      </p>
-      <p *ngIf="selectedProtocolId && isEraseMode" class="odontograma__selection-hint">
-        Mode esborrar actiu: fes clic sobre una cara per eliminar la marca d'aquesta patologia.
-      </p>
-      <p *ngIf="selectedProtocolId && isBatchSelectionMode" class="odontograma__selection-hint">
-        Selecció múltiple activa: arrossega per diverses cares i s'aplicarà directament.
-      </p>
-    </aside>
+      <aside class="odontograma__menu-panel">
+        <header class="odontograma__menu-header">
+          <div>
+            <p class="odontograma__eyebrow">Tractaments</p>
+            <h2>Tractaments del pacient</h2>
+          </div>
+        </header>
+
+        <div class="odontograma__menu-list">
+          <button
+            type="button"
+            class="odontograma__menu-item"
+            [disabled]="isLoading || !patientId"
+            (click)="openTreatmentsModal()"
+          >
+            <span class="odontograma__menu-copy">
+              <strong>Tractaments</strong>
+              <span>Consulta els tractaments actius del pacient</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="odontograma__menu-item"
+            [disabled]="isLoading || !visitId"
+            (click)="openCreateTreatmentModal()"
+          >
+            <span class="odontograma__menu-copy">
+              <strong>Crear tractament</strong>
+              <span>Afegeix un nou tractament vinculat a la cita oberta</span>
+            </span>
+          </button>
+        </div>
+      </aside>
+    </div>
   </section>
 </main>
+
+<div
+  *ngIf="isTreatmentsModalOpen"
+  class="odontograma__modal-backdrop"
+  role="presentation"
+  (click)="closeTreatmentsModal()"
+>
+  <section
+    class="odontograma__modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Tractaments del pacient"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="odontograma__modal-header">
+      <div>
+        <p class="odontograma__eyebrow">Tractaments</p>
+        <h2>{{ isTreatmentFormOpen ? 'Crear tractament' : 'Tractaments del pacient' }}</h2>
+      </div>
+
+      <div class="odontograma__modal-header-actions">
+        <button
+          type="button"
+          class="odontograma__modal-close"
+          aria-label="Tancar pop-up de tractaments"
+          (click)="closeTreatmentsModal()"
+        >
+          ×
+        </button>
+      </div>
+    </header>
+
+    <div *ngIf="isTreatmentFormOpen" class="odontograma__treatment-form">
+      <div class="odontograma__treatment-form-grid">
+        <label class="odontograma__field">
+          <span>Nom del tractament</span>
+          <input
+            type="text"
+            [(ngModel)]="treatmentDraft.name"
+            placeholder="Ex. Seguiment d'endodòncia"
+          />
+        </label>
+
+        <label class="odontograma__field">
+          <span>Durada estimada</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [(ngModel)]="treatmentDraft.duration"
+          />
+        </label>
+      </div>
+
+      <label class="odontograma__field">
+        <span>Descripció</span>
+        <textarea
+          rows="3"
+          [(ngModel)]="treatmentDraft.description"
+          placeholder="Descriu breument el tractament"
+        ></textarea>
+      </label>
+
+      <div class="odontograma__treatment-form-grid">
+        <label class="odontograma__field">
+          <span>Estat</span>
+          <select [(ngModel)]="treatmentDraft.status">
+            <option value="Actiu">Actiu</option>
+            <option value="Planificat">Planificat</option>
+            <option value="Pendent">Pendent</option>
+          </select>
+        </label>
+
+        <label class="odontograma__field">
+          <span>Notes de planificació</span>
+          <input
+            type="text"
+            [(ngModel)]="treatmentDraft.notes"
+            placeholder="Opcional"
+          />
+        </label>
+      </div>
+
+      <p class="odontograma__form-note">
+        Aquest tractament es vincularà a la cita oberta i s'associarà automàticament a {{ getLinkedPathologyCount() }} patologies del odontograma.
+      </p>
+
+      <p *ngIf="treatmentFormError" class="odontograma__modal-status odontograma__modal-status--error" role="alert">
+        {{ treatmentFormError }}
+      </p>
+
+      <div class="odontograma__treatment-form-actions">
+        <button
+          type="button"
+          class="odontograma__button odontograma__button--ghost odontograma__button--compact"
+          [disabled]="isCreatingTreatment"
+          (click)="cancelTreatmentForm()"
+        >
+          Cancel·lar
+        </button>
+
+        <button
+          type="button"
+          class="odontograma__button odontograma__button--primary odontograma__button--compact odontograma__save-treatment-button"
+          [disabled]="isCreatingTreatment"
+          (click)="submitTreatmentForm()"
+        >
+          {{ isCreatingTreatment ? 'Creant...' : 'Desar tractament' }}
+        </button>
+      </div>
+    </div>
+
+    <p *ngIf="!isTreatmentFormOpen && isTreatmentsLoading" class="odontograma__modal-status" aria-live="polite">
+      Carregant tractaments...
+    </p>
+
+    <p *ngIf="!isTreatmentFormOpen && !isTreatmentsLoading && treatmentsError" class="odontograma__modal-status odontograma__modal-status--error" role="alert">
+      {{ treatmentsError }}
+    </p>
+
+    <p *ngIf="!isTreatmentFormOpen && treatmentFormSuccess" class="odontograma__modal-status" role="status">
+      {{ treatmentFormSuccess }}
+    </p>
+
+    <p *ngIf="!isTreatmentFormOpen && treatments.length > 0" class="odontograma__modal-status">
+      Els canvis de tractaments només es guardaran en prémer <strong>Tancar cita</strong>.
+    </p>
+
+    <div *ngIf="!isTreatmentFormOpen && !isTreatmentsLoading && !treatmentsError && treatments.length > 0" class="odontograma__treatment-list">
+      <article *ngFor="let treatment of treatments; trackBy: trackByTreatment" class="odontograma__treatment-card">
+        <div class="odontograma__treatment-card-top">
+          <div class="odontograma__treatment-main">
+            <strong>{{ treatment.name }}</strong>
+            <span>{{ treatment.pathologyTypeName }}</span>
+            <span *ngIf="treatment.isPending" class="odontograma__pending-badge">Pendent de desar</span>
+          </div>
+
+          <button
+            type="button"
+            class="odontograma__button odontograma__button--ghost odontograma__button--compact"
+            (click)="editTreatment(treatment)"
+          >
+            Editar estat
+          </button>
+        </div>
+
+        <dl class="odontograma__treatment-meta">
+          <div>
+            <dt>Durada</dt>
+            <dd>{{ treatment.duration ?? 0 }} min</dd>
+          </div>
+
+          <div>
+            <dt>Estat</dt>
+            <dd>{{ treatment.status ?? 'Sense estat' }}</dd>
+          </div>
+        </dl>
+      </article>
+    </div>
+
+    <p *ngIf="!isTreatmentFormOpen && !isTreatmentsLoading && !treatmentsError && treatments.length === 0" class="odontograma__modal-empty">
+      Aquest pacient encara no té tractaments actius.
+    </p>
+
+    <div
+      *ngIf="isTreatmentStatusModalOpen"
+      class="odontograma__submodal-backdrop"
+      role="presentation"
+      (click)="closeTreatmentStatusModal()"
+    >
+      <section
+        class="odontograma__submodal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Editar estat del tractament"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="odontograma__submodal-header">
+          <div>
+            <p class="odontograma__eyebrow">Editar estat</p>
+            <h3>{{ selectedTreatmentForStatus?.name ?? 'Tractament' }}</h3>
+          </div>
+
+          <button
+            type="button"
+            class="odontograma__modal-close"
+            aria-label="Tancar pop-up d'estat"
+            (click)="closeTreatmentStatusModal()"
+          >
+            ×
+          </button>
+        </header>
+
+        <label class="odontograma__field">
+          <span>Estat</span>
+          <select [(ngModel)]="editingTreatmentStatus">
+            <option value="Actiu">Actiu</option>
+            <option value="Planificat">Planificat</option>
+            <option value="Pendent">Pendent</option>
+            <option value="Finalitzat">Finalitzat</option>
+          </select>
+        </label>
+
+        <p *ngIf="treatmentStatusError" class="odontograma__modal-status odontograma__modal-status--error" role="alert">
+          {{ treatmentStatusError }}
+        </p>
+
+        <div class="odontograma__treatment-form-actions">
+          <button
+            type="button"
+            class="odontograma__button odontograma__button--compact odontograma__delete-treatment-button"
+            [disabled]="isUpdatingTreatmentStatus"
+            (click)="deleteTreatmentFromStatusModal()"
+          >
+            Borrar tractament
+          </button>
+
+          <button
+            type="button"
+            class="odontograma__button odontograma__button--ghost odontograma__button--compact"
+            [disabled]="isUpdatingTreatmentStatus"
+            (click)="closeTreatmentStatusModal()"
+          >
+            Cancel·lar
+          </button>
+
+          <button
+            type="button"
+            class="odontograma__button odontograma__button--primary odontograma__button--compact odontograma__save-treatment-button"
+            [disabled]="isUpdatingTreatmentStatus"
+            (click)="submitTreatmentStatusUpdate()"
+          >
+            {{ isUpdatingTreatmentStatus ? 'Desant...' : 'Desar estat' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </section>
+</div>
 </ng-template>
