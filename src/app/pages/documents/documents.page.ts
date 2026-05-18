@@ -1,12 +1,13 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { auditTime, catchError, concatMap, finalize, from, map, of, Subscription, switchMap, toArray } from 'rxjs';
+import { Observable, auditTime, catchError, concatMap, finalize, from, map, of, Subscription, switchMap, toArray } from 'rxjs';
 
-import { belongsToPatientRelationStrict } from '../../models/patient-relation.util';
+import { belongsToPatientRelation } from '../../models/patient-relation.util';
 import { documentDisplayNameFromRaw, documentTypeForUpload } from '../../models/document-api.util';
 import type { Patient } from '../../models/patient.model';
 import { DocumentService } from '../../services/document.service';
@@ -14,8 +15,6 @@ import { PatientRealtimeService, type PatientRealtimeEvent } from '../../service
 import { PatientService } from '../../services/patient.service';
 
 type DocumentTab = 'all' | 'pan' | 'pa';
-type SnapSensitivity = 'low' | 'medium' | 'high';
-type SnapSensitivityMode = 'auto' | 'manual';
 
 type DocumentCard = {
   id: number;
@@ -27,25 +26,22 @@ type DocumentCard = {
   description: string;
   iconKind: 'image' | 'pdf' | 'other';
 };
-type ViewerAssetKind = 'none' | 'image' | 'pdf' | 'other';
-type MeasurePoint = { xPct: number; yPct: number };
-type StageSize = { width: number; height: number };
+type ViewerAssetKind = 'none' | 'image' | 'pdf' | 'text' | 'other';
+type PreviewKind = 'image' | 'pdf' | 'text' | 'other';
 
 const PATIENT_LIST_HEIGHT_STORAGE_KEY = 'falconcare_documents_patient_list_height_px';
-const CALIBRATION_LOCK_STORAGE_PREFIX = 'falconcare_documents_calibration_lock';
-const SNAP_SENSITIVITY_STORAGE_PREFIX = 'falconcare_documents_snap_sensitivity';
-const DOCUMENT_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+/** RAW / TAC / CBCT: el límite del servidor puede ser menor (413); aquí solo evitamos subidas absurdamente grandes en el cliente. */
+const DOCUMENT_MAX_UPLOAD_BYTES = 300 * 1024 * 1024;
 
 @Component({
   standalone: true,
   selector: 'app-documents-page',
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, DatePipe, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './documents.page.html',
   styleUrl: './documents.page.css',
 })
 export class DocumentsPageComponent implements OnInit, OnDestroy {
   patients: Patient[] = [];
-  filteredPatients: Patient[] = [];
   selectedPatientId: number | null = null;
 
   loadingPatients = true;
@@ -59,6 +55,10 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   activeTab: DocumentTab = 'all';
 
   loadError: string | null = null;
+  /** Fallo al cargar binario / vista previa del documento activo (no bloquea listado ni badge de sync). */
+  viewerError: string | null = null;
+  /** URL `blob:` marcada como segura para `<embed>` / `<iframe>` (Angular RESOURCE_URL). */
+  viewerTrustedResourceUrl: SafeResourceUrl | null = null;
   uploadFeedback: { kind: 'success' | 'error'; text: string } | null = null;
   noteDraft = '';
   noteSaving = false;
@@ -70,36 +70,16 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   viewerImageUrl: string | null = null;
   viewerAssetKind: ViewerAssetKind = 'none';
   viewerDownloadName = '';
-  zoomLevel = 1;
-  measureMode = false;
-  calibrationMode = false;
-  calibrationLocked = true;
-  snapEnabled = true;
-  snapSensitivityMode: SnapSensitivityMode = 'auto';
-  snapSensitivity: SnapSensitivity = 'medium';
-  pxPerCm = 37.8;
-  measurePointA: MeasurePoint | null = null;
-  measurePointB: MeasurePoint | null = null;
-  measureHoverPoint: MeasurePoint | null = null;
-  calibrationPointA: MeasurePoint | null = null;
-  calibrationPointB: MeasurePoint | null = null;
-  calibrationHoverPoint: MeasurePoint | null = null;
-  calibrationReferenceCm = 1;
-  lastMeasuredCm: number | null = null;
-  liveMeasuredCm: number | null = null;
   private viewerObjectUrl: string | null = null;
-  private lastStageSize: StageSize | null = null;
-  private snapGrayMap: Uint8ClampedArray | null = null;
-  private snapMapWidth = 0;
-  private snapMapHeight = 0;
-  private snapLoadSeq = 0;
+  private viewerLoadSeq = 0;
+  /** Descarga del visor: se cancela al cambiar de documento para evitar solapamientos y fugas. */
+  private viewerDownloadSub: Subscription | null = null;
 
   private readonly subs = new Subscription();
   private madridClockTimer: ReturnType<typeof setInterval> | null = null;
   private resizingPatients = false;
   private resizeStartY = 0;
   private resizeStartHeight = 180;
-  private viewerInteractionActive = false;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -107,7 +87,8 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     private readonly patientService: PatientService,
     private readonly documentService: DocumentService,
     private readonly patientRealtime: PatientRealtimeService,
-    private readonly translate: TranslateService
+    private readonly translate: TranslateService,
+    private readonly sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -134,9 +115,16 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
         )
         .subscribe()
     );
+    this.subs.add(
+      this.translate.onLangChange.subscribe(() => {
+        this.refreshCaptureDateLabels();
+      })
+    );
   }
 
   ngOnDestroy(): void {
+    this.viewerDownloadSub?.unsubscribe();
+    this.viewerDownloadSub = null;
     this.subs.unsubscribe();
     if (this.madridClockTimer) {
       clearInterval(this.madridClockTimer);
@@ -161,6 +149,28 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     return full || this.t('documents.patient.fallbackWithId', { id: p.id });
   }
 
+  /** Fecha de alta del paciente según `currentLang` (misma convención que las fechas de documentos). */
+  get selectedPatientRegistrationDisplay(): string | null {
+    const raw = this.selectedPatient?.registrationDate;
+    if (raw == null || raw === '') {
+      return null;
+    }
+    const d =
+      typeof raw === 'string'
+        ? this.parseDate(raw)
+        : raw instanceof Date
+          ? raw
+          : null;
+    if (!d || Number.isNaN(d.getTime())) {
+      return null;
+    }
+    return new Intl.DateTimeFormat(this.dateLocaleTag(), {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(d);
+  }
+
   get visibleDocuments(): DocumentCard[] {
     if (this.activeTab === 'all') {
       return this.documents;
@@ -178,146 +188,22 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     return this.documents.find((d) => d.id === this.activeDocumentId) ?? null;
   }
 
-  get zoomPercent(): number {
-    return Math.round(this.zoomLevel * 100);
-  }
-
-  get zoomFillPercent(): number {
-    const min = 0.5;
-    const max = 3;
-    const normalized = ((this.zoomLevel - min) / (max - min)) * 100;
-    return Math.max(0, Math.min(100, normalized));
-  }
-
-  get measurementLineStyle(): Record<string, string> | null {
-    const endPoint = this.getActiveMeasureEndPoint();
-    if (!this.measurePointA || !endPoint) {
-      return null;
-    }
-    const x1 = this.measurePointA.xPct;
-    const y1 = this.measurePointA.yPct;
-    const x2 = endPoint.xPct;
-    const y2 = endPoint.yPct;
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-    return {
-      left: `${x1 * 100}%`,
-      top: `${y1 * 100}%`,
-      width: `${length * 100}%`,
-      transform: `translateY(-50%) rotate(${angle}deg)`,
-    };
-  }
-
-  get measurementBadgeStyle(): Record<string, string> | null {
-    const endPoint = this.getActiveMeasureEndPoint();
-    if (!this.measurePointA || !endPoint) {
-      return null;
-    }
-    const midX = ((this.measurePointA.xPct + endPoint.xPct) / 2) * 100;
-    const midY = ((this.measurePointA.yPct + endPoint.yPct) / 2) * 100;
-    return {
-      left: `${midX}%`,
-      top: `${midY}%`,
-      transform: 'translate(-50%, -120%)',
-    };
-  }
-
-  get calibrationLineStyle(): Record<string, string> | null {
-    const endPoint = this.getActiveCalibrationEndPoint();
-    if (!this.calibrationPointA || !endPoint) {
-      return null;
-    }
-    const x1 = this.calibrationPointA.xPct;
-    const y1 = this.calibrationPointA.yPct;
-    const x2 = endPoint.xPct;
-    const y2 = endPoint.yPct;
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-    return {
-      left: `${x1 * 100}%`,
-      top: `${y1 * 100}%`,
-      width: `${length * 100}%`,
-      transform: `translateY(-50%) rotate(${angle}deg)`,
-    };
-  }
-
-  get calibrationBadgeStyle(): Record<string, string> | null {
-    const endPoint = this.getActiveCalibrationEndPoint();
-    if (!this.calibrationPointA || !endPoint) {
-      return null;
-    }
-    const midX = ((this.calibrationPointA.xPct + endPoint.xPct) / 2) * 100;
-    const midY = ((this.calibrationPointA.yPct + endPoint.yPct) / 2) * 100;
-    return {
-      left: `${midX}%`,
-      top: `${midY}%`,
-      transform: 'translate(-50%, 14px)',
-    };
-  }
-
-  get calibrationLabel(): string {
-    if (!this.calibrationMode) {
-      return '';
-    }
-    if (!this.calibrationPointA) {
-      return this.t('documents.viewer.calibration.stepStart');
-    }
-    if (!this.calibrationPointB) {
-      return this.t('documents.viewer.calibration.stepEnd');
-    }
-    return this.t('documents.viewer.calibration.reference', {
-      value: this.calibrationReferenceCm.toFixed(2),
-    });
-  }
-
-  get measureLabel(): string {
-    if (this.liveMeasuredCm != null) {
-      return `${this.liveMeasuredCm.toFixed(2)} cm`;
-    }
-    if (this.lastMeasuredCm == null) {
-      return this.t('documents.viewer.measure.pending');
-    }
-    return `${this.lastMeasuredCm.toFixed(2)} cm`;
-  }
-
-  get canMeasureOnCurrentDocument(): boolean {
+  /** Tipo mostrado en pie: vacío del API → clave i18n; sin documento activo → guion tipográfico. */
+  get activeDocumentTypeDisplay(): string {
     const doc = this.activeDocument;
-    return !!doc && this.viewerAssetKind === 'image';
-  }
-
-  get canZoomCurrentDocument(): boolean {
-    return !!this.activeDocument && !!this.viewerImageUrl && !this.loadingViewerAsset;
-  }
-
-  get snapStatusLabel(): string {
-    if (!this.canMeasureOnCurrentDocument) {
-      return this.t('documents.viewer.snap.unavailable');
+    if (!doc) {
+      return this.t('documents.common.emDash');
     }
-    const sensitivity = this.snapSensitivityLabel;
-    const mode = this.snapSensitivityMode === 'auto' ? 'auto' : 'manual';
-    const state = this.snapEnabled
-      ? this.t('documents.viewer.snap.on')
-      : this.t('documents.viewer.snap.off');
-    return `${state} (${sensitivity}, ${mode})`;
+    const label = doc.typeLabel?.trim();
+    return label ? label : this.t('documents.card.unknownType');
   }
 
-  get snapSensitivityLabel(): string {
-    switch (this.effectiveSnapSensitivity) {
-      case 'low':
-        return this.t('documents.viewer.snap.low');
-      case 'high':
-        return this.t('documents.viewer.snap.high');
-      default:
-        return this.t('documents.viewer.snap.medium');
-    }
+  get footerDocumentIdText(): string {
+    return this.activeDocument != null ? String(this.activeDocument.id) : this.t('documents.common.emDash');
   }
 
-  get snapSensitivitySelectValue(): string {
-    return this.snapSensitivityMode === 'auto' ? 'auto' : this.snapSensitivity;
+  get footerDocumentDateText(): string {
+    return this.activeDocument != null ? this.activeDocument.captureDateLabel : this.t('documents.common.emDash');
   }
 
   get realtimeSyncLabel(): string {
@@ -333,7 +219,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     if (!this.lastRealtimeSyncAt) {
       return this.t('documents.sync.pending');
     }
-    return `${this.t('documents.sync.realtimePrefix')} · ${new Intl.DateTimeFormat('es-ES', {
+    return `${this.t('documents.sync.realtimePrefix')} · ${new Intl.DateTimeFormat(this.dateLocaleTag(), {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
@@ -341,10 +227,13 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   }
 
   get notesSyncLabel(): string {
+    if (this.noteFeedback?.kind === 'error') {
+      return this.t('documents.notes.syncFailed');
+    }
     if (!this.activeDocument) {
       return this.t('documents.notes.selectDocument');
     }
-    return `${this.t('documents.notes.syncedPrefix')} · ${new Intl.DateTimeFormat('es-ES', {
+    return `${this.t('documents.notes.syncedPrefix')} · ${new Intl.DateTimeFormat(this.dateLocaleTag(), {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
@@ -372,208 +261,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     this.activeDocumentId = doc.id;
     this.noteDraft = '';
     this.noteFeedback = null;
-    this.resetViewerAdjustments();
-    this.clearMeasurement();
-    this.applyStoredCalibrationForDocument(doc);
-    this.applyStoredSnapSensitivityForDocument(doc);
     this.renderViewerAsset(doc);
-  }
-
-  zoomOut(): void {
-    if (!this.canZoomCurrentDocument) {
-      return;
-    }
-    this.zoomLevel = this.clampZoom(this.zoomLevel - 0.1);
-  }
-
-  zoomIn(): void {
-    if (!this.canZoomCurrentDocument) {
-      return;
-    }
-    this.zoomLevel = this.clampZoom(this.zoomLevel + 0.1);
-  }
-
-  onViewerWheel(event: WheelEvent): void {
-    event.stopPropagation();
-    this.applyTrackpadZoom(event);
-  }
-
-  onViewerPointerEnter(): void {
-    this.viewerInteractionActive = true;
-  }
-
-  onViewerPointerLeave(): void {
-    this.viewerInteractionActive = false;
-  }
-
-  toggleMeasureMode(): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    this.measureMode = !this.measureMode;
-    if (this.measureMode) {
-      this.calibrationMode = false;
-    }
-    this.clearMeasurement();
-  }
-
-  toggleCalibrationMode(): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    this.calibrationMode = !this.calibrationMode;
-    if (this.calibrationMode) {
-      this.measureMode = false;
-    }
-    this.clearCalibrationSelection();
-  }
-
-  toggleCalibrationLock(): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    this.calibrationLocked = !this.calibrationLocked;
-    const active = this.activeDocument;
-    const patientId = this.selectedPatientId;
-    if (!active || patientId == null) {
-      return;
-    }
-    if (this.calibrationLocked) {
-      this.persistCalibration(patientId, active);
-      return;
-    }
-    this.clearStoredCalibrationLock(patientId, active);
-  }
-
-  toggleSnap(): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    this.snapEnabled = !this.snapEnabled;
-  }
-
-  onSnapSensitivityChange(rawValue: string): void {
-    if (rawValue === 'auto') {
-      this.snapSensitivityMode = 'auto';
-      this.persistSnapSensitivityForCurrentDocument();
-      return;
-    }
-    if (rawValue === 'low' || rawValue === 'medium' || rawValue === 'high') {
-      this.snapSensitivityMode = 'manual';
-      this.snapSensitivity = rawValue;
-      this.persistSnapSensitivityForCurrentDocument();
-    }
-  }
-
-  onViewerCanvasClick(event: MouseEvent): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    const target = event.currentTarget as HTMLElement | null;
-    if (!target) {
-      return;
-    }
-    const rect = target.getBoundingClientRect();
-    this.lastStageSize = { width: rect.width, height: rect.height };
-    if (rect.width <= 0 || rect.height <= 0) {
-      return;
-    }
-    const rawPoint = this.toStagePoint(event, rect);
-    if (!rawPoint) {
-      return;
-    }
-    const point: MeasurePoint = this.applySnapToPoint(rawPoint, rect.width, rect.height);
-
-    if (this.calibrationMode) {
-      this.registerCalibrationPoint(point, rect.width, rect.height);
-      return;
-    }
-    if (!this.measureMode) {
-      return;
-    }
-
-    if (!this.measurePointA || this.measurePointB) {
-      this.measurePointA = point;
-      this.measurePointB = null;
-      this.lastMeasuredCm = null;
-      return;
-    }
-
-    this.measurePointB = point;
-    this.lastMeasuredCm = this.calculateMeasurementCm(rect.width, rect.height);
-  }
-
-  onPxPerCmChange(rawValue: string): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    const parsed = Number(rawValue);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return;
-    }
-    this.pxPerCm = Math.max(1, Math.min(500, parsed));
-    this.persistCalibrationForCurrentSelection();
-    if (this.measurePointA && this.measurePointB) {
-      const stage = document.querySelector('.documents-render-stage') as HTMLElement | null;
-      if (!stage) {
-        return;
-      }
-      const rect = stage.getBoundingClientRect();
-      this.lastMeasuredCm = this.calculateMeasurementCm(rect.width, rect.height);
-    }
-  }
-
-  onViewerCanvasMouseMove(event: MouseEvent): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    const target = event.currentTarget as HTMLElement | null;
-    if (!target) {
-      return;
-    }
-    const rect = target.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) {
-      return;
-    }
-    this.lastStageSize = { width: rect.width, height: rect.height };
-    const rawPoint = this.toStagePoint(event, rect);
-    if (!rawPoint) {
-      return;
-    }
-    const point = this.applySnapToPoint(rawPoint, rect.width, rect.height);
-
-    if (this.measureMode && this.measurePointA && !this.measurePointB) {
-      this.measureHoverPoint = point;
-      this.liveMeasuredCm = this.calculateMeasurementCmFromPoints(
-        this.measurePointA,
-        point,
-        rect.width,
-        rect.height
-      );
-    }
-
-    if (this.calibrationMode && this.calibrationPointA && !this.calibrationPointB) {
-      this.calibrationHoverPoint = point;
-    }
-  }
-
-  onViewerCanvasMouseLeave(): void {
-    this.measureHoverPoint = null;
-    this.calibrationHoverPoint = null;
-    if (this.measurePointB == null) {
-      this.liveMeasuredCm = null;
-    }
-  }
-
-  onCalibrationReferenceCmChange(rawValue: string): void {
-    if (!this.canMeasureOnCurrentDocument) {
-      return;
-    }
-    const parsed = Number(rawValue);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return;
-    }
-    this.calibrationReferenceCm = Math.max(0.1, Math.min(100, parsed));
   }
 
   openUploadPicker(input: HTMLInputElement): void {
@@ -601,7 +289,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
 
   autoAdjustPatientListHeight(): void {
     const recommended = this.clampPatientListHeight(
-      Math.max(180, this.filteredPatients.length * 42 + 24)
+      Math.max(180, this.patients.length * 42 + 24)
     );
     this.patientListHeightPx = recommended;
     this.persistPatientListHeightPreference();
@@ -625,14 +313,6 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     this.resizingPatients = false;
   }
 
-  @HostListener('window:wheel', ['$event'])
-  onWindowWheel(event: WheelEvent): void {
-    if (!this.viewerInteractionActive) {
-      return;
-    }
-    this.applyTrackpadZoom(event);
-  }
-
   saveClinicalNote(): void {
     const patientId = this.selectedPatientId;
     const doc = this.activeDocument;
@@ -644,7 +324,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     this.noteSaving = true;
     this.noteFeedback = null;
     const nowLabel = this.formatNowForNote();
-    const nextEntry = `${nowLabel} — ${raw}`;
+    const nextEntry = this.t('documents.notes.historyLine', { time: nowLabel, text: raw });
     const nextDescription = doc.description.trim()
       ? `${doc.description.trim()}\n${nextEntry}`
       : nextEntry;
@@ -671,6 +351,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
             item.id === doc.id ? { ...item, ...freshCard } : item
           );
           this.noteDraft = '';
+          this.lastRealtimeSyncAt = new Date();
           this.noteFeedback = {
             kind: 'success',
             text: this.t('documents.feedback.noteSaved'),
@@ -723,7 +404,6 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
       switchMap((patients) => {
         this.loadingPatients = false;
         this.patients = [...patients];
-        this.filteredPatients = [...patients];
         if (patients.length === 0) {
           this.selectedPatientId = null;
           this.documents = [];
@@ -751,8 +431,12 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
         this.loadingPatients = false;
         this.loadError = this.mapDocumentHttpError(err, 'list');
         this.patients = [];
-        this.filteredPatients = [];
         this.documents = [];
+        this.selectedPatientId = null;
+        this.activeDocumentId = null;
+        this.revokeViewerObjectUrl();
+        this.viewerImageUrl = null;
+        this.viewerAssetKind = 'none';
         return of(null);
       })
     );
@@ -761,10 +445,12 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   private loadDocumentsByPatient(patientId: number) {
     this.loadingDocuments = true;
     this.loadError = null;
+    this.viewerError = null;
     return this.documentService.listByPatientId(patientId).pipe(
       map((rows) =>
         rows
-          .filter((row) => belongsToPatientRelationStrict(row, patientId))
+          /* Las rutas de listado ya filtran por paciente; muchos backends no incluyen `patient` en cada ítem. */
+          .filter((row) => belongsToPatientRelation(row, patientId))
           .map((row) => this.toDocumentCard(row))
           .filter((item): item is DocumentCard => item != null)
       ),
@@ -879,7 +565,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     if (!Number.isFinite(id) || id < 1) {
       return null;
     }
-    const type = this.pickString(row, ['type', 'mimeType', 'mime_type']) || 'Sin tipo';
+    const type = this.pickString(row, ['type', 'mimeType', 'mime_type', 'contentType', 'content_type']) || '';
     const capture = this.pickString(row, ['captureDate', 'capture_date', 'createdAt', 'created_at']);
     const captureDate = this.parseDate(capture);
     const description = this.pickString(row, ['description', 'notes', 'clinicalNotes', 'clinical_notes']);
@@ -891,13 +577,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
       typeLabel: type,
       shortTag: this.resolveShortTag(type, displayName),
       captureDate,
-      captureDateLabel: captureDate
-        ? new Intl.DateTimeFormat('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          }).format(captureDate)
-        : 'Sin fecha',
+      captureDateLabel: this.formatCaptureDateLabel(captureDate),
       description,
       iconKind,
     };
@@ -927,13 +607,15 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   private ensureActiveDocumentVisibleInCurrentTab(): void {
     const visible = this.filterDocumentsForTab(this.documents, this.activeTab);
     const nextActive = visible.find((d) => d.id === this.activeDocumentId) ?? visible[0] ?? null;
+    const previousId = this.activeDocumentId;
     this.activeDocumentId = nextActive?.id ?? null;
     if (!nextActive) {
       this.revokeViewerObjectUrl();
       this.viewerImageUrl = null;
       this.viewerAssetKind = 'none';
-      this.clearMeasurement();
-      this.clearCalibrationSelection();
+      return;
+    }
+    if (nextActive.id === previousId) {
       return;
     }
     this.onSelectDocument(nextActive);
@@ -943,47 +625,152 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     if (this.selectedPatientId == null) {
       return;
     }
+    const seq = ++this.viewerLoadSeq;
+    this.viewerError = null;
+    this.viewerTrustedResourceUrl = null;
     this.revokeViewerObjectUrl();
     this.viewerImageUrl = null;
     this.viewerAssetKind = 'none';
-    this.viewerDownloadName = doc.displayName || `documento-${doc.id}`;
+    this.viewerDownloadName = doc.displayName || this.t('documents.downloads.fallbackFilename', { id: doc.id });
+    this.viewerDownloadSub?.unsubscribe();
+    this.viewerDownloadSub = null;
     this.loadingViewerAsset = true;
-    this.subs.add(
-      this.documentService
+    this.viewerDownloadSub = this.documentService
         .download(doc.id, this.selectedPatientId)
         .pipe(
           finalize(() => {
-            this.loadingViewerAsset = false;
+            if (seq === this.viewerLoadSeq) {
+              this.loadingViewerAsset = false;
+            }
           }),
           catchError((err: unknown) => {
+            if (seq !== this.viewerLoadSeq) {
+              return of(null);
+            }
             this.viewerImageUrl = null;
             this.viewerAssetKind = 'none';
-            this.loadError = this.mapDocumentHttpError(err, 'download');
+            this.viewerTrustedResourceUrl = null;
+            this.viewerError = this.mapDocumentHttpError(err, 'download');
             return of(null);
+          }),
+          switchMap((blob: Blob | null) => {
+            if (!blob || seq !== this.viewerLoadSeq) {
+              return of<{ blob: Blob; kind: PreviewKind } | null>(null);
+            }
+            return this.sniffPreviewKind(blob, doc).pipe(map((kind) => ({ blob, kind })));
           })
         )
-        .subscribe((blob) => {
-          if (!blob) {
+        .subscribe((pack) => {
+          if (!pack || seq !== this.viewerLoadSeq) {
             return;
           }
+          const { blob, kind } = pack;
           const objectUrl = URL.createObjectURL(blob);
+          if (seq !== this.viewerLoadSeq) {
+            URL.revokeObjectURL(objectUrl);
+            return;
+          }
           this.viewerObjectUrl = objectUrl;
           this.viewerImageUrl = objectUrl;
-          const mime = blob.type.toLowerCase();
-          if (doc.iconKind === 'image' || mime.startsWith('image/')) {
+          this.viewerTrustedResourceUrl = null;
+          if (kind === 'image') {
             this.viewerAssetKind = 'image';
-            this.prepareSnapMapFromImage(objectUrl);
             return;
           }
-          if (doc.iconKind === 'pdf' || mime.includes('pdf')) {
+          if (kind === 'pdf') {
             this.viewerAssetKind = 'pdf';
-            this.clearSnapMap();
+            this.viewerTrustedResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+            return;
+          }
+          if (kind === 'text') {
+            this.viewerAssetKind = 'text';
+            this.viewerTrustedResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
             return;
           }
           this.viewerAssetKind = 'other';
-          this.clearSnapMap();
-        })
+        });
+  }
+
+  /** Clasifica el binario descargado: firma mágica, MIME y nombre (p. ej. PDF con `application/octet-stream`). */
+  private sniffPreviewKind(blob: Blob, doc: DocumentCard): Observable<PreviewKind> {
+    const size = blob.size ?? 0;
+    const take = Math.min(256, Math.max(0, size));
+    if (take === 0) {
+      return of(this.classifyPreviewMimeOnly(blob, doc));
+    }
+    return from(blob.slice(0, take).arrayBuffer()).pipe(
+      map((buf) => this.classifyPreviewFromBuffer(buf, blob, doc)),
+      catchError(() => of(this.classifyPreviewMimeOnly(blob, doc)))
     );
+  }
+
+  private classifyPreviewFromBuffer(buf: ArrayBuffer, blob: Blob, doc: DocumentCard): PreviewKind {
+    const u = new Uint8Array(buf);
+    if (u.length >= 4 && u[0] === 0x25 && u[1] === 0x50 && u[2] === 0x44 && u[3] === 0x46) {
+      return 'pdf';
+    }
+    if (u.length >= 3 && u[0] === 0xff && u[1] === 0xd8 && u[2] === 0xff) {
+      return 'image';
+    }
+    if (u.length >= 4 && u[0] === 0x89 && u[1] === 0x50 && u[2] === 0x4e && u[3] === 0x47) {
+      return 'image';
+    }
+    if (u.length >= 6 && u[0] === 0x47 && u[1] === 0x49 && u[2] === 0x46) {
+      return 'image';
+    }
+    if (u.length >= 12 && u[0] === 0x52 && u[1] === 0x49 && u[2] === 0x46 && u[3] === 0x46) {
+      const tag = String.fromCharCode(u[8] ?? 0, u[9] ?? 0, u[10] ?? 0, u[11] ?? 0);
+      if (tag === 'WEBP') {
+        return 'image';
+      }
+    }
+    if (u.length >= 2 && u[0] === 0x42 && u[1] === 0x4d) {
+      return 'image';
+    }
+    if (u.length >= 4) {
+      const le = u[0] === 0x49 && u[1] === 0x49 && u[2] === 0x2a && u[3] === 0x00;
+      const be = u[0] === 0x4d && u[1] === 0x4d && u[2] === 0x00 && u[3] === 0x2a;
+      if (le || be) {
+        return 'image';
+      }
+    }
+    const head = new TextDecoder('utf-8', { fatal: false }).decode(u.slice(0, Math.min(u.length, 512))).trimStart();
+    if (head.startsWith('<svg') || (head.startsWith('<?xml') && head.includes('<svg'))) {
+      return 'image';
+    }
+    if (head.startsWith('<!DOCTYPE') || head.startsWith('<html')) {
+      return 'text';
+    }
+    return this.classifyPreviewMimeOnly(blob, doc);
+  }
+
+  private classifyPreviewMimeOnly(blob: Blob, doc: DocumentCard): PreviewKind {
+    const mime = (blob.type || '').toLowerCase();
+    const name = (doc.displayName || '').toLowerCase();
+    const treatAsPdf =
+      doc.iconKind === 'pdf' || mime.includes('pdf') || /\.pdf(\?|$)/i.test(doc.displayName || '');
+    if (treatAsPdf) {
+      return 'pdf';
+    }
+    if (doc.iconKind === 'image' || mime.startsWith('image/')) {
+      return 'image';
+    }
+    if (mime.startsWith('text/') || mime === 'application/json' || mime === 'application/xml') {
+      return 'text';
+    }
+    if (
+      name.endsWith('.svg') ||
+      name.endsWith('.json') ||
+      name.endsWith('.xml') ||
+      name.endsWith('.txt') ||
+      name.endsWith('.csv') ||
+      name.endsWith('.html') ||
+      name.endsWith('.htm') ||
+      name.endsWith('.md')
+    ) {
+      return 'text';
+    }
+    return 'other';
   }
 
   private uploadDocuments(files: File[]): void {
@@ -1010,15 +797,15 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
           ),
           toArray(),
           switchMap(() => this.loadDocumentsByPatient(patientId)),
-          finalize(() => {
-            this.uploadingFiles = false;
-          }),
           catchError((err: unknown) => {
             this.uploadFeedback = {
               kind: 'error',
               text: this.mapDocumentHttpError(err, 'upload'),
             };
             return of(null);
+          }),
+          finalize(() => {
+            this.uploadingFiles = false;
           })
         )
         .subscribe((result) => {
@@ -1063,413 +850,11 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   }
 
   private revokeViewerObjectUrl(): void {
+    this.viewerTrustedResourceUrl = null;
     if (this.viewerObjectUrl) {
       URL.revokeObjectURL(this.viewerObjectUrl);
       this.viewerObjectUrl = null;
     }
-  }
-
-  private resetViewerAdjustments(): void {
-    this.zoomLevel = 1;
-  }
-
-  private clearMeasurement(): void {
-    this.measurePointA = null;
-    this.measurePointB = null;
-    this.measureHoverPoint = null;
-    this.lastMeasuredCm = null;
-    this.liveMeasuredCm = null;
-  }
-
-  private clearCalibrationSelection(): void {
-    this.calibrationPointA = null;
-    this.calibrationPointB = null;
-    this.calibrationHoverPoint = null;
-  }
-
-  private registerCalibrationPoint(point: MeasurePoint, widthPx: number, heightPx: number): void {
-    if (!this.calibrationPointA || this.calibrationPointB) {
-      this.calibrationPointA = point;
-      this.calibrationPointB = null;
-      this.calibrationHoverPoint = null;
-      return;
-    }
-
-    this.calibrationPointB = point;
-    this.calibrationHoverPoint = null;
-    const calculated = this.calculatePxPerCmFromCalibration(widthPx, heightPx);
-    if (calculated != null) {
-      this.pxPerCm = calculated;
-      this.persistCalibrationForCurrentSelection();
-      if (this.measurePointA && this.measurePointB) {
-        this.lastMeasuredCm = this.calculateMeasurementCm(widthPx, heightPx);
-      }
-    }
-  }
-
-  private clampZoom(value: number): number {
-    return Math.max(0.5, Math.min(3, Number(value.toFixed(2))));
-  }
-
-  private applyTrackpadZoom(event: WheelEvent): void {
-    if (!this.activeDocument) {
-      return;
-    }
-    // En trackpads, el gesto de pinza suele llegar como wheel con ctrl/meta pulsado.
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-    event.preventDefault();
-    const delta = event.deltaY;
-    if (delta === 0) {
-      return;
-    }
-    const stepBase = Math.max(0.04, Math.min(0.18, Math.abs(delta) / 600));
-    const step = delta < 0 ? stepBase : -stepBase;
-    this.zoomLevel = this.clampZoom(this.zoomLevel + step);
-  }
-
-  private calculateMeasurementCm(widthPx: number, heightPx: number): number | null {
-    if (!this.measurePointA || !this.measurePointB || widthPx <= 0 || heightPx <= 0) {
-      return null;
-    }
-    return this.calculateMeasurementCmFromPoints(this.measurePointA, this.measurePointB, widthPx, heightPx);
-  }
-
-  private calculatePxPerCmFromCalibration(widthPx: number, heightPx: number): number | null {
-    if (!this.calibrationPointA || !this.calibrationPointB || widthPx <= 0 || heightPx <= 0) {
-      return null;
-    }
-    const dx = (this.calibrationPointB.xPct - this.calibrationPointA.xPct) * widthPx;
-    const dy = (this.calibrationPointB.yPct - this.calibrationPointA.yPct) * heightPx;
-    const distancePxScaled = Math.sqrt(dx * dx + dy * dy);
-    const distancePxReal = distancePxScaled / this.zoomLevel;
-    if (!Number.isFinite(distancePxReal) || distancePxReal <= 0 || this.calibrationReferenceCm <= 0) {
-      return null;
-    }
-    const pxPerCm = distancePxReal / this.calibrationReferenceCm;
-    return Math.max(1, Math.min(500, Number(pxPerCm.toFixed(2))));
-  }
-
-  private applySnapToPoint(point: MeasurePoint, stageWidth: number, stageHeight: number): MeasurePoint {
-    if (!this.snapEnabled || !this.snapGrayMap || this.snapMapWidth < 3 || this.snapMapHeight < 3) {
-      return point;
-    }
-    if (stageWidth <= 0 || stageHeight <= 0) {
-      return point;
-    }
-    const config = this.getSnapSensitivityConfig();
-
-    const cx = Math.round(point.xPct * (this.snapMapWidth - 1));
-    const cy = Math.round(point.yPct * (this.snapMapHeight - 1));
-    const radiusX = Math.max(
-      1,
-      Math.min(24, Math.round((config.searchRadiusPx * this.snapMapWidth) / stageWidth))
-    );
-    const radiusY = Math.max(
-      1,
-      Math.min(24, Math.round((config.searchRadiusPx * this.snapMapHeight) / stageHeight))
-    );
-
-    let bestX = cx;
-    let bestY = cy;
-    let bestScore = -1;
-
-    const minX = Math.max(1, cx - radiusX);
-    const maxX = Math.min(this.snapMapWidth - 2, cx + radiusX);
-    const minY = Math.max(1, cy - radiusY);
-    const maxY = Math.min(this.snapMapHeight - 2, cy + radiusY);
-
-    for (let y = minY; y <= maxY; y += 1) {
-      for (let x = minX; x <= maxX; x += 1) {
-        const score = this.edgeScoreAt(x, y);
-        if (score > bestScore) {
-          bestScore = score;
-          bestX = x;
-          bestY = y;
-        }
-      }
-    }
-
-    if (bestScore < config.minEdgeScore) {
-      return point;
-    }
-
-    return {
-      xPct: bestX / (this.snapMapWidth - 1),
-      yPct: bestY / (this.snapMapHeight - 1),
-    };
-  }
-
-  private getSnapSensitivityConfig(): { searchRadiusPx: number; minEdgeScore: number } {
-    switch (this.effectiveSnapSensitivity) {
-      case 'low':
-        return { searchRadiusPx: 6, minEdgeScore: 50 };
-      case 'high':
-        return { searchRadiusPx: 14, minEdgeScore: 22 };
-      default:
-        return { searchRadiusPx: 10, minEdgeScore: 35 };
-    }
-  }
-
-  private get effectiveSnapSensitivity(): SnapSensitivity {
-    if (this.snapSensitivityMode === 'manual') {
-      return this.snapSensitivity;
-    }
-    return this.resolveAutoSnapSensitivity();
-  }
-
-  private resolveAutoSnapSensitivity(): SnapSensitivity {
-    const doc = this.activeDocument;
-    if (!doc) {
-      return 'medium';
-    }
-    if (doc.shortTag === 'PAN') {
-      return 'high';
-    }
-    if (doc.shortTag === 'BW') {
-      return 'low';
-    }
-    if (doc.shortTag === 'PA') {
-      return 'medium';
-    }
-    return 'medium';
-  }
-
-  private edgeScoreAt(x: number, y: number): number {
-    if (!this.snapGrayMap || x <= 0 || y <= 0 || x >= this.snapMapWidth - 1 || y >= this.snapMapHeight - 1) {
-      return 0;
-    }
-    const row = this.snapMapWidth;
-    const idx = y * row + x;
-    const gx = Math.abs(this.snapGrayMap[idx + 1] - this.snapGrayMap[idx - 1]);
-    const gy = Math.abs(this.snapGrayMap[idx + row] - this.snapGrayMap[idx - row]);
-    return gx + gy;
-  }
-
-  private prepareSnapMapFromImage(imageUrl: string): void {
-    const seq = ++this.snapLoadSeq;
-    const image = new Image();
-    image.onload = () => {
-      if (seq !== this.snapLoadSeq) {
-        return;
-      }
-      const naturalWidth = image.naturalWidth || image.width;
-      const naturalHeight = image.naturalHeight || image.height;
-      if (!naturalWidth || !naturalHeight) {
-        this.clearSnapMap();
-        return;
-      }
-
-      const maxDim = 1100;
-      const scale = Math.min(1, maxDim / Math.max(naturalWidth, naturalHeight));
-      const w = Math.max(4, Math.round(naturalWidth * scale));
-      const h = Math.max(4, Math.round(naturalHeight * scale));
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (!ctx) {
-        this.clearSnapMap();
-        return;
-      }
-      ctx.drawImage(image, 0, 0, w, h);
-      const data = ctx.getImageData(0, 0, w, h).data;
-      const gray = new Uint8ClampedArray(w * h);
-      for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
-        gray[p] = Math.round((data[i] * 299 + data[i + 1] * 587 + data[i + 2] * 114) / 1000);
-      }
-      this.snapGrayMap = gray;
-      this.snapMapWidth = w;
-      this.snapMapHeight = h;
-    };
-    image.onerror = () => {
-      if (seq !== this.snapLoadSeq) {
-        return;
-      }
-      this.clearSnapMap();
-    };
-    image.src = imageUrl;
-  }
-
-  private clearSnapMap(): void {
-    this.snapGrayMap = null;
-    this.snapMapWidth = 0;
-    this.snapMapHeight = 0;
-  }
-
-  private calculateMeasurementCmFromPoints(
-    pointA: MeasurePoint,
-    pointB: MeasurePoint,
-    widthPx: number,
-    heightPx: number
-  ): number | null {
-    if (widthPx <= 0 || heightPx <= 0 || this.pxPerCm <= 0) {
-      return null;
-    }
-    const dx = (pointB.xPct - pointA.xPct) * widthPx;
-    const dy = (pointB.yPct - pointA.yPct) * heightPx;
-    const distancePxScaled = Math.sqrt(dx * dx + dy * dy);
-    const distancePxReal = distancePxScaled / this.zoomLevel;
-    if (!Number.isFinite(distancePxReal) || distancePxReal <= 0) {
-      return null;
-    }
-    return distancePxReal / this.pxPerCm;
-  }
-
-  private getActiveMeasureEndPoint(): MeasurePoint | null {
-    return this.measurePointB ?? this.measureHoverPoint;
-  }
-
-  private getActiveCalibrationEndPoint(): MeasurePoint | null {
-    return this.calibrationPointB ?? this.calibrationHoverPoint;
-  }
-
-  private toStagePoint(event: MouseEvent, rect: DOMRect): MeasurePoint | null {
-    if (rect.width <= 0 || rect.height <= 0) {
-      return null;
-    }
-    const xPct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-    const yPct = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-    return { xPct, yPct };
-  }
-
-  private persistCalibrationForCurrentSelection(): void {
-    if (!this.calibrationLocked) {
-      return;
-    }
-    const active = this.activeDocument;
-    const patientId = this.selectedPatientId;
-    if (!active || patientId == null) {
-      return;
-    }
-    this.persistCalibration(patientId, active);
-  }
-
-  private persistCalibration(patientId: number, doc: DocumentCard): void {
-    const payload = JSON.stringify({
-      pxPerCm: this.pxPerCm,
-      updatedAt: Date.now(),
-    });
-    const documentKey = this.buildCalibrationDocumentKey(patientId, doc.id);
-    const typeKey = this.buildCalibrationTypeKey(patientId, doc.shortTag);
-    try {
-      localStorage.setItem(documentKey, payload);
-      localStorage.setItem(typeKey, payload);
-      localStorage.setItem(this.buildCalibrationLockStateKey(patientId, doc.id), '1');
-    } catch {
-      // Storage may be unavailable.
-    }
-  }
-
-  private applyStoredCalibrationForDocument(doc: DocumentCard): void {
-    const patientId = this.selectedPatientId;
-    if (patientId == null) {
-      return;
-    }
-    try {
-      const lockRaw = localStorage.getItem(this.buildCalibrationLockStateKey(patientId, doc.id));
-      this.calibrationLocked = lockRaw !== '0';
-      const fromDocument = this.readStoredPxPerCm(
-        localStorage.getItem(this.buildCalibrationDocumentKey(patientId, doc.id))
-      );
-      const fromType = this.readStoredPxPerCm(
-        localStorage.getItem(this.buildCalibrationTypeKey(patientId, doc.shortTag))
-      );
-      const next = fromDocument ?? fromType;
-      if (next != null) {
-        this.pxPerCm = next;
-      }
-    } catch {
-      // Storage may be unavailable.
-    }
-  }
-
-  private persistSnapSensitivityForCurrentDocument(): void {
-    const patientId = this.selectedPatientId;
-    const doc = this.activeDocument;
-    if (patientId == null || !doc) {
-      return;
-    }
-    const payload = JSON.stringify({
-      mode: this.snapSensitivityMode,
-      manualValue: this.snapSensitivity,
-      updatedAt: Date.now(),
-    });
-    try {
-      localStorage.setItem(this.buildSnapSensitivityDocumentKey(patientId, doc.id), payload);
-    } catch {
-      // Storage may be unavailable.
-    }
-  }
-
-  private applyStoredSnapSensitivityForDocument(doc: DocumentCard): void {
-    const patientId = this.selectedPatientId;
-    if (patientId == null) {
-      return;
-    }
-    try {
-      const raw = localStorage.getItem(this.buildSnapSensitivityDocumentKey(patientId, doc.id));
-      if (!raw) {
-        this.snapSensitivityMode = 'auto';
-        this.snapSensitivity = 'medium';
-        return;
-      }
-      const parsed = JSON.parse(raw) as { mode?: unknown; manualValue?: unknown };
-      const mode: SnapSensitivityMode = parsed.mode === 'manual' ? 'manual' : 'auto';
-      this.snapSensitivityMode = mode;
-      if (
-        parsed.manualValue === 'low' ||
-        parsed.manualValue === 'medium' ||
-        parsed.manualValue === 'high'
-      ) {
-        this.snapSensitivity = parsed.manualValue;
-      }
-    } catch {
-      this.snapSensitivityMode = 'auto';
-      this.snapSensitivity = 'medium';
-    }
-  }
-
-  private clearStoredCalibrationLock(patientId: number, doc: DocumentCard): void {
-    try {
-      localStorage.setItem(this.buildCalibrationLockStateKey(patientId, doc.id), '0');
-    } catch {
-      // Storage may be unavailable.
-    }
-  }
-
-  private readStoredPxPerCm(raw: string | null): number | null {
-    if (!raw) {
-      return null;
-    }
-    try {
-      const parsed = JSON.parse(raw) as { pxPerCm?: unknown };
-      const value = Number(parsed.pxPerCm);
-      if (!Number.isFinite(value) || value <= 0) {
-        return null;
-      }
-      return Math.max(1, Math.min(500, value));
-    } catch {
-      return null;
-    }
-  }
-
-  private buildCalibrationDocumentKey(patientId: number, documentId: number): string {
-    return `${CALIBRATION_LOCK_STORAGE_PREFIX}:patient:${patientId}:document:${documentId}`;
-  }
-
-  private buildCalibrationTypeKey(patientId: number, shortTag: string): string {
-    const safeTag = String(shortTag || 'DOC').toUpperCase();
-    return `${CALIBRATION_LOCK_STORAGE_PREFIX}:patient:${patientId}:type:${safeTag}`;
-  }
-
-  private buildCalibrationLockStateKey(patientId: number, documentId: number): string {
-    return `${CALIBRATION_LOCK_STORAGE_PREFIX}:patient:${patientId}:document:${documentId}:locked`;
-  }
-
-  private buildSnapSensitivityDocumentKey(patientId: number, documentId: number): string {
-    return `${SNAP_SENSITIVITY_STORAGE_PREFIX}:patient:${patientId}:document:${documentId}`;
   }
 
   private pickString(source: Record<string, unknown>, keys: string[]): string {
@@ -1511,7 +896,9 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     const lower = `${type} ${displayName}`.toLowerCase();
     if (
       lower.includes('image/') ||
-      /\.(jpg|jpeg|png|gif|webp|bmp|svg|tif|tiff)$/i.test(displayName)
+      /\.(jpg|jpeg|png|gif|webp|bmp|svg|tif|tiff|heic|heif|cr2|nef|arw|dng|orf|raf|rw2|pef|srw|raw|3fr|sr2|x3f)$/i.test(
+        displayName
+      )
     ) {
       return 'image';
     }
@@ -1555,7 +942,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
   }
 
   private formatNowForNote(): string {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(this.dateLocaleTag(), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -1564,8 +951,73 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
     }).format(new Date());
   }
 
+  /** Locale BCP 47 alineado con el idioma activo de ngx-translate (fechas en listado y pies). */
+  private dateLocaleTag(): string {
+    const raw = (this.translate.currentLang || this.translate.defaultLang || 'es').toLowerCase();
+    const base = raw.split('-')[0] ?? 'es';
+    const map: Record<string, string> = {
+      es: 'es-ES',
+      en: 'en-GB',
+      ca: 'ca-ES',
+      fr: 'fr-FR',
+    };
+    return map[base] ?? 'es-ES';
+  }
+
+  private formatCaptureDateLabel(captureDate: Date | null): string {
+    if (!captureDate) {
+      return this.t('documents.card.noDate');
+    }
+    return new Intl.DateTimeFormat(this.dateLocaleTag(), {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(captureDate);
+  }
+
+  private refreshCaptureDateLabels(): void {
+    if (this.documents.length === 0) {
+      return;
+    }
+    this.documents = this.documents.map((d) => ({
+      ...d,
+      captureDateLabel: this.formatCaptureDateLabel(d.captureDate),
+    }));
+  }
+
   private updateMadridClock(): void {
     this.madridNow = new Date();
+  }
+
+  /** `maxUploadBytes` en raíz o en `details` (Symfony 413). */
+  private pickMaxUploadBytesFromError(http: HttpErrorResponse): number | null {
+    const e = http.error;
+    if (!e || typeof e !== 'object') {
+      return null;
+    }
+    const o = e as Record<string, unknown>;
+    const root = o['maxUploadBytes'];
+    if (typeof root === 'number' && Number.isFinite(root) && root > 0) {
+      return root;
+    }
+    const details = o['details'];
+    if (details && typeof details === 'object') {
+      const d = (details as Record<string, unknown>)['maxUploadBytes'];
+      if (typeof d === 'number' && Number.isFinite(d) && d > 0) {
+        return d;
+      }
+    }
+    return null;
+  }
+
+  /** Mensaje legible del JSON de error del API (`message`). */
+  private pickBackendErrorMessage(http: HttpErrorResponse): string | null {
+    const e = http.error;
+    if (!e || typeof e !== 'object') {
+      return null;
+    }
+    const m = (e as Record<string, unknown>)['message'];
+    return typeof m === 'string' && m.trim().length > 0 ? m.trim() : null;
   }
 
   private mapDocumentHttpError(
@@ -1577,31 +1029,40 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
       return this.t('documents.errors.sessionExpired');
     }
     if (http?.status === 403) {
-      return this.t('documents.errors.forbidden');
+      return this.pickBackendErrorMessage(http) ?? this.t('documents.errors.forbidden');
     }
     if (http?.status === 404) {
-      return this.t('documents.errors.notFound');
+      return this.pickBackendErrorMessage(http) ?? this.t('documents.errors.notFound');
     }
     if (http?.status === 409) {
+      const msg409 = this.pickBackendErrorMessage(http);
+      if (msg409) {
+        return msg409;
+      }
       return context === 'delete'
         ? this.t('documents.errors.deleteConflict')
         : this.t('documents.errors.conflict');
     }
     if (http?.status === 413) {
-      const max = Number((http.error as { maxUploadBytes?: unknown } | null)?.maxUploadBytes);
-      if (Number.isFinite(max) && max > 0) {
+      const max = this.pickMaxUploadBytesFromError(http);
+      if (max != null && max > 0) {
         return this.t('documents.errors.serverMaxFile', { maxMb: Math.round(max / (1024 * 1024)) });
+      }
+      const msg413 = this.pickBackendErrorMessage(http);
+      if (msg413) {
+        return msg413;
       }
       return this.t('documents.errors.serverFileTooLarge');
     }
     if (http?.status === 400) {
+      const msg400 = this.pickBackendErrorMessage(http);
       if (context === 'upload') {
-        return this.t('documents.errors.uploadBadRequest');
+        return msg400 ?? this.t('documents.errors.uploadBadRequest');
       }
       if (context === 'list') {
-        return this.t('documents.errors.listBadRequest');
+        return msg400 ?? this.t('documents.errors.listBadRequest');
       }
-      return this.t('documents.errors.badRequest');
+      return msg400 ?? this.t('documents.errors.badRequest');
     }
     if (http?.status === 0) {
       return this.t('documents.errors.offline');

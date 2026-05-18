@@ -52,13 +52,60 @@ export function documentDisplayNameFromRaw(raw: Record<string, unknown>): string
     }
   }
   const id = raw['id'];
-  return `Documento #${id ?? '?'}`;
+  return `#${id ?? '?'}`;
 }
 
-/** Tipo enviado al POST `/api/documents`: MIME real o binario genérico. */
+function fileExtensionKey(fileName: string): string {
+  const n = fileName.trim();
+  const i = n.lastIndexOf('.');
+  if (i < 0 || i === n.length - 1) {
+    return '';
+  }
+  return n.slice(i).toLowerCase();
+}
+
+/**
+ * Si el navegador no informa `File.type` (frecuente en RAW y algunos binarios),
+ * infiere un MIME razonable solo para extensiones habituales; el resto → `application/octet-stream`.
+ */
+const EXTENSION_TO_MIME: Readonly<Record<string, string>> = {
+  '.pdf': 'application/pdf',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.jpe': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.bmp': 'image/bmp',
+  '.svg': 'image/svg+xml',
+  '.tif': 'image/tiff',
+  '.tiff': 'image/tiff',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
+  '.dcm': 'application/dicom',
+  '.dic': 'application/dicom',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.txt': 'text/plain',
+  '.csv': 'text/csv',
+  '.json': 'application/json',
+  '.xml': 'application/xml',
+  '.zip': 'application/zip',
+  '.rtf': 'application/rtf',
+};
+
+/** Tipo enviado al POST `/api/documents`: MIME del navegador, inferencia por extensión o binario genérico. */
 export function documentTypeForUpload(file: File): string {
   const t = file.type?.trim();
-  return t.length > 0 ? t : 'application/octet-stream';
+  if (t.length > 0) {
+    return t;
+  }
+  const ext = fileExtensionKey(file.name);
+  return EXTENSION_TO_MIME[ext] ?? 'application/octet-stream';
 }
 
 export function mapUnknownToPatientDocumentView(raw: unknown): PatientDocumentView | null {
@@ -79,7 +126,9 @@ export function mapUnknownToPatientDocumentView(raw: unknown): PatientDocumentVi
   if (
     mime.startsWith('image/') ||
     typeField.startsWith('image/') ||
-    /\.(jpg|jpeg|png|gif|webp|bmp|svg|tif|tiff)$/i.test(nameLower)
+    /\.(jpg|jpeg|png|gif|webp|bmp|svg|tif|tiff|heic|heif|cr2|nef|arw|dng|orf|raf|rw2|pef|srw|raw|3fr|sr2|x3f)$/i.test(
+      nameLower
+    )
   ) {
     iconKind = 'image';
   } else if (mime === 'application/pdf' || typeField === 'application/pdf' || nameLower.endsWith('.pdf')) {

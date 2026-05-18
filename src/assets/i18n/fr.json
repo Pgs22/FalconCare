@@ -387,15 +387,19 @@
   },
   "documents": {
     "brand": { "aria": "Clinique Dentaire FalconCare" },
+    "common": { "emDash": "—" },
+    "downloads": { "fallbackFilename": "document-{{id}}" },
     "nav": { "panel": "Panneau", "agenda": "Agenda", "documents": "Documents", "settings": "Paramètres" },
     "header": { "collectionTitle": "Collection de Fichiers", "registrationDate": "Inscription" },
+    "card": { "unknownType": "Type inconnu", "noDate": "Sans date" },
     "actions": {
       "uploading": "Téléversement...",
       "uploadNew": "Téléverser un Nouveau Document",
       "selectFilesAria": "Sélectionner des documents à téléverser",
       "delete": "Supprimer le document actif",
       "deleteConfirm": "Supprimer le document « {{name}} » ? Cette action est irréversible.",
-      "downloadFile": "Télécharger le fichier"
+      "downloadFile": "Télécharger le fichier",
+      "openInNewTab": "Ouvrir dans un nouvel onglet"
     },
     "tabs": { "aria": "Types de radiographie", "all": "Tout", "pan": "Panoramique", "pa": "Périapicale" },
     "states": {
@@ -404,6 +408,7 @@
       "loadingPreview": "Chargement de l'aperçu...",
       "previewAlt": "Aperçu du document sélectionné",
       "pdfPreview": "Aperçu PDF",
+      "textPreview": "Aperçu du texte",
       "pdfPreviewUnavailable": "Aperçu PDF non disponible dans ce navigateur.",
       "previewUnavailableType": "Aperçu non disponible pour ce format.",
       "selectDocument": "Sélectionnez un document pour l'afficher."
@@ -413,35 +418,6 @@
       "resizeAria": "Ajuster la hauteur de la liste des patients",
       "defaultName": "Patient",
       "fallbackWithId": "Patient n°{{id}}"
-    },
-    "toolbar": {
-      "zoomOut": "Zoom arrière",
-      "zoomIn": "Zoom avant",
-      "measure": "Mesurer en cm",
-      "calibration": "Calibration guidée (2 clics)",
-      "lockCalibration": "Verrouiller la calibration pour ce patient/document",
-      "snap": "Snap magnétique aux bords",
-      "snapLabel": "snap",
-      "snapSensitivity": "Sensibilité du snap anatomique",
-      "refCm": "ref cm",
-      "referenceLength": "Longueur réelle de référence en centimètres"
-    },
-    "viewer": {
-      "measure": { "pending": "Mesure en attente" },
-      "calibration": {
-        "stepStart": "Calibration : clic au point initial",
-        "stepEnd": "Calibration : clic au point final",
-        "reference": "Référence : {{value}} cm"
-      },
-      "snap": {
-        "unavailable": "Snap indisponible pour ce format",
-        "on": "Snap ON",
-        "off": "Snap OFF",
-        "auto": "Auto",
-        "low": "Faible",
-        "medium": "Moyen",
-        "high": "Élevé"
-      }
     },
     "sync": {
       "error": "Erreur de synchronisation",
@@ -453,9 +429,7 @@
     "footer": {
       "imageId": "ID Image",
       "type": "Type",
-      "date": "Date",
-      "measure": "Mesure",
-      "measureAvailableImages": "Mesure disponible pour les images"
+      "date": "Date"
     },
     "notes": {
       "title": "Notes Cliniques",
@@ -468,7 +442,9 @@
       "send": "Envoyer la note",
       "saving": "Enregistrement...",
       "selectDocument": "Sélectionnez un document pour synchroniser les notes.",
-      "syncedPrefix": "Notes synchronisées"
+      "syncedPrefix": "Notes synchronisées",
+      "syncFailed": "Impossible d'enregistrer la note (voir le message ci-dessous)",
+      "historyLine": "{{time}} — {{text}}"
     },
     "feedback": {
       "noteSaved": "Note clinique enregistrée et vérifiée avec succès en base de données.",

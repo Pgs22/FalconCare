@@ -5,42 +5,52 @@ import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { extractApiCollection } from '../models/appointment-api.util';
 import { Document } from '../models/document.model';
+import { normalizeApiBaseUrl } from '../utils/api-base-url.util';
 import { PatientRealtimeService } from './patient-realtime.service';
 
 export type CreateDocumentPayload = {
   file: File;
   patientId: number;
-  type: string;
+  /** MIME u `application/octet-stream`; opcional si el back infiere solo por fichero. */
+  type?: string;
   description?: string;
 };
 
 @Injectable({ providedIn: 'root' })
 export class DocumentService {
-  private readonly baseUrl = `${environment.apiBaseUrl}/api/documents`;
+  private readonly apiBase = normalizeApiBaseUrl(environment.apiBaseUrl);
+  private readonly baseUrl = `${this.apiBase}/api/documents`;
 
   constructor(
     private readonly http: HttpClient,
     private readonly patientRealtime: PatientRealtimeService
   ) {}
 
-  /** IRI absoluto del `Patient` en API Platform (necesario con front en otro origen que `/api/...` relativo). */
+  /**
+   * IRI absoluta del paciente (obligatoria en POST `patient`).
+   * Debe coincidir con la base que el servidor usa al validar IRI (`API_BASE_URL`).
+   */
   private patientResourceIri(patientId: number): string {
-    return `${environment.apiBaseUrl}/api/patients/${patientId}`;
+    return `${this.apiBase}/api/patients/${patientId}`;
   }
 
   /**
-   * Documentos del paciente (orden de reintentos si falla el anterior):
+   * Documentos del paciente (orden de reintentos si falla el anterior).
+   * Alineado con `DocumentApiController` / `PatientApiController` Symfony (sin API Platform en composer).
+   *
    * 1) GET `/api/patients/{id}/documents`
    * 2) GET `/api/documents?patientId=`
    * 3) GET `/api/documents?patient.id=`
    * 4) GET `/api/documents?patient_id=`
-   * 5) GET `/api/documents?patient=` (IRI absoluta `{apiBaseUrl}/api/patients/{id}`)
+   * 5) GET `/api/documents?patient[id]=`
+   * 6) GET `/api/documents?patient=` (IRI absoluta `{apiBase}/api/patients/{id}`)
    *
-   * El panel aplica además `belongsToPatientRelationStrict` en cliente.
+   * `GET /api/documents` sin filtro de paciente → 400 en servidor.
+   * El cliente aplica `belongsToPatientRelation` por si la colección incluye ruido.
    */
   listByPatientId(patientId: number): Observable<unknown[]> {
     const idStr = String(patientId);
-    const patientDocumentsUrl = `${environment.apiBaseUrl}/api/patients/${patientId}/documents`;
+    const patientDocumentsUrl = `${this.apiBase}/api/patients/${patientId}/documents`;
 
     const fromPatientSubresource = this.http
       .get<unknown>(patientDocumentsUrl)
@@ -64,6 +74,12 @@ export class DocumentService {
       })
       .pipe(map(extractApiCollection));
 
+    const byPatientBracketId = this.http
+      .get<unknown>(this.baseUrl, {
+        params: new HttpParams().set('patient[id]', idStr),
+      })
+      .pipe(map(extractApiCollection));
+
     const byPatientIri = this.http
       .get<unknown>(this.baseUrl, {
         params: new HttpParams().set('patient', this.patientResourceIri(patientId)),
@@ -75,6 +91,7 @@ export class DocumentService {
         byPatientId.pipe(
           catchError(() => byPatientDotId),
           catchError(() => byPatientUnderscoreId),
+          catchError(() => byPatientBracketId),
           catchError(() => byPatientIri),
           catchError((err: unknown) => throwError(() => err))
         )
@@ -82,9 +99,15 @@ export class DocumentService {
     );
   }
 
+  /**
+   * Mismo criterio de filtro por paciente que `GET /api/documents` (query `patientId`, etc.).
+   * Respuesta: array JSON o envoltura Hydra (`hydra:member` / `member`).
+   */
   listByCaptureDate(patientId: number, date: string): Observable<Document[]> {
     const params = new HttpParams().set('patientId', String(patientId)).set('date', date);
-    return this.http.get<Document[]>(`${this.baseUrl}/captureDate`, { params });
+    return this.http.get<unknown>(`${this.baseUrl}/captureDate`, { params }).pipe(
+      map((body) => extractApiCollection(body) as Document[])
+    );
   }
 
   private patientIdQueryParams(patientId: number): HttpParams {
@@ -104,7 +127,9 @@ export class DocumentService {
     const form = new FormData();
     form.append('file', payload.file);
     form.append('patient', this.patientResourceIri(payload.patientId));
-    form.append('type', payload.type);
+    if (payload.type?.trim()) {
+      form.append('type', payload.type.trim());
+    }
     if (payload.description) form.append('description', payload.description);
     return this.http.post<Document>(this.baseUrl, form).pipe(
       tap((doc) => this.patientRealtime.publishDocumentMutation('created', payload.patientId, doc?.id))
@@ -118,7 +143,9 @@ export class DocumentService {
     const form = new FormData();
     form.append('file', payload.file);
     form.append('patient', this.patientResourceIri(payload.patientId));
-    form.append('type', payload.type);
+    if (payload.type?.trim()) {
+      form.append('type', payload.type.trim());
+    }
     if (payload.description) form.append('description', payload.description);
     return this.http
       .post<Document>(this.baseUrl, form, {
