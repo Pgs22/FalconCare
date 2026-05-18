@@ -184,10 +184,13 @@ export class PatientRegisterComponent implements OnDestroy, OnInit {
       healthStatus: this.t('patientRegister.defaults.noInitialInfo'),
       lifestyleHabits: this.t('patientRegister.defaults.noInitialInfo'),
       medicationAllergies: this.getSelectedAllergyText(),
-      selectedAllergies: [...this.selectedAllergies],
-      allergiesBitmask: buildAllergiesBitmask(this.selectedAllergies),
       registrationDate: new Date().toISOString(),
     };
+
+    if (this.selectedAllergies.length > 0) {
+      payload.selectedAllergies = [...this.selectedAllergies];
+      payload.allergiesBitmask = buildAllergiesBitmask(this.selectedAllergies);
+    }
 
     this.patientService.registerPatient(payload).subscribe({
       next: (created) => {
