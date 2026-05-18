@@ -56,10 +56,29 @@ export type SyncOdontogramResponse = {
   odontogram: OdontogramApi;
 };
 
+export type CreateTreatmentPayload = {
+  treatmentName: string;
+  description: string;
+  estimatedDuration: number;
+  status: string;
+  schedulingNotes?: string | null;
+  pathology_ids?: number[];
+  appointment_id: number;
+};
+
+export type UpdateTreatmentPayload = {
+  treatmentName?: string;
+  description?: string;
+  estimatedDuration?: number;
+  status?: string;
+  schedulingNotes?: string | null;
+};
+
 @Injectable({ providedIn: 'root' })
 export class OdontogramService {
   private readonly http = inject(HttpClient);
   private readonly odontogramsUrl = `${environment.apiBaseUrl}/api/odontograms`;
+  private readonly treatmentsUrl = `${environment.apiBaseUrl}/api/treatments`;
 
   openOdontogram(patientId: number, visitId: number): Observable<OpenOdontogramResponse> {
     return this.http.post<OpenOdontogramResponse>(`${this.odontogramsUrl}/open`, {
@@ -76,5 +95,25 @@ export class OdontogramService {
     return this.http.post<SyncOdontogramResponse>(`${this.odontogramsUrl}/${odontogramId}/details/sync`, {
       entries,
     });
+  }
+
+  getPatientTreatments(patientId: number): Observable<unknown> {
+    return this.http.get(`${this.treatmentsUrl}/patient/${patientId}`);
+  }
+
+  createTreatment(payload: CreateTreatmentPayload): Observable<unknown> {
+    return this.http.post(`${this.treatmentsUrl}/create`, payload);
+  }
+
+  getTreatment(treatmentId: number): Observable<unknown> {
+    return this.http.get(`${this.treatmentsUrl}/${treatmentId}`);
+  }
+
+  updateTreatment(treatmentId: number, payload: UpdateTreatmentPayload): Observable<unknown> {
+    return this.http.put(`${this.treatmentsUrl}/${treatmentId}`, payload);
+  }
+
+  deleteTreatment(treatmentId: number): Observable<unknown> {
+    return this.http.delete(`${this.treatmentsUrl}/${treatmentId}`);
   }
 }
