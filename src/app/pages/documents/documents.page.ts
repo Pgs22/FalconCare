@@ -1032,7 +1032,7 @@ export class DocumentsPageComponent implements OnInit, OnDestroy {
       return this.pickBackendErrorMessage(http) ?? this.t('documents.errors.forbidden');
     }
     if (http?.status === 404) {
-      return this.pickBackendErrorMessage(http) ?? this.t('documents.errors.notFound');
+      return this.t('documents.errors.notFound');
     }
     if (http?.status === 409) {
       const msg409 = this.pickBackendErrorMessage(http);
