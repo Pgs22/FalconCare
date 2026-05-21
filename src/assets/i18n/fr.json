@@ -250,6 +250,18 @@
       }
     }
   },
+  "patientsPage": {
+    "header": {
+      "title": "Patients",
+      "subtitle": "Recherchez tout patient enregistré par nom ou ID."
+    },
+    "search": {
+      "prompt": "Saisissez un nom ou un ID pour rechercher les patients enregistrés (même recherche que le tableau de bord)."
+    },
+    "empty": {
+      "title": "Aucun patient à afficher"
+    }
+  },
   "patientPanel": {
     "title": "Dossier du patient",
     "loadingRecord": "Chargement du dossier patient...",
@@ -263,7 +275,7 @@
     },
     "header": { "recordOf": "Dossier complet de {{name}}", "subtitle": "Informations cliniques centralisées et gestion documentaire." },
     "profile": { "changePhoto": "Changer la photo", "removePhoto": "Supprimer la photo", "activeTreatment": "Traitement actif" },
-    "nav": { "fullRecord": "Dossier complet", "odontograms": "Odontogrammes" },
+    "nav": { "fullRecord": "Dossier complet" },
     "allergies": {
       "title": "Allergies critiques",
       "subtitle": "Réactions influençant les médicaments et matériaux cliniques.",

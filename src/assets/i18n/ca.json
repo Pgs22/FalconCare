@@ -250,6 +250,18 @@
       }
     }
   },
+  "patientsPage": {
+    "header": {
+      "title": "Pacients",
+      "subtitle": "Cerca qualsevol pacient registrat per nom o ID."
+    },
+    "search": {
+      "prompt": "Escriu al cercador per trobar pacients registrats per nom o ID (mateixa cerca que al panell de control)."
+    },
+    "empty": {
+      "title": "Sense pacients per mostrar"
+    }
+  },
   "patientPanel": {
     "title": "Fitxa del pacient",
     "loadingRecord": "Carregant expedient del pacient...",
@@ -263,7 +275,7 @@
     },
     "header": { "recordOf": "Expedient integral de {{name}}", "subtitle": "Informació clínica centralitzada i gestió documental." },
     "profile": { "changePhoto": "Canviar foto", "removePhoto": "Eliminar foto", "activeTreatment": "Tractament actiu" },
-    "nav": { "fullRecord": "Expedient integral", "odontograms": "Odontogrames" },
+    "nav": { "fullRecord": "Expedient integral" },
     "allergies": {
       "title": "Al·lèrgies crítiques",
       "subtitle": "Reaccions que condicionen medicació i materials clínics.",

@@ -285,6 +285,18 @@
       }
     }
   },
+  "patientsPage": {
+    "header": {
+      "title": "Pacientes",
+      "subtitle": "Busca cualquier paciente registrado por nombre o ID."
+    },
+    "search": {
+      "prompt": "Escribe en el buscador para encontrar pacientes registrados por nombre o ID."
+    },
+    "empty": {
+      "title": "Sin pacientes que mostrar"
+    }
+  },
   "patientPanel": {
     "title": "Ficha del paciente",
     "loadingRecord": "Cargando expediente del paciente...",
@@ -309,8 +321,7 @@
       "activeTreatment": "Tratamiento activo"
     },
     "nav": {
-      "fullRecord": "Expediente integral",
-      "odontograms": "Odontogramas"
+      "fullRecord": "Expediente integral"
     },
     "allergies": {
       "title": "Alergias críticas",

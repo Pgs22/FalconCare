@@ -250,6 +250,18 @@
       }
     }
   },
+  "patientsPage": {
+    "header": {
+      "title": "Patients",
+      "subtitle": "Search any registered patient by name or ID."
+    },
+    "search": {
+      "prompt": "Use the search box to find registered patients by name or ID (same as the control panel)."
+    },
+    "empty": {
+      "title": "No patients to show"
+    }
+  },
   "patientPanel": {
     "title": "Patient record",
     "loadingRecord": "Loading patient record...",
@@ -263,7 +275,7 @@
     },
     "header": { "recordOf": "Full record of {{name}}", "subtitle": "Centralized clinical information and document management." },
     "profile": { "changePhoto": "Change photo", "removePhoto": "Remove photo", "activeTreatment": "Active treatment" },
-    "nav": { "fullRecord": "Full record", "odontograms": "Odontograms" },
+    "nav": { "fullRecord": "Full record" },
     "allergies": {
       "title": "Critical allergies",
       "subtitle": "Reactions that affect medication and clinical materials.",

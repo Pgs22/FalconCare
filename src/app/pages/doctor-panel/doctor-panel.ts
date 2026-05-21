@@ -8,8 +8,6 @@ import {
   Subject,
   Subscription,
   catchError,
-  debounceTime,
-  distinctUntilChanged,
   finalize,
   forkJoin,
   map,
@@ -39,8 +37,10 @@ import {
 import { Patient } from '../../models/patient.model';
 import { AppointmentService } from '../../services/appointment.service';
 import { AuthService } from '../../services/auth.service';
+import { PatientSearchService } from '../../services/patient-search.service';
 import { PatientService } from '../../services/patient.service';
 import { AppUser, UserService } from '../../services/user.service';
+import { parseJwtPayload, resolveClinicalUserDisplayName } from '../../utils/clinical-user-display.util';
 
 @Component({
   selector: 'app-doctor-panel',
@@ -104,12 +104,16 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly patientService: PatientService,
+    private readonly patientSearchService: PatientSearchService,
     private readonly userService: UserService,
     private readonly appointmentService: AppointmentService,
     private readonly translate: TranslateService
   ) {
     this.refreshJwtPayload();
-    this.doctorDisplayName = this.getDoctorDisplayNameFromPayload(this.jwtPayload);
+    this.doctorDisplayName = resolveClinicalUserDisplayName(
+      this.jwtPayload,
+      this.safeInstant('doctorPanel.defaults.user', 'Usuario'),
+    );
     this.doctorSpecialty = this.safeInstant('doctorPanel.defaults.professional', 'Profesional');
     this.patientsTodayDateLabel = this.formatDashboardDate(new Date());
     this.loadDoctorProfileImage();
@@ -122,25 +126,12 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
 
     this.loadDashboardAppointmentStats();
 
-    this.patientSearchSub = this.patientSearchInput$
-      .pipe(
-        debounceTime(350),
-        distinctUntilChanged(),
-        switchMap((raw) => {
-          const term = raw.trim();
-          if (!term) {
-            this.searchPatientsLoading = false;
-            return of([] as Patient[]);
-          }
-          this.searchPatientsLoading = true;
-          return this.searchPatients(term).pipe(
-            finalize(() => {
-              this.searchPatientsLoading = false;
-            }),
-            catchError(() => of([] as Patient[]))
-          );
-        })
-      )
+    this.patientSearchSub = this.patientSearchService
+      .wireDebouncedSearch(this.patientSearchInput$, {
+        onLoadingChange: (loading) => {
+          this.searchPatientsLoading = loading;
+        },
+      })
       .subscribe((patients) => {
         this.patientSearchResults = patients;
       });
@@ -368,16 +359,7 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   }
 
   patientDisplayName(p: Patient): string {
-    const fn = p.firstName?.trim() ?? '';
-    const ln = p.lastName?.trim() ?? '';
-    const name = [fn, ln].filter(Boolean).join(' ').trim();
-    if (name) {
-      return name;
-    }
-    if (p.id != null) {
-      return this.translate.instant('doctorPanel.search.patientWithId', { id: p.id });
-    }
-    return this.translate.instant('doctorPanel.defaults.patient');
+    return this.patientSearchService.displayName(p);
   }
 
   openPatientFromSearch(p: Patient): void {
@@ -689,31 +671,7 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
   }
 
   private refreshJwtPayload(): void {
-    this.jwtPayload = this.parseJwtPayload(this.authService.getToken() ?? '');
-  }
-
-  private getDoctorDisplayNameFromPayload(payload: Record<string, unknown> | null): string {
-    if (!payload) {
-      return this.safeInstant('doctorPanel.defaults.user', 'Usuario');
-    }
-
-    const fullName =
-      this.getStringValue(payload, ['name', 'fullName', 'full_name', 'displayName', 'display_name']) ??
-      this.buildNameFromParts(payload);
-    if (fullName) {
-      return fullName;
-    }
-
-    const emailOrSub = this.getStringValue(payload, ['email', 'sub', 'username', 'preferred_username']);
-    if (!emailOrSub) {
-      return this.safeInstant('doctorPanel.defaults.user', 'Usuario');
-    }
-
-    const emailPrefix = emailOrSub.includes('@') ? emailOrSub.split('@')[0] : emailOrSub;
-    return (
-      this.toDisplayCase(emailPrefix.replace(/[._-]+/g, ' ').trim()) ||
-      this.safeInstant('doctorPanel.defaults.user', 'Usuario')
-    );
+    this.jwtPayload = parseJwtPayload(this.authService.getToken());
   }
 
   private safeInstant(key: string, fallback: string): string {
@@ -740,32 +698,6 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     }
   }
 
-  private buildNameFromParts(payload: Record<string, unknown>): string | null {
-    const firstName = this.getStringValue(payload, ['given_name', 'firstName', 'first_name']);
-    const lastName = this.getStringValue(payload, ['family_name', 'lastName', 'last_name']);
-    const combined = [firstName, lastName].filter(Boolean).join(' ').trim();
-    return combined ? this.toDisplayCase(combined) : null;
-  }
-
-  private getStringValue(payload: Record<string, unknown>, keys: string[]): string | null {
-    for (const key of keys) {
-      const value = payload[key];
-      if (typeof value === 'string' && value.trim()) {
-        return value.trim();
-      }
-    }
-    return null;
-  }
-
-  private toDisplayCase(value: string): string {
-    return value
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ');
-  }
-
   private updateTimeGreeting(): void {
     const hour = new Date().getHours();
     if (hour >= 6 && hour < 12) {
@@ -782,102 +714,4 @@ export class DoctorPanelComponent implements OnInit, OnDestroy {
     this.timeGreetingIcon = 'bedtime';
   }
 
-  private parseJwtPayload(token: string): Record<string, unknown> | null {
-    const parts = token.split('.');
-    if (parts.length < 2) {
-      return null;
-    }
-
-    try {
-      const normalizedBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const decoded = atob(normalizedBase64);
-      return JSON.parse(decoded) as Record<string, unknown>;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Búsqueda robusta:
-   * 1) por ID (si aplica),
-   * 2) por endpoint `?search=`,
-   * 3) fallback a listado completo + filtro local (nombre/id).
-   */
-  private searchPatients(term: string): Observable<Patient[]> {
-    const idNum = /^\d+$/.test(term) ? Number(term) : NaN;
-    const validId = Number.isFinite(idNum) && idNum >= 1;
-
-    const byId$ = validId
-      ? this.patientService.getById(idNum).pipe(
-          map((p) => [p] as Patient[]),
-          catchError(() => of([] as Patient[]))
-        )
-      : of([] as Patient[]);
-
-    const bySearch$ = this.patientService.list(term).pipe(catchError(() => of([] as Patient[])));
-    const byLocalFallback$ = this.patientService
-      .list()
-      .pipe(
-        map((patients) => this.filterPatientsLocally(patients, term)),
-        catchError(() => of([] as Patient[]))
-      );
-
-    if (validId) {
-      return byId$.pipe(
-        switchMap((byId) =>
-          bySearch$.pipe(
-            switchMap((bySearch) => {
-              const merged = this.mergeUniquePatients(byId, bySearch);
-              return merged.length > 0
-                ? of(merged)
-                : byLocalFallback$.pipe(map((local) => this.mergeUniquePatients(byId, local)));
-            })
-          )
-        )
-      );
-    }
-
-    return bySearch$.pipe(
-      switchMap((bySearch) =>
-        bySearch.length > 0 ? of(bySearch) : byLocalFallback$
-      )
-    );
-  }
-
-  private filterPatientsLocally(patients: Patient[], term: string): Patient[] {
-    const normalizedTerm = this.normalizeText(term);
-    if (!normalizedTerm) {
-      return [];
-    }
-    return patients.filter((p) => {
-      const idText = String(p.id ?? '');
-      const fullName = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
-      const normalizedName = this.normalizeText(fullName);
-      return idText.includes(term) || normalizedName.includes(normalizedTerm);
-    });
-  }
-
-  private mergeUniquePatients(...groups: Patient[][]): Patient[] {
-    const seen = new Set<number>();
-    const merged: Patient[] = [];
-    for (const group of groups) {
-      for (const patient of group) {
-        const id = patient.id;
-        if (id == null || seen.has(id)) {
-          continue;
-        }
-        seen.add(id);
-        merged.push(patient);
-      }
-    }
-    return merged;
-  }
-
-  private normalizeText(value: string): string {
-    return value
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-  }
 }
