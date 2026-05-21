@@ -1,0 +1,136 @@
+<div
+  class="doctor-panel-shell bg-background-light dark:bg-background-dark text-text-main dark:text-white font-sans overflow-hidden flex-1 flex flex-col min-h-0 min-w-0"
+>
+  <div class="flex flex-1 min-h-0 min-w-0 w-full overflow-hidden items-stretch">
+    <aside
+      class="doctor-sidebar w-64 shrink-0 border-r border-[#e5e7eb] bg-white dark:bg-[#162a2a] flex flex-col min-h-0 self-stretch z-20"
+    >
+      <div class="px-6 py-5 flex items-center justify-center shrink-0">
+        <img
+          alt="Clínica Dental FalconCare"
+          class="block h-auto w-full max-h-16 object-contain"
+          src="/assets/branding/logo-fullname.png"
+        />
+      </div>
+      <nav class="min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-2" [attr.aria-label]="'doctorPanel.nav.main' | translate">
+        <a routerLink="/doctor-panel" routerLinkActive="bg-primary/10 text-primary font-bold" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400">
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">dashboard</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.dashboard' | translate }}</span>
+        </a>
+        <a routerLink="/appointments" routerLinkActive="bg-primary/10 text-primary font-bold" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400">
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">calendar_today</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.agenda' | translate }}</span>
+        </a>
+        <a routerLink="/documents" routerLinkActive="bg-primary/10 text-primary font-bold" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400">
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">description</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.documents' | translate }}</span>
+        </a>
+        <a routerLink="/patients" routerLinkActive="bg-primary/10 text-primary font-bold" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400">
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">group</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.patients' | translate }}</span>
+        </a>
+        <a routerLink="/settings" routerLinkActive="bg-primary/10 text-primary font-bold" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group hover:bg-primary/10 hover:text-primary text-[#6b7280] dark:text-gray-400">
+          <span class="material-symbols-outlined text-[24px] transition-colors group-hover:text-primary">settings</span>
+          <span class="text-sm">{{ 'doctorPanel.nav.settings' | translate }}</span>
+        </a>
+      </nav>
+
+      <div class="mt-auto shrink-0 border-t border-[#e5e7eb] dark:border-[#1f3636] p-4">
+        <div class="flex items-center gap-3 px-2 py-2">
+          <img
+            [attr.alt]="doctorDisplayName"
+            class="rounded-full size-10 object-cover border border-primary/30 dark:border-primary/30 shrink-0"
+            [src]="profileImageUrl"
+          />
+          <div class="flex flex-col min-w-0 flex-1">
+            <p class="text-sm font-bold text-text-main dark:text-white truncate">{{ doctorDisplayName }}</p>
+            <p class="text-xs text-text-muted font-medium truncate">{{ doctorSpecialty }}</p>
+            <button
+              type="button"
+              class="mt-2 text-[11px] font-semibold text-text-muted hover:text-primary dark:text-slate-400 dark:hover:text-primary hover:underline cursor-pointer text-left w-full"
+              (click)="onLogout()"
+            >
+              {{ 'common.logout' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+    <main class="flex-1 flex flex-col min-h-0 min-w-0 relative overflow-hidden">
+      <header class="flex items-center justify-between px-8 py-5 bg-white/80 dark:bg-[#162a2a]/80 backdrop-blur-md sticky top-0 z-10 border-b border-[#e5e7eb] dark:border-[#1f3636]">
+        <div class="panel-box-heading min-w-0">
+          <h2 class="panel-box-title">{{ 'patientsPage.header.title' | translate }}</h2>
+          <p class="panel-box-subtitle">{{ 'patientsPage.header.subtitle' | translate }}</p>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="relative group z-20">
+            <label class="sr-only" for="patientsSearchInput">{{ 'doctorPanel.search.label' | translate }}</label>
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted">
+              <span class="material-symbols-outlined text-[20px]">search</span>
+            </div>
+            <input
+              id="patientsSearchInput"
+              class="block w-[32.4ch] max-w-full p-2.5 pl-10 pr-4 text-sm font-medium text-text-main dark:text-white bg-[#f0f5f5] dark:bg-[#0f2323] border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#162a2a] transition-all placeholder:text-text-muted"
+              [placeholder]="'doctorPanel.search.placeholder' | translate"
+              [title]="'doctorPanel.search.label' | translate"
+              type="search"
+              name="patientsSearch"
+              autocomplete="off"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onPatientSearchChange($event)"
+              (focus)="onPatientSearchFocus()"
+              (blur)="onPatientSearchBlur()"
+              (keydown.enter)="onPatientSearchEnter($event)"
+              aria-autocomplete="list"
+              aria-controls="patients-page-search-results"
+              [attr.aria-expanded]="searchDropdownOpen && searchQuery.trim().length > 0"
+            />
+            @if (
+              searchDropdownOpen &&
+              searchQuery.trim().length > 0
+            ) {
+              <ul
+                id="patients-page-search-results"
+                class="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl border border-[#e5e7eb] dark:border-[#1f3636] bg-white dark:bg-[#162a2a] shadow-lg py-1 z-30"
+                role="listbox"
+                [attr.aria-label]="'doctorPanel.search.resultsAria' | translate"
+              >
+                @if (searchPatientsLoading) {
+                  <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.searching' | translate }}</li>
+                } @else if (patientSearchResults.length === 0) {
+                  <li role="presentation" class="px-4 py-3 text-sm text-text-muted">{{ 'doctorPanel.search.noResults' | translate }}</li>
+                } @else {
+                  @for (p of patientSearchResults; track p.id) {
+                    <li
+                      role="option"
+                      tabindex="-1"
+                      class="px-4 py-2.5 text-sm text-text-main dark:text-white hover:bg-[#f0f5f5] dark:hover:bg-[#0f2323] cursor-pointer flex flex-col gap-0.5"
+                      (mousedown)="$event.preventDefault(); openPatient(p)"
+                    >
+                      <span class="font-semibold">{{ patientDisplayName(p) }}</span>
+                      <span class="text-xs text-text-muted">{{ 'doctorPanel.search.idLabel' | translate }}: #{{ p.id }}</span>
+                    </li>
+                  }
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      </header>
+      <div class="flex-1 overflow-y-auto px-8 pb-8 pt-6 scroll-smooth">
+        <div class="max-w-7xl mx-auto flex flex-col gap-6 w-full">
+          @if (!hasActiveSearch) {
+            <section class="patients-empty-state" aria-labelledby="patients-empty-title">
+              <span class="material-symbols-outlined patients-empty-state__icon" aria-hidden="true">person_search</span>
+              <h3 id="patients-empty-title" class="text-base font-semibold text-text-main dark:text-white">
+                {{ 'patientsPage.empty.title' | translate }}
+              </h3>
+              <p class="text-sm text-text-muted max-w-md leading-relaxed">{{ 'patientsPage.search.prompt' | translate }}</p>
+            </section>
+          }
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
